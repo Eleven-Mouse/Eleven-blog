@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org" th:with="title='文章管理',active='article-list'">
+<header th:replace="admin/header::headerFragment(${title},${active})"></header>
+<style>
+    /* 文章标题链接样式 */
+    .article-title-link {
+        color: #333;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+    
+    .article-title-link:hover {
+        color: #667eea;
+        text-decoration: none;
+    }
+    
+    /* 表格行悬停效果 */
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    /* 操作按钮样式优化 */
+    .action-btns {
+        white-space: nowrap;
+    }
+    
+    .action-btns .btn-sm {
+        padding: 4px 8px;
+        font-size: 12px;
+        margin-right: 4px;
+    }
+    
+    .action-btns .btn-sm:last-child {
+        margin-right: 0;
+    }
+    
+    .action-btns .btn-sm i {
+        margin-right: 3px;
+    }
+</style>
+<body>
+
+<div id="wrapper">
+    <div th:replace="admin/header::header-body"></div>
+    <div class="content-page">
+        <div class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h4 class="page-title">文章管理</h4>
+                        <div style="margin-bottom: 15px;">
+                            <a th:href="@{/admin/articles/write}" class="btn btn-primary">
+                                <i class="fa fa-plus"></i> 发布新文章
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover">
+                                        <thead>
+                                        <tr>
+                                            <th width="5%">ID</th>
+                                            <th width="30%">文章标题</th>
+                                            <th width="10%">封面图片</th>
+                                            <th>所属分类</th>
+                                            <th>发布时间</th>
+                                            <th>状态</th>
+                                            <th width="20%">操作</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody id="articleTableBody">
+                                        <tr>
+                                            <td colspan="7" class="text-center" style="padding: 40px;">
+                                                <i class="fa fa-spinner fa-spin" style="font-size: 48px; color: #ccc;"></i>
+                                                <p style="color: #999; margin-top: 15px;">加载中...</p>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div th:replace="admin/footer :: footer-content"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div th:replace="admin/footer :: footer"></div>
+<script>
+// 页面加载时获取文章列表
+$(document).ready(function() {
+    loadArticles();
+    
+    // 检查是否有文章发布成功的消息
+    if (sessionStorage.getItem('articlePublished') === 'true') {
+        const message = sessionStorage.getItem('publishMessage') || '文章发布成功！';
+        BlogAdmin.alertOk(message);
+        
+        // 清除标记
+        sessionStorage.removeItem('articlePublished');
+        sessionStorage.removeItem('publishMessage');
+    }
+});
+
+// 加载文章列表
+function loadArticles() {
+    BlogAdmin.get('/admin/articles/list', function(result) {
+        if (result.data && result.data.length > 0) {
+            renderArticles(result.data);
+        } else {
+            showEmptyState();
+        }
+    }, function(error) {
+        console.error('加载文章失败', error);
+        showEmptyState();
+    });
+}
+
+// 渲染文章列表
+function renderArticles(articles) {
+    var html = '';
+    articles.forEach(function(article) {
+        var createTime = article.createTime ? new Date(article.createTime).toLocaleDateString('zh-CN') : '-';
+        var statusClass = article.status === 1 ? 'success' : 'warning';
+        var statusText = article.status === 1 ? '已发布' : '草稿';
+        
+        html += '<tr>';
+        html += '<td>' + article.id + '</td>';
+        html += '<td><a href="/admin/preview/article/' + article.id + '" target="_blank" class="article-title-link" title="点击预览文章">' + article.title + '</a></td>';
+        
+        // 封面图片
+        html += '<td>';
+        if (article.coverImage && article.coverImage.trim() !== '') {
+            html += '<img src="' + article.coverImage + '" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;" alt="封面" onerror="this.style.display=\'none\'; this.parentElement.innerHTML=\'-\'">';
+        } else {
+            html += '-';
+        }
+        html += '</td>';
+        
+        html += '<td>' + (article.categoryName || '-') + '</td>';
+        html += '<td>' + createTime + '</td>';
+        html += '<td><span class="label label-' + statusClass + '">' + statusText + '</span></td>';
+        html += '<td class="action-btns">';
+        html += '<a href="/admin/preview/article/' + article.id + '" class="btn btn-sm btn-success" target="_blank" title="预览文章"><i class="fa fa-eye"></i> 预览</a>';
+        html += '<a href="/admin/articles/' + article.id + '/edit" class="btn btn-sm btn-info" title="编辑文章"><i class="fa fa-edit"></i> 编辑</a>';
+        html += '<button onclick="deleteArticle(' + article.id + ')" class="btn btn-sm btn-danger" title="删除文章"><i class="fa fa-trash"></i> 删除</button>';
+        html += '</td>';
+        html += '</tr>';
+    });
+    
+    $('#articleTableBody').html(html);
+}
+
+// 显示空状态
+function showEmptyState() {
+    var html = '<tr>';
+    html += '<td colspan="7" class="text-center" style="padding: 40px;">';
+    html += '<i class="fa fa-inbox" style="font-size: 48px; color: #ccc;"></i>';
+    html += '<p style="color: #999; margin-top: 15px;">暂无文章数据</p>';
+    html += '<a href="/admin/articles/write" class="btn btn-primary" style="margin-top: 10px;">';
+    html += '<i class="fa fa-plus"></i> 发布第一篇文章';
+    html += '</a>';
+    html += '</td>';
+    html += '</tr>';
+    
+    $('#articleTableBody').html(html);
+}
+
+// 删除文章
+function deleteArticle(id) {
+    if (confirm('确定要删除这篇文章吗？')) {
+        BlogAdmin.delete('/admin/articles/' + id, function(result) {
+            BlogAdmin.success('删除成功');
+            loadArticles(); // 重新加载列表
+        });
+    }
+}
+</script>
+</body>
+</html>

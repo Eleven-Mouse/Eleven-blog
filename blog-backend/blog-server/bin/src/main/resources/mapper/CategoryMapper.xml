@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="blog.mapper.CategoryMapper">
+
+    <!-- 查询所有分类，统计每个分类下的文章数（包含所有状态） -->
+    <select id="selectAll" resultType="blog.vo.CategoryVO">
+        SELECT 
+            c.id,
+            c.name,
+            c.create_time AS createTime,
+            c.update_time AS updateTime,
+            COALESCE(COUNT(a.id), 0) AS articleCount
+        FROM category c
+        LEFT JOIN article a ON c.id = a.category_id
+        GROUP BY c.id, c.name, c.create_time, c.update_time
+        ORDER BY c.create_time DESC
+    </select>
+
+    <update id="update">
+        UPDATE category
+        <set>
+            <if test="name != null">
+                name = #{name},
+            </if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+</mapper>

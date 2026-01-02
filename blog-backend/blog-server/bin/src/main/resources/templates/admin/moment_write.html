@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org" 
+      th:with="title=${isEdit ? '编辑动态' : '写动态'},active='moment'">
+<header th:replace="admin/header::headerFragment(${title},${active})"></header>
+<style>
+    .moment-form {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .content-textarea {
+        min-height: 200px;
+        resize: vertical;
+        font-size: 16px;
+        line-height: 1.6;
+    }
+    
+    .btn-group-custom {
+        margin-top: 20px;
+    }
+    
+    .btn-group-custom .btn {
+        margin-right: 10px;
+    }
+    
+    .char-count {
+        text-align: right;
+        color: #999;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+</style>
+<body>
+
+<div id="wrapper">
+    <div th:replace="admin/header::header-body"></div>
+    <div class="content-page">
+        <div class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h4 class="page-title" th:text="${isEdit ? '编辑动态' : '写动态'}">写动态</h4>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                <form id="momentForm" class="moment-form" onsubmit="return false;">
+                                    <input type="hidden" id="momentId" th:value="${momentId}" />
+                                    <input type="hidden" id="isEdit" th:value="${isEdit}" />
+                                    
+                                    <div class="form-group">
+                                        <label for="content">动态内容 <span class="text-danger">*</span></label>
+                                        <textarea class="form-control content-textarea" id="content" name="content" 
+                                                  placeholder="分享你的想法..." required></textarea>
+                                        <div class="char-count">
+                                            <span id="charCount">0</span> 字
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="images">图片链接</label>
+                                        <textarea class="form-control" id="images" name="images" rows="3"
+                                                  placeholder="请输入直接的图片链接，多个用逗号分隔&#10;例如：https://example.com/photo.jpg, https://example.com/pic.png"></textarea>
+
+                                    <div class="btn-group-custom">
+                                        <button type="button" class="btn btn-primary" onclick="publishMoment()">
+                                            <i class="fa fa-send"></i>
+                                            <span th:text="${isEdit ? '更新动态' : '发布动态'}">发布动态</span>
+                                        </button>
+                                        <button type="button" class="btn btn-warning" onclick="saveDraft()">
+                                            <i class="fa fa-save"></i> 保存草稿
+                                        </button>
+                                        <a href="/admin/moment/manage" class="btn btn-default">
+                                            <i class="fa fa-list"></i> 返回列表
+                                        </a>
+                                    </div>
+                                    
+                                    <div class="form-group" style="margin-top: 15px;">
+                                        <small class="text-muted">
+                                            <i class="fa fa-info-circle"></i> 
+                                            <strong>发布动态</strong>：立即发布，所有人可见 ｜
+                                            <strong>保存草稿</strong>：保存为草稿状态
+                                        </small>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:replace="admin/footer :: footer-content"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div th:replace="admin/footer :: footer"></div>
+<script>
+// 字符计数和加载编辑数据
+$(document).ready(function() {
+    $('#content').on('input', function() {
+        var length = $(this).val().length;
+        $('#charCount').text(length);
+    });
+    
+    // 如果是编辑模式，加载动态数据
+    var isEdit = $('#isEdit').val() === 'true';
+    if (isEdit) {
+        var momentId = $('#momentId').val();
+        loadMomentData(momentId);
+    }
+});
+
+// 加载动态数据
+function loadMomentData(momentId) {
+    BlogAdmin.get('/admin/moment/' + momentId, function(result) {
+        if (result.data) {
+            $('#content').val(result.data.content || '');
+            $('#images').val(result.data.image || '');
+            // 更新字符计数
+            $('#charCount').text((result.data.content || '').length);
+        }
+    }, function(error) {
+        alert('加载动态数据失败：' + (error.msg || '请稍后重试'));
+        window.location.href = '/admin/moments/manage';
+    });
+}
+
+// 发布动态
+function publishMoment() {
+    saveMoment(1); // status = 1 表示已发布
+}
+
+// 保存草稿
+function saveDraft() {
+    saveMoment(0); // status = 0 表示草稿
+}
+
+// 保存动态
+function saveMoment(status) {
+    var content = $('#content').val().trim();
+    var images = $('#images').val().trim();
+    var isEdit = $('#isEdit').val() === 'true';
+    var momentId = $('#momentId').val();
+    
+    // 验证内容
+    if (!content) {
+        alert('请输入动态内容');
+        return;
+    }
+    
+    // 验证图片链接
+    if (images) {
+        var imageUrls = images.split(',');
+        var invalidUrls = [];
+        var warningUrls = [];
+        
+        for (var i = 0; i < imageUrls.length; i++) {
+            var url = imageUrls[i].trim();
+            if (url) {
+                // 检查是否是有效的HTTP/HTTPS URL
+                if (url.indexOf('http://') !== 0 && url.indexOf('https://') !== 0) {
+                    invalidUrls.push(url);
+                }
+                // 检查是否是图片URL（以常见图片扩展名结尾）
+                else if (!url.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?.*)?$/i)) {
+                    // 检查是否是明显的网页链接
+                    if (url.indexOf('/detail/') > 0 || url.indexOf('/photo/') > 0 || url.indexOf('.html') > 0) {
+                        warningUrls.push(url);
+                    }
+                }
+            }
+        }
+        
+        if (invalidUrls.length > 0) {
+            alert('以下图片链接格式不正确（必须以 http:// 或 https:// 开头）：\n\n' + invalidUrls.join('\n'));
+            return;
+        }
+        
+        if (warningUrls.length > 0) {
+            if (!confirm('检测到以下链接可能是网页链接而不是直接的图片链接：\n\n' + warningUrls.join('\n') + '\n\n网页链接无法显示为图片。\n\n是否仍要继续保存？')) {
+                return;
+            }
+        }
+    }
+    
+    var data = {
+        content: content,
+        image: images || '',
+        status: status
+    };
+    
+    var btn = status === 1 ? $('button').filter(function() {
+        return $(this).text().indexOf('发布') !== -1 || $(this).text().indexOf('更新') !== -1;
+    }).first() : $('button:contains("保存草稿")');
+    var originalHtml = btn.html();
+    btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> 保存中...');
+    
+    // 根据是否编辑模式选择不同的API
+    var url = isEdit ? '/admin/moment/' + momentId : '/admin/moment';
+    var method = isEdit ? 'put' : 'post';
+    
+    BlogAdmin[method](url, data, function(result) {
+        var message = '';
+        if (isEdit) {
+            message = status === 1 ? '动态更新成功！' : '草稿保存成功！';
+        } else {
+            message = status === 1 ? '动态发布成功！' : '草稿保存成功！';
+        }
+        BlogAdmin.success(message);
+        
+        setTimeout(function() {
+            window.location.href = '/admin/moment/manage';
+        }, 1500);
+    }, function(error) {
+        btn.prop('disabled', false).html(originalHtml);
+        alert('保存失败：' + (error.msg || '请稍后重试'));
+    });
+}
+</script>
+</body>
+</html>
+

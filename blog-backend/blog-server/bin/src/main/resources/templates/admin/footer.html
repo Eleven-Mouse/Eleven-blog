@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="footer-content">
+    <footer class="footer text-center" style="padding: 20px 0; color: #999; font-size: 14px; margin-top: 40px;">
+        <p>© 2024 Eleven Blog. All Rights Reserved.</p>
+    </footer>
+</div>
+<body th:fragment="footer">
+<script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
+<script>
+// 如果jQuery加载失败，尝试使用备用CDN
+if (typeof jQuery === 'undefined') {
+    document.write('<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"><\/script>');
+}
+</script>
+<script>
+// 基础工具函数
+var BlogAdmin = {
+    // 显示成功消息
+    success: function(msg) {
+        alert(msg || '操作成功');
+    },
+    
+    // 显示错误消息
+    error: function(msg) {
+        alert(msg || '操作失败');
+    },
+    
+    // 确认对话框
+    confirm: function(msg, callback) {
+        if (confirm(msg || '确定执行此操作吗？')) {
+            callback && callback();
+        }
+    },
+    
+    // 显示加载中
+    showLoading: function(msg) {
+        // 简单的加载提示，可以后续优化为更好的UI
+        if (!$('#loadingOverlay').length) {
+            $('body').append('<div id="loadingOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 9999; display: flex; align-items: center; justify-content: center;"><div style="background: white; padding: 20px; border-radius: 4px;"><i class="fa fa-spinner fa-spin"></i> ' + (msg || '加载中...') + '</div></div>');
+        }
+    },
+    
+    // 隐藏加载中
+    hideLoading: function() {
+        $('#loadingOverlay').remove();
+    },
+    
+    // Ajax GET 请求
+    get: function(url, success, error) {
+        $.ajax({
+            url: url,
+            type: 'GET',
+            dataType: 'json',
+            success: function(result) {
+                if (result && result.code === 1) {
+                    success && success(result);
+                } else {
+                    error && error(result);
+                    BlogAdmin.error(result.msg || '请求失败');
+                }
+            },
+            error: function(xhr) {
+                error && error(xhr);
+                BlogAdmin.error('网络请求失败');
+            }
+        });
+    },
+    
+    // Ajax POST 请求
+    post: function(url, data, success, error) {
+        $.ajax({
+            url: url,
+            type: 'POST',
+            contentType: 'application/json',
+            data: typeof data === 'string' ? data : JSON.stringify(data),
+            dataType: 'json',
+            success: function(result) {
+                if (result && result.code === 1) {
+                    success && success(result);
+                } else {
+                    error && error(result);
+                    BlogAdmin.error(result.msg || '请求失败');
+                }
+            },
+            error: function(xhr) {
+                error && error(xhr);
+                BlogAdmin.error('网络请求失败');
+            }
+        });
+    },
+    
+    // Ajax DELETE 请求
+    delete: function(url, success, error) {
+        $.ajax({
+            url: url,
+            type: 'DELETE',
+            dataType: 'json',
+            success: function(result) {
+                if (result && result.code === 1) {
+                    success && success(result);
+                } else {
+                    error && error(result);
+                    BlogAdmin.error(result.msg || '删除失败');
+                }
+            },
+            error: function(xhr) {
+                error && error(xhr);
+                BlogAdmin.error('网络请求失败');
+            }
+        });
+    },
+    
+    // Ajax PUT 请求
+    put: function(url, data, success, error) {
+        $.ajax({
+            url: url,
+            type: 'PUT',
+            contentType: 'application/json',
+            data: typeof data === 'string' ? data : JSON.stringify(data),
+            dataType: 'json',
+            success: function(result) {
+                if (result && result.code === 1) {
+                    success && success(result);
+                } else {
+                    error && error(result);
+                    BlogAdmin.error(result.msg || '请求失败');
+                }
+            },
+            error: function(xhr) {
+                error && error(xhr);
+                BlogAdmin.error('网络请求失败');
+            }
+        });
+    }
+};
+
+// 全局使用
+window.BlogAdmin = BlogAdmin;
+</script>
+</body>
+</html>

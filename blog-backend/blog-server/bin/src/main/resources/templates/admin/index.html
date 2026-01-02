@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org" th:with="title='管理中心',active='home'">
+<header th:replace="admin/header::headerFragment(${title},${active})"></header>
+<body>
+
+<div id="wrapper">
+    <div th:replace="admin/header::header-body"></div>
+    <div class="content-page">
+        <div class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h4 class="page-title">仪表盘</h4>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="mini-stat bg-info">
+                            <span class="mini-stat-icon"><i class="fa fa-file-text-o"></i></span>
+                            <div class="mini-stat-info text-right">
+                                发表了<span class="counter" id="articleCount">0</span>篇文章
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="mini-stat bg-purple">
+                            <span class="mini-stat-icon"><i class="fa fa-comments-o"></i></span>
+                            <div class="mini-stat-info text-right">
+                                收到了<span class="counter" id="commentCount">0</span>条留言
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="mini-stat bg-success">
+                            <span class="mini-stat-icon"><i class="fa fa-cloud-upload"></i></span>
+                            <div class="mini-stat-info text-right">
+                                上传了<span class="counter" id="momentCount">0</span>个动态
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="mini-stat bg-primary">
+                            <span class="mini-stat-icon"><i class="fa fa-link"></i></span>
+                            <div class="mini-stat-info text-right">
+                                友链了<span class="counter" id="friendLinkCount">0</span>个好友
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">
+                                    <i class="fa fa-file-text-o"></i> 最近文章
+                                </h4>
+                            </div>
+                            <div class="panel-body">
+                                <div class="list-group" id="recentArticles">
+                                    <div class="text-center" style="padding: 20px; color: #999;">
+                                        <i class="fa fa-spinner fa-spin"></i> 加载中...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">
+                                    <i class="fa fa-comments"></i> 最近动态
+                                </h4>
+                            </div>
+                            <div class="panel-body">
+                                <div class="list-group" id="recentMoments">
+                                    <div class="text-center" style="padding: 20px; color: #999;">
+                                        <i class="fa fa-spinner fa-spin"></i> 加载中...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">欢迎使用 Eleven Blog 管理系统</h4>
+                            </div>
+                            <div class="panel-body">
+                                <div class="alert alert-info">
+                                    <h4><i class="fa fa-info-circle"></i> 使用提示</h4>
+                                    <ul style="margin-bottom: 0; padding-left: 20px;">
+                                        <li>点击左侧菜单可以访问不同的管理功能</li>
+                                        <li>在"写文章"页面可以使用 Markdown 编辑器撰写文章</li>
+                                        <li>在"分类管理"中可以管理文章的分类</li>
+                                        <li>在"友链管理"中可以添加和管理友情链接</li>
+                                        <li>系统默认账号：admin / 123456</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:replace="admin/footer :: footer-content"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div th:replace="admin/footer :: footer"></div>
+<script>
+// 页面加载时获取统计数据、最近文章和动态
+$(document).ready(function() {
+    loadStatistics();
+    loadRecentArticles();
+    loadRecentMoments();
+});
+
+// 加载统计数据
+function loadStatistics() {
+    BlogAdmin.get('/admin/dashboard/statistics', function(result) {
+        if (result.data) {
+            // 使用动画效果更新数字
+            animateCounter('#articleCount', result.data.articleCount || 0);
+            animateCounter('#commentCount', result.data.commentCount || 0);
+            animateCounter('#momentCount', result.data.momentCount || 0);
+            animateCounter('#friendLinkCount', result.data.friendLinkCount || 0);
+        }
+    }, function() {
+        // 如果API失败，保持显示0
+        console.log('加载统计数据失败，使用默认值');
+    });
+}
+
+// 数字动画效果
+function animateCounter(selector, targetValue) {
+    var $element = $(selector);
+    var currentValue = 0;
+    var increment = Math.ceil(targetValue / 30); // 分30步完成
+    var duration = 1000; // 总时长1秒
+    var stepTime = duration / 30;
+    
+    if (targetValue === 0) {
+        $element.text('0');
+        return;
+    }
+    
+    var timer = setInterval(function() {
+        currentValue += increment;
+        if (currentValue >= targetValue) {
+            currentValue = targetValue;
+            clearInterval(timer);
+        }
+        $element.text(currentValue);
+    }, stepTime);
+}
+
+// 加载最近文章
+function loadRecentArticles() {
+    BlogAdmin.get('/admin/articles/recent?limit=8', function(result) {
+        if (result.data && result.data.length > 0) {
+            var html = '';
+            result.data.forEach(function(article) {
+                var date = article.createTime ? new Date(article.createTime).toLocaleDateString('zh-CN') : '未知日期';
+                html += '<a href="/admin/articles/' + article.id + '/edit" class="list-group-item" style="border-left: 3px solid #667eea; margin-bottom: 8px; transition: all 0.3s; cursor: pointer; text-decoration: none; color: inherit;">';
+                html += '<div style="display: flex; justify-content: space-between; align-items: center;">';
+                html += '<div style="flex: 1; overflow: hidden;">';
+                html += '<h5 style="margin: 0 0 5px 0; font-size: 15px; font-weight: 500; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">';
+                html += '<i class="fa fa-file-text-o" style="color: #667eea; margin-right: 5px;"></i>';
+                html += article.title;
+                html += '</h5>';
+                html += '<small style="color: #999;"><i class="fa fa-calendar"></i> ' + date;
+                if (article.categoryName) {
+                    html += ' <span style="margin-left: 10px;"><i class="fa fa-folder-o"></i> ' + article.categoryName + '</span>';
+                }
+                html += '</small>';
+                html += '</div>';
+                if (article.status === 'draft') {
+                    html += '<span class="badge" style="background: #f39c12; color: white;">草稿</span>';
+                } else {
+                    html += '<span class="badge" style="background: #27ae60; color: white;">已发布</span>';
+                }
+                html += '</div>';
+                html += '</a>';
+            });
+            $('#recentArticles').html(html);
+            
+            // 添加悬停效果
+            $('#recentArticles .list-group-item').hover(
+                function() {
+                    $(this).css({
+                        'background-color': '#f8f9fa',
+                        'border-left-width': '5px',
+                        'transform': 'translateX(5px)',
+                        'box-shadow': '0 2px 8px rgba(0,0,0,0.1)'
+                    });
+                },
+                function() {
+                    $(this).css({
+                        'background-color': 'white',
+                        'border-left-width': '3px',
+                        'transform': 'translateX(0)',
+                        'box-shadow': 'none'
+                    });
+                }
+            );
+        } else {
+            // 显示空状态
+            var emptyHtml = '<div class="text-center" style="padding: 40px;">';
+            emptyHtml += '<i class="fa fa-inbox" style="font-size: 48px; color: #ddd;"></i>';
+            emptyHtml += '<p style="color: #999; margin-top: 15px;">还没有文章</p>';
+            emptyHtml += '<a href="/admin/articles/write" class="btn btn-primary btn-sm" style="margin-top: 10px;">';
+            emptyHtml += '<i class="fa fa-plus"></i> 发布第一篇文章';
+            emptyHtml += '</a>';
+            emptyHtml += '</div>';
+            $('#recentArticles').html(emptyHtml);
+        }
+    }, function() {
+        // 加载失败时显示模拟数据
+        var mockHtml = '';
+        var mockArticles = [
+            {title: '欢迎使用 Eleven Blog', date: '2024-10-25', category: '公告', status: 'publish'},
+            {title: 'Spring Boot 3.x 新特性介绍', date: '2024-10-24', category: '技术', status: 'publish'},
+            {title: 'Thymeleaf 模板引擎使用指南', date: '2024-10-23', category: '技术', status: 'publish'},
+            {title: 'MySQL 性能优化技巧', date: '2024-10-22', category: '数据库', status: 'publish'},
+            {title: '如何构建一个博客系统', date: '2024-10-21', category: '教程', status: 'draft'},
+            {title: 'Java 开发最佳实践', date: '2024-10-20', category: '技术', status: 'publish'}
+        ];
+        
+        mockArticles.forEach(function(article, index) {
+            mockHtml += '<a href="/admin/articles/' + (index + 1) + '" class="list-group-item" style="border-left: 3px solid #667eea; margin-bottom: 8px; transition: all 0.3s;">';
+            mockHtml += '<div style="display: flex; justify-content: space-between; align-items: center;">';
+            mockHtml += '<div style="flex: 1; overflow: hidden;">';
+            mockHtml += '<h5 style="margin: 0 0 5px 0; font-size: 15px; font-weight: 500; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">';
+            mockHtml += '<i class="fa fa-file-text-o" style="color: #667eea; margin-right: 5px;"></i>';
+            mockHtml += article.title;
+            mockHtml += '</h5>';
+            mockHtml += '<small style="color: #999;"><i class="fa fa-calendar"></i> ' + article.date;
+            mockHtml += ' <span style="margin-left: 10px;"><i class="fa fa-folder-o"></i> ' + article.category + '</span>';
+            mockHtml += '</small>';
+            mockHtml += '</div>';
+            if (article.status === 'draft') {
+                mockHtml += '<span class="badge" style="background: #f39c12; color: white;">草稿</span>';
+            } else {
+                mockHtml += '<span class="badge" style="background: #27ae60; color: white;">已发布</span>';
+            }
+            mockHtml += '</div>';
+            mockHtml += '</a>';
+        });
+        
+        $('#recentArticles').html(mockHtml);
+        
+        // 添加悬停效果
+        $('.list-group-item').hover(
+            function() {
+                $(this).css({
+                    'background-color': '#f8f9fa',
+                    'border-left-width': '5px',
+                    'transform': 'translateX(5px)'
+                });
+            },
+            function() {
+                $(this).css({
+                    'background-color': 'white',
+                    'border-left-width': '3px',
+                    'transform': 'translateX(0)'
+                });
+            }
+        );
+    });
+}
+
+// 加载最近动态
+function loadRecentMoments() {
+    BlogAdmin.get('/admin/moment/list', function(result) {
+        if (result.data && result.data.length > 0) {
+            var html = '';
+            var moments = result.data.slice(0, 8); // 只显示前8条
+            moments.forEach(function(moment) {
+                var date = moment.publishTime ? new Date(moment.publishTime).toLocaleDateString('zh-CN') : 
+                           (moment.createTime ? new Date(moment.createTime).toLocaleDateString('zh-CN') : '未知日期');
+                var statusClass = moment.status === 1 ? '#27ae60' : '#f39c12';
+                var statusText = moment.status === 1 ? '已发布' : '草稿';
+                
+                html += '<a href="/admin/moment/' + moment.id + '/edit" class="list-group-item" style="border-left: 3px solid #f093fb; margin-bottom: 8px; cursor: pointer; text-decoration: none; color: inherit; display: block; transition: all 0.3s;">';
+                html += '<div style="display: flex; justify-content: space-between; align-items: flex-start;">';
+                html += '<div style="flex: 1; overflow: hidden;">';
+                html += '<p style="margin: 0 0 5px 0; font-size: 14px; color: #333; line-height: 1.5;">';
+                html += '<i class="fa fa-commenting-o" style="color: #f093fb; margin-right: 5px;"></i>';
+                
+                // 限制显示内容长度
+                var content = moment.content || '';
+                if (content.length > 60) {
+                    content = content.substring(0, 60) + '...';
+                }
+                html += content;
+                html += '</p>';
+                html += '<small style="color: #999;"><i class="fa fa-calendar"></i> ' + date + '</small>';
+                html += '</div>';
+                html += '<span class="badge" style="background: ' + statusClass + '; color: white; margin-left: 10px;">' + statusText + '</span>';
+                html += '</div>';
+                html += '</a>';
+            });
+            $('#recentMoments').html(html);
+            
+            // 添加悬停效果
+            $('#recentMoments .list-group-item').hover(
+                function() {
+                    $(this).css({
+                        'background-color': '#fef5ff',
+                        'border-left-width': '5px',
+                        'transform': 'translateX(5px)',
+                        'box-shadow': '0 2px 8px rgba(240,147,251,0.2)'
+                    });
+                },
+                function() {
+                    $(this).css({
+                        'background-color': 'white',
+                        'border-left-width': '3px',
+                        'transform': 'translateX(0)',
+                        'box-shadow': 'none'
+                    });
+                }
+            );
+        } else {
+            // 显示空状态
+            var emptyHtml = '<div class="text-center" style="padding: 40px;">';
+            emptyHtml += '<i class="fa fa-comments-o" style="font-size: 48px; color: #ddd;"></i>';
+            emptyHtml += '<p style="color: #999; margin-top: 15px;">还没有动态</p>';
+            emptyHtml += '<a href="/admin/moment/write" class="btn btn-primary btn-sm" style="margin-top: 10px;">';
+            emptyHtml += '<i class="fa fa-plus"></i> 发布第一条动态';
+            emptyHtml += '</a>';
+            emptyHtml += '</div>';
+            $('#recentMoments').html(emptyHtml);
+        }
+    }, function() {
+        // 加载失败显示提示
+        var errorHtml = '<div class="text-center" style="padding: 40px;">';
+        errorHtml += '<i class="fa fa-exclamation-circle" style="font-size: 48px; color: #ddd;"></i>';
+        errorHtml += '<p style="color: #999; margin-top: 15px;">加载失败</p>';
+        errorHtml += '</div>';
+        $('#recentMoments').html(errorHtml);
+    });
+}
+</script>
+</body>
+</html>

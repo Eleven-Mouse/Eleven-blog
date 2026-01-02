@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org" th:with="title='动态管理',active='moment-list'">
+<header th:replace="admin/header::headerFragment(${title},${active})"></header>
+<style>
+    .moment-content {
+        max-width: 500px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .moment-images {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+    }
+    
+    .moment-image-thumb {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    .moment-textarea {
+        min-height: 150px;
+        resize: vertical;
+    }
+</style>
+<body>
+
+<div id="wrapper">
+    <div th:replace="admin/header::header-body"></div>
+    <div class="content-page">
+        <div class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h4 class="page-title">动态管理</h4>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <!-- 搜索和筛选 -->
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                <form class="form-inline" onsubmit="return false;">
+                                    <div class="form-group">
+                                        <input type="text" class="form-control" id="searchKeyword" 
+                                               placeholder="搜索动态内容" style="width: 250px;">
+                                    </div>
+                                    <div class="form-group">
+                                        <select class="form-control" id="searchStatus"
+                                                style="padding-top: 7px; padding-bottom: 8px;color:grey">
+                                            <option value="">全部状态</option>
+                                            <option value="1">已发布</option>
+                                            <option value="0">草稿</option>
+                                        </select>
+                                    </div>
+                                    <button type="button" class="btn btn-primary" onclick="searchMoments()">
+                                        <i class="fa fa-search"></i> 搜索
+                                    </button>
+                                    <button type="button" class="btn btn-default" onclick="resetSearch()">
+                                        <i class="fa fa-refresh"></i> 重置
+                                    </button>
+                                    <a href="/admin/moment/write" class="btn btn-success pull-right">
+                                        <i class="fa fa-plus"></i> 写动态
+                                    </a>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- 动态列表 -->
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">动态列表</h4>
+                            </div>
+                            <div class="panel-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover">
+                                        <thead>
+                                        <tr>
+                                            <th width="5%">ID</th>
+                                            <th width="35%">动态内容</th>
+                                            <th width="10%">图片</th>
+                                            <th width="10%">状态</th>
+                                            <th width="15%">发布时间</th>
+                                            <th width="25%">操作</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody id="momentList">
+                                        <tr>
+                                            <td colspan="6" class="text-center" style="padding: 40px;">
+                                                <i class="fa fa-comments" style="font-size: 48px; color: #ccc;"></i>
+                                                <p style="color: #999; margin-top: 15px;">暂无动态数据</p>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:replace="admin/footer :: footer-content"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div th:replace="admin/footer :: footer"></div>
+<script>
+// 页面加载时获取动态列表
+$(document).ready(function() {
+    loadMoments();
+});
+
+// 加载动态列表
+function loadMoments(keyword, status) {
+    var url = '/admin/moment/list';
+    var params = [];
+    
+    if (keyword) {
+        params.push('keyword=' + encodeURIComponent(keyword));
+    }
+    if (status !== undefined && status !== '') {
+        params.push('status=' + status);
+    }
+    
+    if (params.length > 0) {
+        url += '?' + params.join('&');
+    }
+    
+    BlogAdmin.get(url, function(result) {
+        console.log('动态列表数据:', result); // 调试：查看完整返回数据
+        
+        if (result.data && result.data.length > 0) {
+            var html = '';
+            result.data.forEach(function(moment) {
+                console.log('==== 动态 ID:', moment.id, '====');
+                console.log('图片字段值:', moment.image);
+                console.log('图片字段类型:', typeof moment.image);
+                console.log('图片字段是否为空:', moment.image === null || moment.image === undefined || moment.image === '');
+                
+                html += '<tr>';
+                html += '<td>' + moment.id + '</td>';
+                html += '<td class="moment-content" title="' + (moment.content || '') + '">' + (moment.content || '-') + '</td>';
+                
+                // 图片缩略图
+                html += '<td>';
+                
+                // 检查图片字段
+                var imageField = moment.image;
+                console.log('处理前的图片字段:', imageField);
+                
+                if (imageField && imageField !== null && imageField !== '' && imageField.trim() !== '') {
+                    console.log('图片字段有效，开始处理');
+                    var imageUrls = imageField.split(',');
+                    console.log('分割后的URL数组:', imageUrls);
+                    
+                    var imageHtml = '';
+                    var validImageCount = 0;
+                    
+                    for (var i = 0; i < imageUrls.length; i++) {
+                        var cleanUrl = imageUrls[i].trim();
+                        console.log('处理URL [' + i + ']:', cleanUrl);
+                        
+                        if (cleanUrl && cleanUrl !== '') {
+                            // 验证是否是有效的URL
+                            if (cleanUrl.indexOf('http://') === 0 || cleanUrl.indexOf('https://') === 0) {
+                                console.log('有效的图片URL:', cleanUrl);
+                                validImageCount++;
+                                // 创建一个容器来显示图片或错误信息
+                                imageHtml += '<span style="display: inline-block; position: relative; margin-right: 5px;">';
+                                imageHtml += '<img src="' + cleanUrl + '" class="moment-image-thumb" alt="图片" title="' + cleanUrl + '" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; display: block;" onerror="console.error(\'图片加载失败:\', this.src); this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\'">';
+                                imageHtml += '<div style="display: none; width: 50px; height: 50px; background: #f5f5f5; border: 1px dashed #ccc; border-radius: 4px; align-items: center; justify-content: center; font-size: 10px; color: #999; text-align: center; line-height: 1.2;" title="图片加载失败: ' + cleanUrl + '">加载<br>失败</div>';
+                                imageHtml += '</span>';
+                            } else {
+                                console.log('无效的图片URL（非http/https）:', cleanUrl);
+                                imageHtml += '<span style="color: #999; font-size: 12px; display: inline-block; padding: 2px 5px; background: #f5f5f5; border-radius: 3px; margin-right: 5px;" title="无效的图片链接">' + cleanUrl + '</span>';
+                            }
+                        }
+                    }
+                    
+                    if (imageHtml !== '') {
+                        html += imageHtml;
+                    } else {
+                        html += '-';
+                    }
+                    
+                    console.log('有效图片数量:', validImageCount);
+                } else {
+                    console.log('图片字段为空或无效');
+                    html += '-';
+                }
+                
+                html += '</td>';
+                
+                // 状态（使用与文章管理一致的样式）
+                var statusText = '';
+                var statusClass = '';
+                switch(moment.status) {
+                    case 0:
+                        statusText = '草稿';
+                        statusClass = 'warning';
+                        break;
+                    case 1:
+                        statusText = '已发布';
+                        statusClass = 'success';
+                        break;
+                    default:
+                        statusText = '未知';
+                        statusClass = 'default';
+                }
+                html += '<td><span class="label label-' + statusClass + '">' + statusText + '</span></td>';
+                
+                // 发布时间
+                html += '<td>' + (moment.publishTime ? formatDateTime(moment.publishTime) : '-') + '</td>';
+                
+                // 操作
+                html += '<td>';
+                html += '<a href="/admin/moment/' + moment.id + '/edit" class="btn btn-sm btn-info" title="编辑动态"><i class="fa fa-edit"></i> 编辑</a> ';
+                html += '<button class="btn btn-sm btn-danger" onclick="deleteMoment(' + moment.id + ')" title="删除动态"><i class="fa fa-trash"></i> 删除</button>';
+                html += '</td>';
+                html += '</tr>';
+            });
+            $('#momentList').html(html);
+        } else {
+            $('#momentList').html('<tr><td colspan="6" class="text-center" style="padding: 40px;"><i class="fa fa-comments" style="font-size: 48px; color: #ccc;"></i><p style="color: #999; margin-top: 15px;">暂无动态数据</p></td></tr>');
+        }
+    }, function() {
+        console.log('加载动态列表失败');
+    });
+}
+
+// 搜索动态
+function searchMoments() {
+    var keyword = $('#searchKeyword').val().trim();
+    var status = $('#searchStatus').val();
+    loadMoments(keyword, status);
+}
+
+// 重置搜索
+function resetSearch() {
+    $('#searchKeyword').val('');
+    $('#searchStatus').val('');
+    loadMoments();
+}
+
+// 删除动态
+function deleteMoment(id) {
+    if (confirm('确定要删除这条动态吗？删除后无法恢复！')) {
+        BlogAdmin.delete('/admin/moment/' + id, function(result) {
+            BlogAdmin.success('动态删除成功');
+            loadMoments();
+        });
+    }
+}
+
+// 格式化日期时间
+function formatDateTime(dateTimeStr) {
+    if (!dateTimeStr) return '-';
+    var date = new Date(dateTimeStr);
+    var year = date.getFullYear();
+    var month = String(date.getMonth() + 1).padStart(2, '0');
+    var day = String(date.getDate()).padStart(2, '0');
+    var hours = String(date.getHours()).padStart(2, '0');
+    var minutes = String(date.getMinutes()).padStart(2, '0');
+    return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes;
+}
+</script>
+</body>
+</html>
+

@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org" th:with="title='Markdown文章上传',active='markdown'">
+<header th:replace="admin/header::headerFragment(${title},${active})"></header>
+<body>
+
+<div id="wrapper">
+    <div th:replace="admin/header::header-body"></div>
+    <div class="content-page">
+        <div class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h4 class="page-title">Markdown文章上传</h4>
+                        <p class="text-muted">
+                            <i class="fa fa-info-circle"></i> 上传Markdown文件(.md)，选择分类和标签，然后保存发布
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 上传区域 -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">
+                                    <i class="fa fa-cloud-upload"></i> 上传Markdown文件
+                                </h4>
+                            </div>
+                            <div class="panel-body">
+                                <div id="upload-area" class="upload-dropzone">
+                                    <div class="upload-icon">
+                                        <i class="fa fa-file-text-o"></i>
+                                    </div>
+                                    <p class="upload-text">拖拽Markdown文件到这里，或点击选择文件</p>
+                                    <p class="upload-hint">
+                                        <i class="fa fa-check-circle text-success"></i> 
+                                        支持 .md 和 .markdown 格式，单个文件最大 10MB<br>
+                                        <i class="fa fa-info-circle text-info"></i> 
+                                        上传后需要选择分类和标签，然后点击"保存文章"才会正式发布
+                                    </p>
+                                    <input type="file" id="fileInput" accept=".md,.markdown" multiple style="display: none;">
+                                    <button class="btn btn-primary btn-lg" onclick="document.getElementById('fileInput').click()">
+                                        <i class="fa fa-folder-open"></i> 选择Markdown文件
+                                    </button>
+                                </div>
+                                
+                                <!-- 上传进度 -->
+                                <div id="upload-progress" style="display: none; margin-top: 20px;">
+                                    <h5 id="upload-status">正在上传...</h5>
+                                    <div class="progress progress-lg">
+                                        <div id="progress-bar" class="progress-bar progress-bar-striped active" 
+                                             role="progressbar" style="width: 0%">
+                                            <span id="progress-text">0%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 待保存的文章列表 -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="panel panel-warning">
+                            <div class="panel-heading">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h4 class="panel-title">
+                                            <i class="fa fa-exclamation-circle"></i> 待保存的文章（草稿）
+                                        </h4>
+                                    </div>
+                                    <div class="col-md-6 text-right">
+                                        <button class="btn btn-sm btn-primary" onclick="goToArticleList()">
+                                            <i class="fa fa-list"></i> 查看所有文章
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="panel-body">
+                                <div id="article-list" class="row">
+                                    <!-- 文章卡片将显示在这里 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:replace="admin/footer :: footer-content"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="admin/footer :: footer"></div>
+
+<style>
+/* 上传区域样式 */
+.upload-dropzone {
+    border: 3px dashed #5cb85c;
+    border-radius: 10px;
+    padding: 60px 20px;
+    text-align: center;
+    background: #f9fff9;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.upload-dropzone:hover {
+    border-color: #449d44;
+    background: #f0f9f0;
+    transform: scale(1.01);
+}
+
+.upload-dropzone.dragover {
+    border-color: #449d44;
+    background: #e8f5e8;
+    transform: scale(1.02);
+    box-shadow: 0 5px 20px rgba(76, 175, 80, 0.3);
+}
+
+.upload-icon i {
+    font-size: 80px;
+    color: #5cb85c;
+    margin-bottom: 20px;
+}
+
+.upload-text {
+    font-size: 22px;
+    color: #333;
+    margin: 15px 0 10px;
+    font-weight: 500;
+}
+
+.upload-hint {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 25px;
+    line-height: 2;
+}
+
+/* 文章卡片样式 */
+.article-card {
+    border: 2px solid #f0ad4e;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background: #fffbf5;
+    transition: all 0.3s;
+}
+
+.article-card.saved {
+    border-color: #5cb85c;
+    background: #f0f9f0;
+}
+
+.article-card .article-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.article-card .article-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+.article-card .article-status {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.article-card .status-draft {
+    background: #f0ad4e;
+    color: white;
+}
+
+.article-card .status-published {
+    background: #5cb85c;
+    color: white;
+}
+
+.article-card .article-summary {
+    color: #666;
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: white;
+    border-radius: 5px;
+}
+
+.article-card .article-meta {
+    display: flex;
+    gap: 20px;
+    font-size: 13px;
+    color: #999;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.article-card .article-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.article-card .article-form {
+    background: white;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+.article-card .form-section {
+    margin-bottom: 15px;
+}
+
+.article-card .form-section:last-child {
+    margin-bottom: 0;
+}
+
+.article-card .form-section label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #555;
+}
+
+.article-card .form-section select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.article-card .article-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.article-card .article-actions button {
+    flex: 1;
+}
+
+/* 进度条 */
+.progress-lg {
+    height: 35px;
+    border-radius: 5px;
+}
+
+.progress-lg .progress-bar {
+    line-height: 35px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+#upload-status {
+    color: #5cb85c;
+    margin-bottom: 10px;
+}
+
+/* 空状态 */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-state i {
+    font-size: 72px;
+    color: #ddd;
+    margin-bottom: 20px;
+}
+
+.empty-state p {
+    color: #999;
+    font-size: 16px;
+}
+</style>
+
+<script>
+let articles = JSON.parse(localStorage.getItem('uploadedArticles') || '[]');
+let categories = [];
+let tags = [];
+
+// 页面加载时初始化
+$(document).ready(function() {
+    loadCategories();
+    loadTags();
+    displayArticleList();
+    initUpload();
+});
+
+// 加载分类
+function loadCategories() {
+    BlogAdmin.get('/admin/categories', function(result) {
+        if (result.data && result.data.length > 0) {
+            categories = result.data;
+        }
+    });
+}
+
+// 加载标签
+function loadTags() {
+    BlogAdmin.get('/admin/tags/list', function(result) {
+        if (result.data && result.data.length > 0) {
+            tags = result.data;
+        }
+    });
+}
+
+// 初始化上传功能
+function initUpload() {
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('fileInput');
+
+    uploadArea.onclick = function(e) {
+        if (e.target.tagName !== 'BUTTON') {
+            fileInput.click();
+        }
+    };
+
+    fileInput.onchange = function(e) {
+        handleFiles(e.target.files);
+    };
+
+    uploadArea.ondragover = function(e) {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    };
+
+    uploadArea.ondragleave = function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+    };
+
+    uploadArea.ondrop = function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        handleFiles(e.dataTransfer.files);
+    };
+}
+
+// 处理文件上传
+function handleFiles(files) {
+    if (files.length === 0) return;
+
+    const mdFiles = Array.from(files).filter(file => {
+        const ext = file.name.split('.').pop().toLowerCase();
+        return ext === 'md' || ext === 'markdown';
+    });
+
+    if (mdFiles.length === 0) {
+        BlogAdmin.alertError('请选择Markdown文件（.md 或 .markdown）');
+        return;
+    }
+
+    let completed = 0;
+    let successCount = 0;
+
+    $('#upload-progress').show();
+    $('#upload-status').text('正在上传 ' + mdFiles.length + ' 个文件...');
+    updateProgress(0);
+
+    mdFiles.forEach((file, index) => {
+        uploadMarkdownFile(file, function(success, data) {
+            completed++;
+            if (success) {
+                successCount++;
+                articles.unshift(data);
+                localStorage.setItem('uploadedArticles', JSON.stringify(articles));
+            }
+
+            const progress = Math.round((completed / mdFiles.length) * 100);
+            updateProgress(progress);
+            $('#upload-status').text('已完成 ' + completed + '/' + mdFiles.length + '，成功 ' + successCount + ' 个');
+
+            if (completed === mdFiles.length) {
+                setTimeout(function() {
+                    $('#upload-progress').hide();
+                    displayArticleList();
+                    document.getElementById('fileInput').value = '';
+                    
+                    if (successCount > 0) {
+                        BlogAdmin.alertOk('成功上传 ' + successCount + ' 篇文章！请选择分类和标签后保存');
+                    }
+                }, 1000);
+            }
+        });
+    });
+}
+
+// 上传单个Markdown文件
+function uploadMarkdownFile(file, callback) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+        $.ajax({
+            url: '/admin/upload/markdown',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(result) {
+                if (result.code === 1) {
+                    callback(true, {
+                        articleId: result.data.articleId,
+                        title: result.data.title,
+                        summary: result.data.summary,
+                        content: result.data.content,
+                        contentLength: result.data.contentLength,
+                        status: result.data.status,
+                        uploadTime: new Date().toLocaleString(),
+                        categoryId: null,
+                        tags: null,
+                        coverImage: null,
+                        saved: false
+                    });
+                } else {
+                    BlogAdmin.alertError('上传失败：' + file.name + ' - ' + result.msg);
+                    callback(false);
+                }
+            },
+            error: function() {
+                BlogAdmin.alertError('上传失败：' + file.name);
+                callback(false);
+            }
+        });
+}
+
+// 更新进度条
+function updateProgress(percent) {
+    $('#progress-bar').css('width', percent + '%');
+    $('#progress-text').text(percent + '%');
+}
+
+// 显示文章列表
+function displayArticleList() {
+    const articleList = $('#article-list');
+    articleList.empty();
+
+    if (articles.length === 0) {
+        articleList.html(`
+            <div class="col-md-12">
+                <div class="empty-state">
+                    <i class="fa fa-file-text-o"></i>
+                    <p>还没有上传任何Markdown文章<br>上传后将在这里显示，请选择分类和标签后保存发布</p>
+                </div>
+            </div>
+        `);
+        return;
+    }
+
+    articles.forEach((article, index) => {
+        const statusClass = article.saved ? 'saved' : '';
+        const statusBadgeClass = article.saved ? 'status-published' : 'status-draft';
+        const statusText = article.saved ? '已发布' : '草稿';
+        
+        // 生成分类选择框
+        let categoryOptions = '<option value="">请选择分类</option>';
+        categories.forEach(cat => {
+            const selected = article.categoryId == cat.id ? 'selected' : '';
+            categoryOptions += `<option value="${cat.id}" ${selected}>${cat.name}</option>`;
+        });
+        
+        // 生成标签选择框
+        let tagOptions = '<option value="">请选择标签（可选）</option>';
+        tags.forEach(tag => {
+            const selected = article.tags == tag.id ? 'selected' : '';
+            tagOptions += `<option value="${tag.id}" ${selected}>${tag.name}</option>`;
+        });
+        
+        const card = `
+            <div class="col-md-12">
+                <div class="article-card ${statusClass}">
+                    <div class="article-header">
+                        <h3 class="article-title">
+                            <i class="fa fa-file-text"></i> ${article.title}
+                        </h3>
+                        <span class="article-status ${statusBadgeClass}">
+                            <i class="fa ${article.saved ? 'fa-check-circle' : 'fa-clock-o'}"></i> ${statusText}
+                        </span>
+                    </div>
+                    
+                    <div class="article-summary">${article.summary || '暂无摘要'}</div>
+                    
+                    <div class="article-meta">
+                        <span><i class="fa fa-hashtag"></i> ID: ${article.articleId}</span>
+                        <span><i class="fa fa-font"></i> ${article.contentLength} 字符</span>
+                        <span><i class="fa fa-clock-o"></i> ${article.uploadTime}</span>
+                    </div>
+                    
+                    ${!article.saved ? `
+                    <div class="article-form">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-section">
+                                    <label><i class="fa fa-folder-o"></i> 选择分类 <span class="text-danger">*</span></label>
+                                    <select class="form-control" id="category-${index}" onchange="updateArticleCategory(${index}, this.value)">
+                                        ${categoryOptions}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-section">
+                                    <label><i class="fa fa-tags"></i> 选择标签（可选）</label>
+                                    <select class="form-control" id="tags-${index}" onchange="updateArticleTags(${index}, this.value)">
+                                        ${tagOptions}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-section">
+                                    <label><i class="fa fa-picture-o"></i> 选择文章首图（可选）</label>
+                                    <div class="cover-image-upload">
+                                        <input type="text" class="form-control" id="cover-image-${index}" 
+                                               placeholder="请输入图片URL或点击上传" 
+                                               value="${article.coverImage || ''}"
+                                               onchange="updateArticleCoverImage(${index}, this.value)">
+                                        ${article.coverImage ? `
+                                        <div class="cover-preview" style="margin-top: 10px;">
+                                            <img src="${article.coverImage}" style="max-width: 200px; max-height: 150px; border-radius: 5px; border: 1px solid #ddd;">
+                                        </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <div class="article-actions">
+                        ${!article.saved ? `
+                            <button class="btn btn-info" onclick="viewArticle(${article.articleId})">
+                                <i class="fa fa-eye"></i> 预览文章
+                            </button>
+                            <button class="btn btn-success" onclick="saveArticle(${index})" ${!article.categoryId ? 'disabled' : ''}>
+                                <i class="fa fa-save"></i> 保存文章并发布
+                            </button>
+                        ` : `
+                            <button class="btn btn-info" onclick="viewArticle(${article.articleId})">
+                                <i class="fa fa-eye"></i> 预览文章
+                            </button>
+                            <button class="btn btn-primary" onclick="editArticle(${article.articleId})">
+                                <i class="fa fa-edit"></i> 编辑文章
+                            </button>
+                        `}
+                        <button class="btn btn-danger" onclick="removeArticle(${index})">
+                            <i class="fa fa-trash"></i> ${article.saved ? '从列表移除' : '删除文章'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        articleList.append(card);
+    });
+}
+
+// 更新文章分类
+function updateArticleCategory(index, categoryId) {
+    articles[index].categoryId = categoryId ? parseInt(categoryId) : null;
+    localStorage.setItem('uploadedArticles', JSON.stringify(articles));
+    displayArticleList();
+}
+
+// 更新文章标签
+function updateArticleTags(index, tagId) {
+    articles[index].tags = tagId ? tagId : null;
+    localStorage.setItem('uploadedArticles', JSON.stringify(articles));
+}
+
+// 更新文章首图
+function updateArticleCoverImage(index, coverImage) {
+    articles[index].coverImage = coverImage;
+    localStorage.setItem('uploadedArticles', JSON.stringify(articles));
+    displayArticleList();
+}
+
+// 上传首图
+function uploadCoverImage(index) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        // 验证文件类型
+        if (!file.type.startsWith('image/')) {
+            BlogAdmin.alertError('请选择图片文件');
+            return;
+        }
+        
+        // 验证文件大小（最大5MB）
+        if (file.size > 5 * 1024 * 1024) {
+            BlogAdmin.alertError('图片大小不能超过5MB');
+            return;
+        }
+        
+        // 上传图片
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        $.ajax({
+            url: '/admin/upload/image',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(result) {
+                if (result.code === 1) {
+                    const imageUrl = result.data.url;
+                    articles[index].coverImage = imageUrl;
+                    localStorage.setItem('uploadedArticles', JSON.stringify(articles));
+                    displayArticleList();
+                    BlogAdmin.alertOk('首图上传成功');
+                } else {
+                    BlogAdmin.alertError('上传失败：' + result.msg);
+                }
+            },
+            error: function() {
+                BlogAdmin.alertError('上传失败，请重试');
+            }
+        });
+    };
+    input.click();
+}
+
+// 保存文章
+function saveArticle(index) {
+    const article = articles[index];
+    
+    console.log('开始保存文章，index:', index, 'article:', article);
+    
+    if (!article.categoryId) {
+        alert('请选择分类');
+        return;
+    }
+    
+    // 使用原生 confirm
+    if (!confirm('确定要保存并发布这篇文章吗？\n\n文章标题：' + article.title + '\n发布后将跳转到文章管理页面。')) {
+        return;
+    }
+    
+    // 保存文章标题供后续使用
+    const articleTitle = article.title;
+    const articleId = article.articleId;
+    
+    const articleData = {
+        title: article.title,
+        summary: article.summary,
+        content: article.content || '',
+        categoryId: article.categoryId,
+        tags: article.tags || null,
+        coverImage: article.coverImage || null,
+        status: 1, // 发布状态
+        isComment: 1
+    };
+    
+    console.log('准备发送请求，articleData:', articleData);
+    
+    $.ajax({
+        url: '/admin/articles/' + articleId,
+        type: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify(articleData),
+        success: function(result) {
+            console.log('AJAX 成功返回，result:', result);
+            
+            if (result.code === 1) {
+                console.log('文章保存成功，准备跳转');
+                
+                // 从列表中移除已保存的文章
+                articles.splice(index, 1);
+                localStorage.setItem('uploadedArticles', JSON.stringify(articles));
+                console.log('已从列表移除文章，剩余文章数:', articles.length);
+                
+                // 设置跳转标记
+                sessionStorage.setItem('articlePublished', 'true');
+                sessionStorage.setItem('publishMessage', '文章《' + articleTitle + '》发布成功！');
+                console.log('已设置 sessionStorage');
+                
+                // 使用 alert 确认一下
+                alert('文章保存成功！即将跳转到文章管理页面...');
+                
+                // 立即跳转
+                console.log('准备跳转到: /admin/articles/manage');
+                window.location.href = '/admin/articles/manage';
+                
+            } else {
+                console.error('保存失败，result.msg:', result.msg);
+                alert('保存失败：' + result.msg);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('AJAX 请求失败');
+            console.error('xhr:', xhr);
+            console.error('status:', status);
+            console.error('error:', error);
+            console.error('responseText:', xhr.responseText);
+            alert('保存失败：' + (xhr.responseText || error));
+        }
+    });
+}
+
+// 移除文章
+function removeArticle(index) {
+    const article = articles[index];
+    
+    if (article.saved) {
+        // 已保存的文章，只从列表移除
+        BlogAdmin.confirm('确定要从列表中移除这篇文章吗？（文章不会被删除）', function() {
+            articles.splice(index, 1);
+            localStorage.setItem('uploadedArticles', JSON.stringify(articles));
+            displayArticleList();
+            BlogAdmin.alertOk('已从列表中移除');
+        });
+    } else {
+        // 未保存的草稿，删除文章
+        BlogAdmin.confirm('这篇文章还未保存，确定要删除吗？', function() {
+            BlogAdmin.delete('/admin/articles/' + article.articleId, function(result) {
+                articles.splice(index, 1);
+                localStorage.setItem('uploadedArticles', JSON.stringify(articles));
+                displayArticleList();
+                BlogAdmin.alertOk('文章已删除');
+            }, function() {
+                BlogAdmin.alertError('删除失败');
+            });
+        });
+    }
+}
+
+// 查看文章
+function viewArticle(articleId) {
+    window.open('/admin/preview/article/' + articleId, '_blank');
+}
+
+// 编辑文章
+function editArticle(articleId) {
+    window.location.href = '/admin/articles/' + articleId + '/edit';
+}
+
+// 跳转到文章列表
+function goToArticleList() {
+    window.location.href = '/admin/articles/manage';
+}
+</script>
+
+</body>
+</html>

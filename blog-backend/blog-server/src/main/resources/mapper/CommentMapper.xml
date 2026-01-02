@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="blog.mapper.CommentMapper">
+
+    <resultMap id="CommentVOMap" type="blog.vo.CommentVO">
+        <id property="id" column="id"/>
+        <result property="nickname" column="nickname"/>
+        <result property="email" column="email"/>
+        <result property="website" column="website"/>
+        <result property="avatar" column="avatar"/>
+        <result property="ip" column="ip"/>
+        <result property="content" column="content"/>
+        <result property="page" column="page"/>
+        <result property="blogId" column="blog_id"/>
+        <result property="title" column="title"/>
+        <result property="status" column="status"/>
+        <result property="notice" column="notice"/>
+        <result property="createTime" column="create_time"/>
+        <result property="parentCommentId" column="parentCommentId"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="blog.entity.Comment" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO comment (nickname, email, website, avatar, ip, content, page, status, notice, create_time, parentCommentId, blog_id)
+        VALUES (#{nickname}, #{email}, #{website}, #{avatar}, #{ip}, #{content}, #{page}, #{status}, #{notice}, NOW(), #{parentCommentId}, #{blogId})
+    </insert>
+
+    <update id="update" parameterType="blog.entity.Comment">
+        UPDATE comment
+        <set>
+            <if test="nickname != null">nickname = #{nickname},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="website != null">website = #{website},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
+            <if test="ip != null">ip = #{ip},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="page != null">page = #{page},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="notice != null">notice = #{notice},</if>
+            <if test="parentCommentId != null">parentCommentId = #{parentCommentId},</if>
+            <if test="blogId != null">blog_id = #{blogId},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <select id="selectAll" resultMap="CommentVOMap">
+        SELECT c.*, a.title as title
+        FROM comment c
+        LEFT JOIN article a ON c.blog_id = a.id
+        ORDER BY c.create_time DESCcomment
+    </select>
+
+    <select id="selectByBlogId" resultMap="CommentVOMap">
+        SELECT c.*, a.title
+        FROM comment c
+        LEFT JOIN article a ON c.blog_id = a.id
+        WHERE c.blog_id = #{blogId}
+        ORDER BY c.create_time DESC
+    </select>
+
+    <select id="selectByCondition" resultMap="CommentVOMap">
+        SELECT c.*, a.title
+        FROM comment c
+        LEFT JOIN article a ON c.blog_id = a.id
+        <where>
+            <if test="blogId != null">
+                AND c.blog_id = #{blogId}
+            </if>
+            <if test="page != null and page != ''">
+                AND c.page = #{page}
+            </if>
+            <if test="status != null">
+                AND c.status = #{status}
+            </if>
+            <if test="nickname != null and nickname != ''">
+                AND c.nickname LIKE CONCAT('%', #{nickname}, '%')
+            </if>
+        </where>
+        ORDER BY c.create_time DESC
+    </select>
+
+    <select id="getComments" resultMap="CommentVOMap">
+        SELECT c.*, a.title
+        FROM comment c
+        LEFT JOIN article a ON c.blog_id = a.id
+        <where>
+            <if test="blogId != null">
+                AND c.blog_id = #{blogId}
+            </if>
+            <if test="page != null and page != ''">
+                AND c.page = #{page}
+            </if>
+            AND c.status = true
+        </where>
+        ORDER BY c.create_time ASC
+    </select>
+    <select id="selectByParentId" resultType="blog.vo.CommentVO">
+        select c.*, a.title
+        from comment as c left join article as a on c.blog_id=a.id
+        where c.parentCommentId=#{parentCommentId}
+
+    </select>
+
+</mapper>

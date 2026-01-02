@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="blog.mapper.TagsMapper">
+
+    <update id="update">
+        UPDATE tags
+        <set>
+            <if test="name != null">
+                name = #{name},
+            </if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <select id="selectByIds" resultType="blog.entity.Tags">
+        SELECT id, name
+        FROM tags
+        WHERE id IN
+        <foreach item="id" collection="list" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+
+
+    <select id="selectTagListWithCount" resultType="blog.vo.TagsVO">
+        SELECT
+        t.*,
+        (
+        SELECT COUNT(*)
+        FROM article a
+        WHERE FIND_IN_SET(t.id, a.tags)
+        ) AS articleCount
+        FROM
+        tags t
+    </select>
+</mapper>

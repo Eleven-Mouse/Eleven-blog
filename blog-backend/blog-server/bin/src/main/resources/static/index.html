@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eleven Blog - API服务</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 600px;
+        }
+        h1 {
+            margin: 0 0 20px 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        p {
+            margin: 15px 0;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+        .api-links {
+            margin: 30px 0;
+        }
+        .api-link {
+            display: inline-block;
+            margin: 5px 10px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .api-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .status {
+            background: #4CAF50;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            display: inline-block;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Eleven Blog</h1>
+        <div class="status">✅ API服务运行中</div>
+        <p>欢迎访问 Eleven Blog 后端API服务！</p>
+        <p>这是一个基于 Spring Boot 构建的博客系统后端服务。</p>
+        
+        <div class="api-links">
+            <h3>🔗 API端点</h3>
+            <a href="/api/health" class="api-link">健康检查</a>
+            <a href="/api/articles" class="api-link">文章列表</a>
+            <a href="/api/categories" class="api-link">分类列表</a>
+            <a href="/api/tags" class="api-link">标签列表</a>
+            <a href="/api/friends" class="api-link">友链列表</a>
+        </div>
+
+        <div class="api-links">
+            <h3>🎯 访问方式</h3>
+            <p><strong>完整网站：</strong> <a href="http://localhost:3000" class="api-link">localhost:3000</a></p>
+            <p><strong>管理后台：</strong> <a href="/admin/login" class="api-link">管理后台登录</a></p>
+        </div>
+
+        <p style="font-size: 0.9em; margin-top: 30px; opacity: 0.8;">
+            © 2025 Eleven Blog - 基于 Spring Boot & React 构建
+        </p>
+    </div>
+</body>
+</html>

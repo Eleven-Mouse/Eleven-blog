@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      th:with="title=${isEdit ? '编辑文章' : '写文章'},active='article'">
+<header th:replace="admin/header::headerFragment(${title},${active})"></header>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+<style>
+    .CodeMirror {
+        min-height: 400px;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    .CodeMirror-scroll {
+        min-height: 400px;
+    }
+    .editor-toolbar {
+        border: 1px solid #e0e0e0;
+        border-bottom: none;
+        border-radius: 4px 4px 0 0;
+    }
+</style>
+<body>
+
+<div id="wrapper">
+    <div th:replace="admin/header::header-body"></div>
+    <div class="content-page">
+        <div class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h4 class="page-title" th:text="${isEdit ? '编辑文章' : '写文章'}">编辑文章</h4>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                <form id="articleForm" onsubmit="return false;">
+                                    <input type="hidden" id="articleId" th:value="${article != null ? article.id : ''}" />
+                                    <input type="hidden" id="isEdit" th:value="${isEdit}" />
+
+                                    <div class="form-group">
+                                        <label for="title">文章标题 <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="title" name="title"
+                                               th:value="${article != null ? article.title : ''}"
+                                               placeholder="请输入文章标题" required>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="categoryId">分类 <span class="text-danger">*</span></label>
+                                        <select class="form-control" id="categoryId" name="categoryId" required
+                                                style="padding-top: 5.8px; padding-bottom: 6px;color:grey">
+                                            <option value="">请选择分类</option>
+                                            <!-- 分类选项将通过JavaScript动态加载 -->
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="content">文章内容 <span class="text-danger">*</span></label>
+                                        <textarea id="content" name="content" style="display: none;"></textarea>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="summary">文章摘要</label>
+                                        <textarea class="form-control" id="summary" name="summary" rows="3"
+                                                  th:text="${article != null ? article.summary : ''}"
+                                                  placeholder="文章摘要（选填，不填则自动从正文提取）"></textarea>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="tags">标签</label>
+                                        <input type="text" class="form-control" id="tags" name="tags"
+                                               th:value="${article != null ? article.tags : ''}"
+                                               placeholder="标签，多个标签用逗号分隔"
+                                               readonly
+                                               onclick="toggleTagSelector()">
+                                        <small class="text-muted">
+                                            <i class="fa fa-info-circle"></i> 点击输入框选择标签
+                                        </small>
+                                        
+                                        <!-- 标签选择器 -->
+                                        <div id="tagSelector" style="display: none; margin-top: 10px; padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px;">
+                                            <div style="margin-bottom: 10px;">
+                                                <strong>选择标签：</strong>
+                                                <button type="button" class="btn btn-xs btn-default" onclick="toggleTagSelector()" style="float: right;">
+                                                    <i class="fa fa-times"></i> 关闭
+                                                </button>
+                                                <button type="button" class="btn btn-xs btn-warning" onclick="clearAllTags()" style="float: right; margin-right: 5px;">
+                                                    <i class="fa fa-eraser"></i> 清空
+                                                </button>
+    
+                                            </div>
+                                            <div id="availableTags" style="clear: both;">
+                                                <div class="text-center" style="padding: 20px; color: #999;">
+                                                    <i class="fa fa-spinner fa-spin"></i> 加载中...
+                                                </div>
+                                            </div>
+                                            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ddd;">
+                                                <strong>已选标签：</strong>
+                                                <div id="selectedTags" style="margin-top: 5px; min-height: 30px;">
+                                                    <span class="text-muted">暂无选择</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="coverImage">封面图片</label>
+                                        <div style="display: flex; align-items: flex-start; gap: 15px;">
+                                            <div style="flex: 1;">
+                                                <input type="text" class="form-control" id="coverImage" name="coverImage"
+                                                       th:value="${article != null ? article.coverImage : ''}"
+                                                       placeholder="可以输入图片URL，或点击上传图片按钮">
+                                                <small class="text-muted">
+                                                    <i class="fa fa-info-circle"></i> 支持两种方式：1) 直接输入图片URL地址 2) 点击"上传图片"按钮上传本地图片
+                                                </small>
+                                            </div>
+                                            <div style="display: flex; gap: 5px; flex-direction: column;">
+                                                <input type="file" id="coverImageFile" accept="image/*" style="display: none;">
+                                                <button type="button" class="btn btn-info" onclick="$('#coverImageFile').click()">
+                                                    <i class="fa fa-upload"></i> 上传图片
+                                                </button>
+                                                <button type="button" class="btn btn-success" onclick="previewCoverFromUrl()">
+                                                    <i class="fa fa-eye"></i> 预览
+                                                </button>
+                                                <button type="button" class="btn btn-danger" onclick="removeCoverImage()" id="removeCoverBtn" style="display: none;">
+                                                    <i class="fa fa-times"></i> 移除
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div id="coverPreview" style="margin-top: 10px; display: none;">
+                                            <img id="coverPreviewImg" src="" style="max-width: 300px; max-height: 200px; border: 1px solid #ddd; border-radius: 4px;">
+                                        </div>
+                                    </div>
+
+
+
+                                    <div class="form-group">
+                                        <label>
+                                            <input type="checkbox" id="allowComment" name="allowComment"
+                                                   th:checked="${article == null || article.isComment == 1}">
+                                            允许评论
+                                        </label>
+                                    </div>
+
+                                    <div class="form-group" style="margin-top: 30px;">
+                                        <button type="button" class="btn btn-primary" onclick="publishArticle()" title="保存并发布文章">
+                                            <i class="fa fa-send"></i>
+                                            <span>保存文章</span>
+                                        </button>
+                                        <button type="button" class="btn btn-warning" onclick="saveDraft()" title="保存为草稿，不公开发布">
+                                            <i class="fa fa-save"></i>
+                                            <span>保存草稿</span>
+                                        </button>
+                                        <a th:href="@{/admin/articles/manage}" class="btn btn-default" title="不保存，返回文章列表">
+                                            <i class="fa fa-list"></i> 返回列表
+                                        </a>
+                                    </div>
+                                    <div class="form-group" style="margin-top: 10px;">
+                                        <small class="text-muted">
+                                            <i class="fa fa-info-circle"></i> 
+                                            <strong>保存文章</strong>：保存并发布（状态为已发布）｜
+                                            <strong>保存草稿</strong>：保存为草稿状态｜
+                                            <strong>返回列表</strong>：不保存任何修改
+                                        </small>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:replace="admin/footer :: footer-content"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div th:replace="admin/footer :: footer"></div>
+<script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+<script th:inline="javascript">
+// 全局变量：存储所有可用标签
+var allTags = [];
+var selectedTagsList = [];
+
+// 等待页面加载完成后初始化编辑器
+$(document).ready(function() {
+    // 加载分类列表
+    loadCategories();
+    
+    // 加载标签列表
+    loadAllTags();
+
+    // 初始化 Markdown 编辑器
+    window.simplemde = new SimpleMDE({
+        element: document.getElementById("content"),
+        placeholder: "请输入文章内容，支持 Markdown 格式...\n\n支持以下格式：\n- **粗体** 或 __粗体__\n- *斜体* 或 _斜体_\n- # 标题\n- [链接](url)\n- ![图片](url)\n- > 引用\n- - 列表",
+        spellChecker: false,
+        autofocus: false,
+        toolbar: [
+            "bold", "italic", "heading", "|",
+            "quote", "unordered-list", "ordered-list", "|",
+            "link", "image", "|",
+            "preview", "side-by-side", "fullscreen", "|",
+            "guide"
+        ],
+        status: ["lines", "words", "cursor"],
+        renderingConfig: {
+            singleLineBreaks: false,
+            codeSyntaxHighlighting: true,
+        }
+    });
+
+    // 如果是编辑模式，加载文章内容
+    var articleContent = /*[[${article != null ? article.content : ''}]]*/ '';
+    if (articleContent) {
+        window.simplemde.value(articleContent);
+    }
+    
+    // 如果是编辑模式且有封面图片，显示预览
+    var coverImageUrl = $('#coverImage').val();
+    if (coverImageUrl) {
+        showCoverPreview(coverImageUrl);
+    }
+    
+    // 监听封面图片文件选择
+    $('#coverImageFile').on('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            uploadCoverImage(file);
+        }
+    });
+    
+    // 监听封面图片输入框的变化（手动输入URL时）
+    $('#coverImage').on('input', function() {
+        var url = $(this).val().trim();
+        if (url) {
+            $('#removeCoverBtn').show();
+        } else {
+            $('#removeCoverBtn').hide();
+            $('#coverPreview').hide();
+        }
+    });
+
+    console.log('Markdown 编辑器初始化成功');
+});
+
+// 加载分类列表
+function loadCategories() {
+    BlogAdmin.get('/admin/categories', function(result) {
+        if (result.data && result.data.length > 0) {
+            var categoryId = /*[[${article != null ? article.categoryId : null}]]*/ null;
+            var html = '<option value="">请选择分类</option>';
+            result.data.forEach(function(category) {
+                var selected = categoryId && category.id == categoryId ? 'selected' : '';
+                html += '<option value="' + category.id + '" ' + selected + '>' + category.name + '</option>';
+            });
+            $('#categoryId').html(html);
+        }
+    }, function(error) {
+        console.error('加载分类失败', error);
+    });
+}
+
+// 发布文章
+function publishArticle() {
+    saveArticle('publish');
+}
+
+// 保存草稿
+function saveDraft() {
+    saveArticle('draft');
+}
+
+// 上传封面图片
+function uploadCoverImage(file) {
+    // 验证文件类型
+    if (!file.type.startsWith('image/')) {
+        alert('只能上传图片文件');
+        return;
+    }
+    
+    // 验证文件大小
+    if (file.size > 10 * 1024 * 1024) {
+        alert('图片大小不能超过10MB');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    // 显示上传中
+    BlogAdmin.showLoading('上传中...');
+    
+    $.ajax({
+        url: '/admin/upload/image',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        dataType: 'json',
+        success: function(result) {
+            console.log('上传响应:', result);
+            console.log('响应类型:', typeof result);
+            console.log('响应code:', result.code);
+            console.log('响应code类型:', typeof result.code);
+            console.log('响应data:', result.data);
+            
+            BlogAdmin.hideLoading();
+            
+            // 兼容不同的响应格式
+            if (result && (result.code === 1 || result.code === '1')) {
+                console.log('上传成功，URL:', result.data.url);
+                $('#coverImage').val(result.data.url);
+                showCoverPreview(result.data.url);
+                BlogAdmin.success('图片上传成功');
+            } else {
+                console.error('上传失败，完整响应:', JSON.stringify(result));
+                alert('上传失败：' + (result && result.msg ? result.msg : '未知错误'));
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('上传请求失败:', xhr, status, error);
+            console.error('xhr.responseText:', xhr.responseText);
+            BlogAdmin.hideLoading();
+            alert('上传失败，请稍后重试。错误信息：' + error);
+        }
+    });
+}
+
+// 显示封面预览
+function showCoverPreview(url) {
+    $('#coverPreviewImg').attr('src', url);
+    $('#coverPreview').show();
+    $('#removeCoverBtn').show();
+}
+
+// 从URL预览封面图片
+function previewCoverFromUrl() {
+    var url = $('#coverImage').val().trim();
+    if (!url) {
+        alert('请先输入图片URL');
+        return;
+    }
+    
+    // 验证URL格式
+    if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('/')) {
+        alert('请输入有效的图片URL（以 http://, https:// 或 / 开头）');
+        return;
+    }
+    
+    // 显示预览
+    showCoverPreview(url);
+}
+
+// 移除封面图片
+function removeCoverImage() {
+    if (confirm('确定要移除封面图片吗？')) {
+        $('#coverImage').val('');
+        $('#coverPreview').hide();
+        $('#removeCoverBtn').hide();
+        $('#coverImageFile').val('');
+    }
+}
+
+// 保存文章
+function saveArticle(status) {
+    var title = $('#title').val().trim();
+    var categoryId = $('#categoryId').val();
+    var content = window.simplemde ? window.simplemde.value() : '';
+    var summary = $('#summary').val().trim();
+    var coverImage = $('#coverImage').val().trim();
+    var tags = $('#tags').val().trim();
+    var allowComment = $('#allowComment').is(':checked');
+    var articleId = $('#articleId').val();
+    var isEdit = $('#isEdit').val() === 'true';
+
+    // 草稿验证较为宽松，只需要标题
+    if (!title) {
+        alert('请输入文章标题');
+        return;
+    }
+
+    // 发布文章时需要完整验证
+    if (status === 'publish') {
+        if (!categoryId) {
+            alert('发布文章时必须选择分类');
+            return;
+        }
+
+        if (!content || content.trim() === '') {
+            alert('发布文章时必须输入文章内容');
+            return;
+        }
+    }
+
+    var data = {
+        title: title,
+        categoryId: categoryId ? parseInt(categoryId) : null,
+        content: content || '',
+        summary: summary || '',
+        coverImage: coverImage || '',
+        tags: tags || '',
+        isComment: allowComment ? 1 : 0,
+        status: status === 'publish' ? 1 : 0  // 1-已发布，0-草稿
+    };
+
+    var btn = status === 'publish' ? $('button').filter(function() {
+        return $(this).text().indexOf('发布') !== -1 || $(this).text().indexOf('保存') !== -1;
+    }).first() : $('button').filter(function() {
+        return $(this).text().indexOf('草稿') !== -1;
+    }).first();
+
+    var originalHtml = btn.html();
+    btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> 保存中...');
+
+    // 根据是否编辑模式选择不同的API
+    var url = isEdit ? '/admin/articles/' + articleId : '/admin/articles';
+    var method = isEdit ? 'put' : 'post';
+
+    BlogAdmin[method](url, data, function(result) {
+        var successMsg = '';
+        if (status === 'publish') {
+            successMsg = isEdit ? '文章更新并发布成功！' : '文章发布成功！';
+        } else {
+            if (isEdit) {
+                successMsg = '文章已保存为草稿！';
+            } else {
+                successMsg = '草稿保存成功！';
+            }
+        }
+        BlogAdmin.success(successMsg);
+        setTimeout(function() {
+            window.location.href = '/admin/articles/manage';
+        }, 1500);
+    }, function(error) {
+        btn.prop('disabled', false).html(originalHtml);
+        alert('保存失败：' + (error.msg || '请稍后重试'));
+    });
+}
+
+// ==================== 标签选择功能 ====================
+
+// 加载所有可用标签
+function loadAllTags() {
+    BlogAdmin.get('/admin/tags/list', function(result) {
+        if (result.data && result.data.length > 0) {
+            allTags = result.data;
+            renderAvailableTags();
+            
+            // 如果是编辑模式且有标签，初始化已选标签
+            var currentTags = $('#tags').val();
+            if (currentTags) {
+                selectedTagsList = currentTags.split(',').map(function(tag) {
+                    return tag.trim();
+                }).filter(function(tag) {
+                    return tag !== '';
+                });
+                updateSelectedTagsDisplay();
+            }
+        }
+    }, function(error) {
+        console.error('加载标签失败', error);
+    });
+}
+
+// 渲染可用标签列表
+function renderAvailableTags() {
+    if (allTags.length === 0) {
+        $('#availableTags').html('<div class="text-center" style="padding: 20px; color: #999;">暂无标签，请先到"标签管理"添加标签</div>');
+        return;
+    }
+    
+    var html = '';
+    allTags.forEach(function(tag) {
+        var isSelected = selectedTagsList.indexOf(tag.name) !== -1;
+        var btnClass = isSelected ? 'btn-primary' : 'btn-default';
+        var icon = isSelected ? '<i class="fa fa-check"></i> ' : '';
+        
+        html += '<button type="button" class="btn btn-sm ' + btnClass + '" ';
+        html += 'onclick="toggleTag(\'' + tag.name.replace(/'/g, "\\'") + '\')" ';
+        html += 'style="margin: 3px; background-color: ' + (isSelected ? tag.color : 'transparent') + '; ';
+        html += 'border-color: ' + tag.color + '; ';
+        html += 'color: ' + (isSelected ? '#fff' : tag.color) + ';">';
+        html += icon + tag.name;
+        html += '</button>';
+    });
+    
+    $('#availableTags').html(html);
+}
+
+// 切换标签选中状态
+function toggleTag(tagName) {
+    var index = selectedTagsList.indexOf(tagName);
+    
+    if (index === -1) {
+        // 添加标签
+        selectedTagsList.push(tagName);
+    } else {
+        // 移除标签
+        selectedTagsList.splice(index, 1);
+    }
+    
+    // 更新显示
+    updateSelectedTagsDisplay();
+    renderAvailableTags();
+    
+    // 更新输入框
+    $('#tags').val(selectedTagsList.join(','));
+}
+
+// 更新已选标签显示
+function updateSelectedTagsDisplay() {
+    if (selectedTagsList.length === 0) {
+        $('#selectedTags').html('<span class="text-muted">暂无选择</span>');
+        return;
+    }
+    
+    var html = '';
+    selectedTagsList.forEach(function(tagName) {
+        // 找到标签的颜色
+        var tag = allTags.find(function(t) { return t.name === tagName; });
+        var color = tag ? tag.color : '#667eea';
+        
+        html += '<span class="label" style="background-color: ' + color + '; margin-right: 5px; margin-bottom: 5px; display: inline-block; padding: 5px 10px;">';
+        html += tagName;
+        html += ' <a href="javascript:void(0)" onclick="toggleTag(\'' + tagName.replace(/'/g, "\\'") + '\')" style="color: #fff; margin-left: 5px;">';
+        html += '<i class="fa fa-times"></i></a>';
+        html += '</span>';
+    });
+    
+    $('#selectedTags').html(html);
+}
+
+// 显示/隐藏标签选择器
+function toggleTagSelector() {
+    var selector = $('#tagSelector');
+    if (selector.is(':visible')) {
+        selector.slideUp(200);
+    } else {
+        selector.slideDown(200);
+        // 重新渲染（以防标签列表有变化）
+        if (allTags.length > 0) {
+            renderAvailableTags();
+        }
+    }
+}
+
+// 清空所有标签
+function clearAllTags() {
+    if (selectedTagsList.length === 0) {
+        alert('当前没有选择任何标签');
+        return;
+    }
+    
+    if (confirm('确定要清空所有已选标签吗？')) {
+        selectedTagsList = [];
+        $('#tags').val('');
+        updateSelectedTagsDisplay();
+        renderAvailableTags();
+    }
+}
+
+// 启用手动输入
+function enableManualInput() {
+    $('#tags').prop('readonly', false).focus();
+    $('#tagSelector').slideUp(200);
+    alert('已启用手动输入模式。\n\n请注意：多个标签用英文逗号分隔，例如：Java,Spring Boot,MySQL');
+}
+
+// 监听手动输入的变化
+$('#tags').on('blur', function() {
+    // 如果手动输入了内容，更新已选标签列表
+    var tagsValue = $(this).val();
+    if (tagsValue) {
+        selectedTagsList = tagsValue.split(',').map(function(tag) {
+            return tag.trim();
+        }).filter(function(tag) {
+            return tag !== '';
+        });
+        updateSelectedTagsDisplay();
+        renderAvailableTags();
+    }
+    
+    // 重新设为只读
+    $(this).prop('readonly', true);
+});
+</script>
+</body>
+</html>

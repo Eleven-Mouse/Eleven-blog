@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Eleven Blog - 用户登录</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu"/>
+    <style type="text/css">
+        body {
+            background: linear-gradient(135deg, #f1b8a4 0%, #7c99ff 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .login-container {
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+        }
+        
+        .login-panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        .panel-heading {
+            background: linear-gradient(135deg, #667eea 0%, #d09292 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .panel-heading h3 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .panel-body {
+            padding: 40px 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-control {
+            height: 45px;
+            border-radius: 5px;
+            border: 1px solid #e0e0e0;
+            font-size: 15px;
+            padding: 10px 15px;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            outline: none;
+        }
+        
+        .btn-login {
+            height: 45px;
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-login:active {
+            transform: translateY(0);
+        }
+        
+        .checkbox label {
+            font-size: 14px;
+            color: #666;
+            font-weight: normal;
+        }
+        
+        .alert {
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .login-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .login-info strong {
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+<div class="login-container">
+    <div class="login-panel">
+        <div class="panel-heading">
+            <h3>Eleven Blog</h3>
+            <p style="margin: 10px 0 0 0; font-size: 14px; opacity: 0.9;">管理后台登录</p>
+        </div>
+        <div class="panel-body">
+            <div id="error-message" class="alert alert-danger" style="display: none;"></div>
+            
+            <form id="loginForm" onsubmit="return false;">
+                <div class="form-group">
+                    <input class="form-control" name="username" id="username" type="text" required
+                           placeholder="请输入用户名"/>
+                </div>
+                <div class="form-group">
+                    <input class="form-control" name="password" id="password" type="password" required
+                           placeholder="请输入密码"/>
+                </div>
+                <div class="form-group">
+                    <div class="checkbox">
+                        <label>
+                            <input id="remember" name="remember" type="checkbox"/> 记住我（7天内自动登录）
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <button class="btn-login" type="submit" id="loginBtn">登 录</button>
+                </div>
+            </form>
+            
+            <div class="login-info">
+                <strong>默认账号信息：</strong><br>
+                用户名：admin<br>
+                密码：123456
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
+<script>
+// 如果jQuery加载失败，尝试使用备用CDN
+if (typeof jQuery === 'undefined') {
+    document.write('<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"><\/script>');
+}
+</script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#loginForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            var username = $('#username').val().trim();
+            var password = $('#password').val().trim();
+            var remember = $('#remember').is(':checked');
+            
+            if (!username) {
+                showError('请输入用户名');
+                return false;
+            }
+            
+            if (!password) {
+                showError('请输入密码');
+                return false;
+            }
+            
+            var btn = $('#loginBtn');
+            btn.prop('disabled', true).text('登录中...');
+            
+            $.ajax({
+                url: '/admin/login',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    username: username,
+                    password: password,
+                    remember: remember
+                }),
+                success: function(result) {
+                    if (result && result.code === 1) {
+                        hideError();
+                        showSuccess('登录成功，正在跳转...');
+                        setTimeout(function() {
+                            window.location.href = '/admin/index';
+                        }, 500);
+                    } else {
+                        showError(result.msg || '登录失败');
+                        btn.prop('disabled', false).text('登 录');
+                    }
+                },
+                error: function(xhr) {
+                    var errorMsg = '登录失败，请稍后重试';
+                    if (xhr.responseJSON && xhr.responseJSON.msg) {
+                        errorMsg = xhr.responseJSON.msg;
+                    }
+                    showError(errorMsg);
+                    btn.prop('disabled', false).text('登 录');
+                }
+            });
+            
+            return false;
+        });
+        
+        function showError(msg) {
+            $('#error-message').text(msg).removeClass('alert-success').addClass('alert-danger').show();
+        }
+        
+        function showSuccess(msg) {
+            $('#error-message').text(msg).removeClass('alert-danger').addClass('alert-success').show();
+        }
+        
+        function hideError() {
+            $('#error-message').hide();
+        }
+        
+        // 回车登录
+        $('#password').on('keypress', function(e) {
+            if (e.which === 13) {
+                $('#loginForm').submit();
+            }
+        });
+    });
+</script>
+</body>
+</html>

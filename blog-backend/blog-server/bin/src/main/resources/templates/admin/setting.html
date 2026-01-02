@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org" th:with="title='系统设置',active='setting'">
+<header th:replace="admin/header::headerFragment(${title},${active})"></header>
+<body>
+
+<div id="wrapper">
+    <div th:replace="admin/header::header-body"></div>
+    <div class="content-page">
+        <div class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h4 class="page-title">系统设置</h4>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">网站基本信息</h4>
+                            </div>
+                            <div class="panel-body">
+                                <form id="siteForm" onsubmit="return false;">
+                                    <div class="form-group">
+                                        <label for="siteName">网站名称 <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="siteName" name="siteName" 
+                                               value="Eleven Blog" required>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="siteDesc">网站描述</label>
+                                        <textarea class="form-control" id="siteDesc" name="siteDescription" rows="3"
+                                                  placeholder="请输入网站描述">一个基于 Spring Boot 的博客系统</textarea>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="siteKeywords">网站关键词</label>
+                                        <input type="text" class="form-control" id="siteKeywords" name="siteKeywords"
+                                               placeholder="关键词，多个用逗号分隔" value="博客,技术,分享">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="siteUrl">网站地址</label>
+                                        <input type="url" class="form-control" id="siteUrl" name="siteUrl"
+                                               value="http://localhost:8080">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <button type="button" class="btn btn-primary" onclick="saveSiteSettings()">
+                                            <i class="fa fa-save"></i> 保存设置
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">功能设置</h4>
+                            </div>
+                            <div class="panel-body">
+                                <form id="featureForm" onsubmit="return false;">
+                                    <div class="form-group">
+                                        <label>评论功能</label>
+                                        <div>
+                                            <label class="radio-inline">
+                                                <input type="radio" name="allowComment" value="true" checked> 开启
+                                            </label>
+                                            <label class="radio-inline">
+                                                <input type="radio" name="allowComment" value="false"> 关闭
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="pageSize">每页文章数</label>
+                                        <select class="form-control" id="pageSize" name="pageSize">
+                                            <option value="5">5</option>
+                                            <option value="10" selected>10</option>
+                                            <option value="15">15</option>
+                                            <option value="20">20</option>
+                                            <option value="30">30</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>文章摘要长度</label>
+                                        <input type="number" class="form-control" name="summaryLength" 
+                                               value="200" min="50" max="500">
+                                        <small class="text-muted">自动截取文章内容作为摘要的字符数</small>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <button type="button" class="btn btn-primary" onclick="saveFeatureSettings()">
+                                            <i class="fa fa-save"></i> 保存设置
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">系统信息</h4>
+                            </div>
+                            <div class="panel-body">
+                                <table class="table table-bordered">
+                                    <tbody>
+                                        <tr>
+                                            <td width="30%"><strong>系统版本</strong></td>
+                                            <td>Eleven Blog v1.0</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Java 版本</strong></td>
+                                            <td>Java 17+</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Spring Boot 版本</strong></td>
+                                            <td>Spring Boot 3.x</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>数据库</strong></td>
+                                            <td>MySQL 8.0</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>模板引擎</strong></td>
+                                            <td>Thymeleaf 3.x</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:replace="admin/footer :: footer-content"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div th:replace="admin/footer :: footer"></div>
+<script>
+// 保存网站设置
+function saveSiteSettings() {
+    var data = {
+        siteName: $('#siteName').val().trim(),
+        siteDescription: $('#siteDesc').val().trim(),
+        siteKeywords: $('#siteKeywords').val().trim(),
+        siteUrl: $('#siteUrl').val().trim()
+    };
+    
+    if (!data.siteName) {
+        alert('请输入网站名称');
+        return;
+    }
+    
+    BlogAdmin.post('/admin/settings/site', data, function(result) {
+        BlogAdmin.success('网站设置保存成功');
+    });
+}
+
+// 保存功能设置
+function saveFeatureSettings() {
+    var data = {
+        allowComment: $('input[name="allowComment"]:checked').val() === 'true',
+        pageSize: parseInt($('#pageSize').val()),
+        summaryLength: parseInt($('input[name="summaryLength"]').val())
+    };
+    
+    BlogAdmin.post('/admin/settings/feature', data, function(result) {
+        BlogAdmin.success('功能设置保存成功');
+    });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org" th:with="title='个人设置',active='home'">
+<header th:replace="admin/header::headerFragment(${title},${active})"></header>
+<body>
+
+<div id="wrapper">
+    <div th:replace="admin/header::header-body"></div>
+    <div class="content-page">
+        <div class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h4 class="page-title">个人设置</h4>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">个人信息</h4>
+                            </div>
+                            <div class="panel-body">
+                                <form id="profileForm" onsubmit="return false;">
+                                    <div class="form-group">
+                                        <label for="username">用户名</label>
+                                        <input type="text" class="form-control" id="username" value="admin" disabled>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="nickname">昵称</label>
+                                        <input type="text" class="form-control" id="nickname" name="nickname" 
+                                               placeholder="请输入昵称" value="管理员">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="email">邮箱</label>
+                                        <input type="email" class="form-control" id="email" name="email"
+                                               placeholder="请输入邮箱" value="admin@example.com">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <button type="button" class="btn btn-primary" onclick="saveProfile()">
+                                            <i class="fa fa-save"></i> 保存信息
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">修改密码</h4>
+                            </div>
+                            <div class="panel-body">
+                                <form id="passwordForm" onsubmit="return false;">
+                                    <div class="form-group">
+                                        <label for="oldPassword">原密码 <span class="text-danger">*</span></label>
+                                        <input type="password" class="form-control" id="oldPassword" 
+                                               placeholder="请输入原密码" required>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="newPassword">新密码 <span class="text-danger">*</span></label>
+                                        <input type="password" class="form-control" id="newPassword"
+                                               placeholder="请输入新密码" required>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="confirmPassword">确认密码 <span class="text-danger">*</span></label>
+                                        <input type="password" class="form-control" id="confirmPassword"
+                                               placeholder="请再次输入新密码" required>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <button type="button" class="btn btn-primary" onclick="changePassword()">
+                                            <i class="fa fa-key"></i> 修改密码
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">关于页面内容</h4>
+                            </div>
+                            <div class="panel-body">
+                                <form id="aboutForm" onsubmit="return false;">
+                                    <div class="form-group">
+                                        <label for="aboutContent">关于页面内容（支持 Markdown）</label>
+                                        <textarea class="form-control" id="aboutContent" name="content" rows="10"
+                                                  placeholder="在这里编写关于页面的内容...">### 关于我
+
+这是一个基于 Spring Boot 的博客系统。
+
+### 技术栈
+
+- Spring Boot 3.x
+- MySQL 8.0
+- Thymeleaf
+- MyBatis
+
+### 联系方式
+
+Email: admin@example.com</textarea>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <button type="button" class="btn btn-primary" onclick="saveAbout()">
+                                            <i class="fa fa-save"></i> 保存关于页面
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:replace="admin/footer :: footer-content"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div th:replace="admin/footer :: footer"></div>
+<script>
+// 保存个人信息
+function saveProfile() {
+    var data = {
+        nickname: $('#nickname').val().trim(),
+        email: $('#email').val().trim()
+    };
+    
+    BlogAdmin.post('/admin/profile', data, function(result) {
+        BlogAdmin.success('个人信息保存成功');
+    });
+}
+
+// 修改密码
+function changePassword() {
+    var oldPassword = $('#oldPassword').val();
+    var newPassword = $('#newPassword').val();
+    var confirmPassword = $('#confirmPassword').val();
+    
+    if (!oldPassword) {
+        alert('请输入原密码');
+        return;
+    }
+    
+    if (!newPassword) {
+        alert('请输入新密码');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        alert('新密码长度不能少于6位');
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        alert('两次输入的密码不一致');
+        return;
+    }
+    
+    var data = {
+        oldPassword: oldPassword,
+        newPassword: newPassword
+    };
+    
+    BlogAdmin.post('/admin/password', data, function(result) {
+        BlogAdmin.success('密码修改成功，请重新登录');
+        setTimeout(function() {
+            window.location.href = '/admin/logout';
+        }, 1500);
+    });
+}
+
+// 保存关于页面
+function saveAbout() {
+    var content = $('#aboutContent').val().trim();
+    
+    if (!content) {
+        alert('请输入关于页面内容');
+        return;
+    }
+    
+    var data = {
+        content: content
+    };
+    
+    BlogAdmin.post('/admin/about', data, function(result) {
+        BlogAdmin.success('关于页面保存成功');
+    });
+}
+</script>
+</body>
+</html>

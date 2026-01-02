@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="headerFragment(title,active)">
+    <meta charset="utf-8"/>
+    <title><th:block th:text="${title!=null?title:'博客后台'}+' - Eleven Blog'"></th:block></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous"/>
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" crossorigin="anonymous"/>
+    <style>
+        /* 全局样式 */
+        body {
+            font-family: "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* 顶部导航栏 */
+        .topbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            z-index: 1000;
+        }
+        
+        .topbar-left {
+            float: left;
+            width: 240px;
+            height: 60px;
+            background: #2f353f;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+        }
+        
+        .topbar-left span {
+            font-size: 20px;
+            color: #fff;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .button-menu-mobile {
+            background: none;
+            border: none;
+            color: #333;
+            font-size: 20px;
+            padding: 10px 15px;
+            cursor: pointer;
+            margin-top: 10px;
+            margin-left: 20px;
+        }
+        
+        .navbar {
+            margin-bottom: 0;
+            border: none;
+            border-radius: 0;
+            background: transparent;
+            min-height: 60px;
+        }
+        
+        .navbar-right {
+            margin-right: 20px;
+            margin-top: 10px;
+        }
+        
+        .navbar-right .dropdown-toggle {
+            padding: 5px;
+        }
+        
+        .navbar-right img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #e0e0e0;
+        }
+        
+        /* 左侧菜单 */
+        .side-menu {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            width: 240px;
+            bottom: 0;
+            background: #2f353f;
+            overflow-y: auto;
+            z-index: 999;
+        }
+        
+        .side-menu ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .side-menu li {
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .side-menu li a {
+            display: block;
+            padding: 15px 20px;
+            color: #8a93a2;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .side-menu li a:hover,
+        .side-menu li.active a {
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            padding-left: 25px;
+        }
+        
+        .side-menu li a i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* 内容区域 */
+        .content-page {
+            margin-left: 240px;
+            margin-top: 60px;
+            min-height: calc(100vh - 60px);
+            background: #f5f5f5;
+        }
+        
+        .content {
+            padding: 20px;
+        }
+        
+        .page-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        /* 面板样式 */
+        .panel {
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+        
+        .panel-heading {
+            background: #fff;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 15px 20px;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+        
+        .panel-body {
+            background: #fff;
+            padding: 20px;
+            border-radius: 0 0 8px 8px;
+        }
+        
+        /* 统计卡片 */
+        .mini-stat {
+            padding: 20px;
+            border-radius: 8px;
+            color: white;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .mini-stat.bg-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .mini-stat.bg-purple {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .mini-stat.bg-success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .mini-stat.bg-primary {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        
+        .mini-stat-icon {
+            font-size: 48px;
+            opacity: 0.3;
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .mini-stat-info {
+            position: relative;
+            z-index: 2;
+            font-size: 18px;
+            font-weight: 500;
+        }
+        
+        .counter {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0 5px;
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            border-radius: 4px;
+            padding: 8px 16px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        /* 表格样式 */
+        .table {
+            background: white;
+        }
+        
+        .table thead th {
+            background: #f8f9fa;
+            border-bottom: 2px solid #e0e0e0;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        /* 表单样式 */
+        .form-control {
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+            padding: 10px 15px;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        /* 徽章 */
+        .badge {
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+        
+        .badge-primary {
+            background: #667eea;
+        }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .side-menu {
+                left: -240px;
+            }
+            .content-page {
+                margin-left: 0;
+            }
+            .topbar-left {
+                width: 60px;
+            }
+            .topbar-left span {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<div th:fragment="header-body">
+<div class="topbar">
+    <div class="topbar-left">
+        <a th:href="@{/admin/index}" style="display: flex; align-items: center; text-decoration: none;">
+            <div class="logo-icon">E</div>
+            <span>Eleven Blog</span>
+        </a>
+    </div>
+    <div class="navbar navbar-default" role="navigation">
+        <div class="container-fluid">
+                <div class="pull-left">
+                <button type="button" class="button-menu-mobile">
+                        <i class="fa fa-bars"></i>
+                    </button>
+                </div>
+
+                <ul class="nav navbar-nav navbar-right pull-right">
+                    <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        <img th:src="@{https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ32i5j846zORDtM9gI4aml3YBlwt3mc5JMUw&s}" alt="用户头像"/>
+                    </a>
+                        <ul class="dropdown-menu">
+                        <li><a href="/" target="_blank"><i class="fa fa-eye"></i> 查看网站</a></li>
+                        <li><a th:href="@{/admin/about/edit}"><i class="fa fa-user"></i> 个人设置</a></li>
+                        <li class="divider"></li>
+                        <li><a th:href="@{/admin/logout}"><i class="fa fa-sign-out"></i> 退出登录</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+<div class="side-menu">
+    <div class="sidebar-inner">
+        <div id="sidebar-menu">
+            <ul>
+                <li th:class="${active}=='home'?'active':''">
+                    <a th:href="@{/admin/index}"><i class="fa fa-dashboard"></i><span> 仪表盘 </span></a>
+                </li>
+                <li th:class="${active}=='article'?'active':''">
+                    <a th:href="@{/admin/articles/write}"><i class="fa fa-pencil-square-o"></i><span> 写文章 </span></a>
+                </li>
+                <li th:class="${active}=='article-list'?'active':''">
+                    <a th:href="@{/admin/articles/manage}"><i class="fa fa-list"></i><span> 文章管理 </span></a>
+                </li>
+                <li th:class="${active}=='moment'?'active':''">
+                <a th:href="@{/admin/moment/write}"><i class="fa fa-commenting"></i><span> 写动态 </span></a>
+            </li>
+                <li th:class="${active}=='moment-list'?'active':''">
+                    <a th:href="@{/admin/moment/manage}"><i class="fa fa-comments"></i><span> 动态管理 </span></a>
+                </li>
+                <li th:class="${active}=='category'?'active':''">
+                    <a th:href="@{/admin/category/manage}"><i class="fa fa-tags"></i><span> 分类管理 </span></a>
+                </li>
+
+                <li th:class="${active}=='tags'?'active':''">
+                    <a th:href="@{/admin/tags/manage}"><i class="fa fa-tag"></i><span> 标签管理 </span></a>
+                </li>
+
+                <li th:class="${active}=='comment'?'active':''">
+                    <a th:href="@{/admin/comment/manage}"><i class="fa fa-comment"></i><span> 评论设置 </span></a>
+                </li>
+
+                <li th:class="${active}=='markdown'?'active':''">
+                    <a th:href="@{/admin/upload/manage}"><i class="fa fa-file-text"></i><span> Markdown上传 </span></a>
+                </li>
+
+                <li th:class="${active}=='links'?'active':''">
+                    <a th:href="@{/admin/friendlink/manage}"><i class="fa fa-link"></i><span> 友链管理 </span></a>
+                </li>
+                <li th:class="${active}=='setting'?'active':''">
+                    <a th:href="@{/admin/settings}"><i class="fa fa-gear"></i><span> 系统设置 </span></a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+</div>
+</html>

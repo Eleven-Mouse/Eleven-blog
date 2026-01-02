@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="blog.mapper.CommentMapper">
+
+    <resultMap id="CommentVOMap" type="blog.vo.CommentVO">
+        <id property="id" column="id"/>
+        <result property="nickname" column="nickname"/>
+        <result property="email" column="email"/>
+        <result property="website" column="website"/>
+        <result property="logo" column="logo"/>
+        <result property="ip" column="ip"/>
+        <result property="content" column="content"/>
+        <result property="qq" column="qq"/>
+        <result property="page" column="page"/>
+        <result property="articleId" column="articleId"/>
+        <result property="articleTitle" column="articleTitle"/>
+        <result property="status" column="status"/>
+        <result property="emailNotify" column="emailNotify"/>
+        <result property="createTime" column="createTime"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="CommentVOMap">
+        SELECT
+            c.id,
+            c.nickname,
+            c.email,
+            c.website,
+            c.logo,
+            c.ip,
+            c.content,
+            c.qq,
+            c.page,
+            c.article_id AS articleId,
+            a.title AS articleTitle,
+            c.status,
+            c.email_notify AS emailNotify,
+            c.create_time AS createTime,
+            c.update_time AS updateTime
+        FROM comment c
+        LEFT JOIN article a ON c.article_id = a.id
+        ORDER BY c.create_time DESC
+    </select>
+
+    <select id="selectByArticleId" resultMap="CommentVOMap">
+        SELECT
+            c.id,
+            c.nickname,
+            c.email,
+            c.website,
+            c.logo,
+            c.ip,
+            c.content,
+            c.qq,
+            c.page,
+            c.article_id AS articleId,
+            a.title AS articleTitle,
+            c.status,
+            c.email_notify AS emailNotify,
+            c.create_time AS createTime,
+            c.update_time AS updateTime
+        FROM comment c
+        LEFT JOIN article a ON c.article_id = a.id
+        WHERE c.article_id = #{param1}
+        ORDER BY c.create_time DESC
+    </select>
+
+    <select id="selectByCondition" resultMap="CommentVOMap">
+        SELECT
+            c.id,
+            c.nickname,
+            c.email,
+            c.website,
+            c.logo,
+            c.ip,
+            c.content,
+            c.qq,
+            c.page,
+            c.article_id AS articleId,
+            a.title AS articleTitle,
+            c.status,
+            c.email_notify AS emailNotify,
+            c.create_time AS createTime,
+            c.update_time AS updateTime
+        FROM comment c
+        LEFT JOIN article a ON c.article_id = a.id
+        <where>
+            <if test="param1 != null">
+                AND c.article_id = #{param1}
+            </if>
+            <if test="param2 != null and param2 != ''">
+                AND c.page = #{param2}
+            </if>
+            <if test="param3 != null">
+                AND c.status = #{param3}
+            </if>
+            <if test="param4 != null and param4 != ''">
+                AND c.nickname LIKE CONCAT('%', #{param4}, '%')
+            </if>
+        </where>
+        ORDER BY c.create_time DESC
+    </select>
+    <select id="getComments" resultType="blog.vo.CommentVO">
+
+
+
+
+
+
+    </select>
+
+    <update id="update" parameterType="blog.entity.Comment">
+        UPDATE comment
+        <set>
+            <if test="nickname != null">nickname = #{nickname},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="website != null">website = #{website},</if>
+            <if test="logo != null">logo = #{logo},</if>
+            <if test="ip != null">ip = #{ip},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="qq != null">qq = #{qq},</if>
+            <if test="page != null">page = #{page},</if>
+            <if test="articleId != null">article_id = #{articleId},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="emailNotify != null">email_notify = #{emailNotify},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+</mapper>
+
+

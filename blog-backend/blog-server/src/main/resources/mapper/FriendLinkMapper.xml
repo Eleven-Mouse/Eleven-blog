@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="blog.mapper.FriendLinkMapper">
+
+    <!-- 更新友链 -->
+    <update id="update" parameterType="blog.entity.FriendLink">
+        UPDATE friend_link
+        SET name = #{name},
+            url = #{url},
+            description = #{description},
+            logo = #{logo},
+            status = #{status},
+            update_time = #{updateTime}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

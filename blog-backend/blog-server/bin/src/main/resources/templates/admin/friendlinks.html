@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org" th:with="title='友链管理',active='friendlinks'">
+<header th:replace="admin/header::headerFragment(${title},${active})"></header>
+<body>
+
+<div id="wrapper">
+    <div th:replace="admin/header::header-body"></div>
+    <div class="content-page">
+        <div class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h4 class="page-title">友链管理</h4>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h4 class="panel-title">友链列表</h4>
+                                    </div>
+                                    <div class="col-md-6 text-right">
+                                        <button class="btn btn-primary btn-sm" onclick="showAddModal()">
+                                            <i class="fa fa-plus"></i> 添加友链
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="panel-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover">
+                                        <thead>
+                                        <tr>
+                                            <th width="5%" class="text-center">序号</th>
+                                            <th width="8%" class="text-center">头像</th>
+                                            <th width="12%" class="text-center">昵称</th>
+                                            <th width="20%" class="text-center">描述</th>
+                                            <th width="20%" class="text-center">站点</th>
+                                            <th width="8%" class="text-center">是否公开</th>
+                                            <th width="8%" class="text-center">浏览次数</th>
+                                            <th width="13%" class="text-center">创建时间</th>
+                                            <th width="6%" class="text-center">操作</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody id="linkList">
+                                        <tr>
+                                            <td colspan="9" class="text-center" style="padding: 40px;">
+                                                <i class="fa fa-link" style="font-size: 48px; color: #ccc;"></i>
+                                                <p style="color: #999; margin-top: 15px;">暂无友链数据</p>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:replace="admin/footer :: footer-content"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加/编辑友链模态框 -->
+<div class="modal fade" id="linkModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="modalTitle">添加友链</h4>
+            </div>
+            <div class="modal-body">
+                <form id="linkForm" onsubmit="return false;">
+                    <input type="hidden" id="linkId" name="id">
+                    
+                    <div class="form-group">
+                        <label for="linkName">友链昵称 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="linkName" name="name" 
+                               placeholder="请输入友链昵称" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="linkUrl">链接地址 <span class="text-danger">*</span></label>
+                        <input type="url" class="form-control" id="linkUrl" name="url"
+                               placeholder="https://example.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="linkDesc">友链描述</label>
+                        <textarea class="form-control" id="linkDesc" name="description" rows="3"
+                                  placeholder="请输入友链描述（选填）"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="linkLogo">头像地址</label>
+                        <input type="url" class="form-control" id="linkLogo" name="logo"
+                               placeholder="https://example.com/avatar.jpg">
+                        <small class="text-muted">建议尺寸：100x100像素</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="linkStatus">状态</label>
+                        <select class="form-control" id="linkStatus" name="status">
+                            <option value="1">公开</option>
+                            <option value="0">私密</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="saveLink()">
+                    <i class="fa fa-save"></i> 保存
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="admin/footer :: footer"></div>
+<script>
+// 页面加载时获取友链列表
+$(document).ready(function() {
+    loadLinks();
+});
+
+// 加载友链列表
+function loadLinks() {
+    BlogAdmin.get('/admin/friendlinks', function(result) {
+        if (result.data && result.data.length > 0) {
+            var html = '';
+            result.data.forEach(function(link, index) {
+                html += '<tr>';
+                html += '<td class="text-center">' + (index + 1) + '</td>';
+                // 头像 - 圆角方形
+                html += '<td class="text-center">';
+                if (link.logo) {
+                    html += '<img src="' + link.logo + '" class="link-avatar" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';" />';
+                    html += '<div class="link-avatar-default" style="display: none;">' + (link.name.charAt(0).toUpperCase()) + '</div>';
+                } else {
+                    html += '<div class="link-avatar-default">' + (link.name.charAt(0).toUpperCase()) + '</div>';
+                }
+                html += '</td>';
+                html += '<td class="text-center">' + link.name + '</td>';
+                html += '<td class="text-center">' + (link.description || '-') + '</td>';
+                html += '<td class="text-center"><a href="' + link.url + '" target="_blank" style="word-break: break-all;">' + link.url + '</a></td>';
+                // 是否公开开关
+                var isPublicChecked = link.status === 1 ? 'checked' : '';
+                html += '<td class="text-center"><label class="switch"><input type="checkbox" ' + isPublicChecked + ' onchange="togglePublic(' + link.id + ', this.checked)"><span class="slider"></span></label></td>';
+                html += '<td class="text-center"><span class="badge badge-info">' + (link.viewCount || 0) + '</span></td>';
+                html += '<td class="text-center">' + formatDateTime(link.createTime) + '</td>';
+                html += '<td class="text-center">';
+                html += '<button class="btn btn-sm btn-info" onclick="editLink(' + link.id + ')" title="编辑"><i class="fa fa-edit"></i></button> ';
+                html += '<button class="btn btn-sm btn-danger" onclick="deleteLink(' + link.id + ')" title="删除"><i class="fa fa-trash"></i></button>';
+                html += '</td>';
+                html += '</tr>';
+            });
+            $('#linkList').html(html);
+        } else {
+            $('#linkList').html('<tr><td colspan="9" class="text-center" style="padding: 40px;"><i class="fa fa-link" style="font-size: 48px; color: #ccc;"></i><p style="color: #999; margin-top: 15px;">暂无友链数据</p></td></tr>');
+        }
+    }, function() {
+        console.log('加载友链列表失败');
+    });
+}
+
+// 显示添加模态框
+function showAddModal() {
+    resetForm();
+    $('#modalTitle').text('添加友链');
+    $('#linkModal').modal('show');
+}
+
+// 保存友链
+function saveLink() {
+    var id = $('#linkId').val();
+    var name = $('#linkName').val().trim();
+    var url = $('#linkUrl').val().trim();
+    var description = $('#linkDesc').val().trim();
+    var logo = $('#linkLogo').val().trim();
+    var status = parseInt($('#linkStatus').val());
+    
+    if (!name) {
+        alert('请输入友链昵称');
+        return;
+    }
+    
+    if (!url) {
+        alert('请输入链接地址');
+        return;
+    }
+    
+    var data = {
+        name: name,
+        url: url,
+        description: description,
+        logo: logo,
+        status: status
+    };
+    
+    if (id) {
+        // 更新
+        BlogAdmin.put('/admin/friendlinks/' + id, data, function(result) {
+            BlogAdmin.success('友链更新成功');
+            $('#linkModal').modal('hide');
+            loadLinks();
+        });
+    } else {
+        // 新增
+        BlogAdmin.post('/admin/friendlinks', data, function(result) {
+            BlogAdmin.success('友链添加成功');
+            $('#linkModal').modal('hide');
+            loadLinks();
+        });
+    }
+}
+
+// 编辑友链
+function editLink(id) {
+    BlogAdmin.get('/admin/friendlinks/' + id, function(result) {
+        if (result.data) {
+            var link = result.data;
+            $('#linkId').val(link.id);
+            $('#linkName').val(link.name);
+            $('#linkUrl').val(link.url);
+            $('#linkDesc').val(link.description || '');
+            $('#linkLogo').val(link.logo || '');
+            $('#linkStatus').val(link.status || 1);
+            $('#modalTitle').text('编辑友链');
+            $('#linkModal').modal('show');
+        }
+    });
+}
+
+// 切换公开状态
+function togglePublic(id, isPublic) {
+    BlogAdmin.get('/admin/friendlinks/' + id, function(result) {
+        if (result.data) {
+            var link = result.data;
+            link.status = isPublic ? 1 : 0;
+            BlogAdmin.put('/admin/friendlinks/' + id, link, function() {
+                BlogAdmin.success('公开状态已更新');
+            });
+        }
+    });
+}
+
+// 删除友链
+function deleteLink(id) {
+    if (confirm('确定要删除这个友链吗？')) {
+        BlogAdmin.delete('/admin/friendlinks/' + id, function(result) {
+            BlogAdmin.success('友链删除成功');
+            loadLinks();
+        });
+    }
+}
+
+// 重置表单
+function resetForm() {
+    $('#linkId').val('');
+    $('#linkName').val('');
+    $('#linkUrl').val('');
+    $('#linkDesc').val('');
+    $('#linkLogo').val('');
+    $('#linkStatus').val('1');
+}
+
+// 格式化日期时间
+function formatDateTime(dateTimeStr) {
+    if (!dateTimeStr) return '-';
+    var date = new Date(dateTimeStr);
+    var year = date.getFullYear();
+    var month = ('0' + (date.getMonth() + 1)).slice(-2);
+    var day = ('0' + date.getDate()).slice(-2);
+    var hours = ('0' + date.getHours()).slice(-2);
+    var minutes = ('0' + date.getMinutes()).slice(-2);
+    var seconds = ('0' + date.getSeconds()).slice(-2);
+    return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds;
+}
+</script>
+
+<style>
+/* 头像样式 - 圆角方形 */
+.link-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    object-fit: cover;
+    display: inline-block;
+}
+
+.link-avatar-default {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    background: #5fbeaa;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 20px;
+}
+
+/* 开关样式 */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #5fbeaa;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+</style>
+</body>
+</html>

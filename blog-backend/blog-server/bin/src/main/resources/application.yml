@@ -1,0 +1,99 @@
+# Spring Boot应用配置文件
+# 配置数据库连接、模板引擎、服务器端口等信息
+
+spring:
+    # 数据源配置
+    datasource:
+        url: jdbc:mysql://10.70.6.181:3306/eleven_blog?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useOldAliasMetadataBehavior=true&zeroDateTimeBehavior=convertToNull&autoCommit=true&rewriteBatchedStatements=true
+        # 数据库用户名
+        username: kunxing
+        # 数据库密码（请修改为你的MySQL密码）
+        password: Kx@123456
+        # MySQL驱动类名
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        # HikariCP连接池配置（使用默认值，避免配置冲突）
+        # hikari:
+        #     maximum-pool-size: 10
+        #     minimum-idle: 2
+        #     connection-timeout: 30000
+    servlet:
+        multipart:
+            max-file-size: 10MB
+            max-request-size: 50MB
+    # Thymeleaf模板引擎配置
+    thymeleaf:
+        # 检查模板位置
+        check-template-location: true
+        # 关闭模板缓存，开发环境下便于调试
+        cache: false
+        # 模板模式为HTML5
+        mode: HTML5
+        # 编码格式
+        encoding: UTF-8
+        # 模板文件后缀
+        suffix: .html
+        servlet:
+            # 内容类型
+            content-type: text/html
+        # 模板文件前缀路径
+        prefix: classpath:/templates/
+    
+    # 数据库初始化配置
+    sql:
+        init:
+            mode: never  # 由 Docker 初始化脚本处理
+            continue-on-error: false
+    
+    # MVC配置
+    mvc:
+        # 禁用favicon，避免浏览器自动请求产生405错误
+        favicon:
+            enabled: false
+
+# 服务器配置
+server:
+    # 应用启动端口
+    port: 8080
+    # Docker环境中需要监听所有网络接口
+    address: 0.0.0.0
+
+# MyBatis配置
+mybatis:
+    # mapper XML配置文件位置
+    mapper-locations: classpath:mapper/*.xml
+    # 实体类包路径（用于类型别名）
+    type-aliases-package: blog.pojo
+    configuration:
+        # 开启驼峰命名转换（数据库字段名user_name转换为Java属性名userName）
+        map-underscore-to-camel-case: true
+        # 打印SQL语句（开发环境）
+        log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# 日志配置
+logging:
+    level:
+        blog:
+            # mapper层日志级别为debug，便于SQL调试
+            mapper: debug
+            # service层日志级别为info
+            service: info
+            # controller层日志级别为info
+            controller: info
+
+# 文件上传配置
+file:
+    upload-dir: upload
+
+# Spring Boot Actuator - 健康检查
+management:
+    endpoints:
+        web:
+            exposure:
+                include: health,info
+    endpoint:
+        health:
+            show-details: when-authorized
+    health:
+        db:
+            enabled: true
+
