@@ -1,0 +1,13 @@
+@font-face {
+  font-family: "HYXJ";
+  src: url("./方正仿宋简体.TTF") format("truetype");
+}
+
+.HYXJ {
+  font-family: "HYXJ" !important;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
