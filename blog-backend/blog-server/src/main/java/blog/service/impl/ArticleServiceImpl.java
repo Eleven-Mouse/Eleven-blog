@@ -7,10 +7,9 @@ import blog.mapper.ArticleMapper;
 import blog.mapper.CommentMapper;
 import blog.mapper.TagsMapper;
 import blog.service.ArticleService;
+import blog.service.ViewCountService;
 import blog.vo.ArticleVO;
-import jakarta.validation.constraints.Null;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.annotations.Delete;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+
+import static org.springframework.beans.BeanUtils.copyProperties;
 
 /**
  * 文章服务实现类
@@ -35,13 +37,18 @@ public class ArticleServiceImpl implements ArticleService {
     @Autowired
     private CommentMapper commentMapper;
 
+    @Autowired
+    private ViewCountService viewCountService;
+
+
+
     @Override
     @Transactional
     public Long saveArticle(ArticleDTO articleDTO) {
         log.info("开始创建文章：{}", articleDTO.getTitle());
 
         Article article = new Article();
-        BeanUtils.copyProperties(articleDTO, article);
+        copyProperties(articleDTO, article);
 
 
         LocalDateTime now = LocalDateTime.now();
@@ -90,6 +97,17 @@ public class ArticleServiceImpl implements ArticleService {
         return article.getId();
     }
 
+    @Override
+    public List<Map<String, Object>> getContributionData()
+    {
+        return articleMapper.getContributionData();
+    }
+
+    @Override
+    public List<Map<String, Object>> getCategoryCount()
+    {
+        return articleMapper.getCategoryCount();
+    }
 
 
     @Override
@@ -190,12 +208,23 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public Article getArticleById(Long id)
+    public ArticleVO getArticleById(Long id)
     {
         log.info("查询文章详情，ID：{}", id);
 
 
-        return articleMapper.selectById(id);
+        ArticleDTO article = articleMapper.selectById(id);
+        ArticleVO vo = new ArticleVO();
+
+        BeanUtils.copyProperties(article,vo);
+        vo.setId(id);
+        viewCountService.incrementViewCount(id);
+
+        Integer viewCount = viewCountService.getViewCount(id);
+
+
+        vo.setViewCount(viewCount);
+        return vo;
     }
 
 
@@ -206,7 +235,7 @@ public class ArticleServiceImpl implements ArticleService {
         log.info("更新文章，ID：{}，标题：{}", id, articleDTO.getTitle());
 
         Article article = new Article();
-        BeanUtils.copyProperties(articleDTO, article);
+        copyProperties(articleDTO, article);
         article.setId(id);
 
         article.setUpdateTime(LocalDateTime.now());
@@ -214,7 +243,7 @@ public class ArticleServiceImpl implements ArticleService {
 
         if (article.getStatus() != null && article.getStatus() == 1)
         {
-            Article existingArticle = articleMapper.selectById(id);
+            ArticleDTO existingArticle = articleMapper.selectById(id);
             if (existingArticle != null && existingArticle.getStatus() != 1)
             {
                 article.setPublishTime(LocalDateTime.now());

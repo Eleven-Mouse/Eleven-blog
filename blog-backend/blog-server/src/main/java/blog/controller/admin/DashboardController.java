@@ -1,10 +1,7 @@
 package blog.controller.admin;
 
 import blog.result.Result;
-import blog.service.ArticleService;
-import blog.service.CommentService;
-import blog.service.FriendLinkService;
-import blog.service.MomentService;
+import blog.service.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -40,6 +38,8 @@ public class DashboardController {
     @Autowired
     private MomentService momentService;
 
+    @Autowired
+    private TagsService tagsService;
     /**
      * 获取统计数据
      */
@@ -59,7 +59,7 @@ public class DashboardController {
             Long commentCount = commentService.countTotal();
             statistics.put("commentCount", commentCount != null ? commentCount : 0);
 
-            // 动态总数（用作"附件"统计，因为可能没有专门的附件表）
+            // 动态总数
             Long momentCount = momentService.countTotal();
             statistics.put("momentCount", momentCount != null ? momentCount : 0);
 
@@ -75,6 +75,32 @@ public class DashboardController {
             log.error("获取统计数据失败", e);
             return Result.error("获取统计数据失败：" + e.getMessage());
         }
+    }
+
+
+
+
+    @GetMapping("/statistics/contribution")
+    @ApiOperation("获取文章贡献度热力图数据")
+    public Result<List<Map<String, Object>>> getContributionData() {
+        // 这里的 articleService.getContributionData() 调用上面的 SQL
+        // 返回格式建议：List<Map<String, Object>>
+        // 例如：[{date: "2024-01-01", count: 1}, {date: "2024-01-05", count: 3}]
+        List<Map<String, Object>> list = articleService.getContributionData();
+        return Result.success(list);
+    }
+
+    @GetMapping("/statistics/category")
+    @ApiOperation("获取分类文章统计")
+    public Result<List<Map<String, Object>>> getCategoryStatistics() {
+        return Result.success(articleService.getCategoryCount());
+    }
+
+
+    @GetMapping("/statistics/tag")
+    @ApiOperation("获取标签文章统计（旭日图）")
+    public Result<List<Map<String, Object>>> getTagStatistics() {
+        return Result.success(tagsService.getTagStatistics());
     }
 }
 

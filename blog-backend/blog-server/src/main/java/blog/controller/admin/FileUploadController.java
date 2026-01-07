@@ -25,7 +25,8 @@ import java.util.*;
 @Slf4j
 @RestController
 @RequestMapping("/admin/upload")
-@Api(tags = "文章上传管理")
+@Api(tags = "上传管理")
+@CrossOrigin
 public class FileUploadController
 {
     @Value("${file.upload-dir:upload}")
@@ -37,76 +38,47 @@ public class FileUploadController
     /**
      * 上传图片
      */
-    @PostMapping("/image")
+    @PostMapping("/images")
     @ApiOperation("上传图片")
 
-    public Result<Map<String, Object>> uploadImage(@RequestParam("file") MultipartFile file)
-    {
-        log.info("上传图片：{}", file.getOriginalFilename());
-
-
-        if (file.isEmpty())
-        {
-            return Result.error("文件不能为空");
+    public Result<String> uploadImage(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            return Result.error("上传文件不能为空");
         }
 
-
+        // 获取原始文件名
         String originalFilename = file.getOriginalFilename();
+        // 获取文件后缀 (例如 .jpg)
+        String suffix = originalFilename.substring(originalFilename.lastIndexOf("."));
+        // 生成唯一文件名 (防止重名覆盖)
+        String fileName = UUID.randomUUID().toString() + suffix;
+        // 确保 uploadDir 后面有分隔符
+        String folderPath = uploadDir.endsWith("/") || uploadDir.endsWith("\\") ? uploadDir : uploadDir + File.separator;
 
-        // 验证文件类型（只允许图片）
-        String extension = getFileExtension(originalFilename);
-        if (!isImageFile(extension))
-        {
-            return Result.error("只支持图片格式（jpg、jpeg、png、gif、webp）");
+        File dest = new File(folderPath + fileName);
+
+        // 检测目录是否存在
+        if (!dest.getParentFile().exists()) {
+            dest.getParentFile().mkdirs();
         }
 
-        // 验证文件大小（限制10MB）
-        if (file.getSize() > 10 * 1024 * 1024)
-        {
-            return Result.error("图片大小不能超过10MB");
-        }
-
-        try
-        {
-
-            String uuid = UUID.randomUUID().toString().replace("-", "");
-            String newFilename = uuid + "." + extension;
-
-            String datePath = new SimpleDateFormat("yyyy/MM/dd").format(new Date());
-
-            File dir = new File(uploadDir, datePath);
-            if (!dir.exists()) {
-                boolean success = dir.mkdirs();
-                log.info("文件夹不存在，创建结果: {}, 路径: {}", success, dir.getAbsolutePath());
-            }
-
-
-            // 3. 构建最终保存的文件对象，并使用绝对路径
-            File dest = new File(dir, newFilename).getAbsoluteFile();
-
-            log.info("准备保存文件到: {}", dest.getAbsolutePath());
-
+        try {
+            // 保存文件到本地
             file.transferTo(dest);
 
-            String url = "/" + datePath.replace("\\", "/") + "/" + newFilename;
+            // 返回可访问的图片 URL
+            // 注意：这里返回的是用于回显的 URL，你需要配置静态资源映射
+            // 假设你配置了 /images/** 映射到本地目录
+            String imageUrl = "http://localhost:8081/images/" + fileName;
 
+            log.info("图片上传成功: {}", imageUrl);
+            return Result.success(imageUrl);
 
-            Map<String, Object> result = new HashMap<>();
-            result.put("url", url);
-            result.put("filename", newFilename);
-            result.put("size", file.getSize());
-
-            log.info("图片上传成功：{}", url);
-            return Result.success(result);
-
-        }
-        catch (IOException e)
-        {
-            log.error("图片上传失败", e);
-            return Result.error("图片上传失败：" + e.getMessage());
+        } catch (IOException e) {
+            log.error("上传失败", e);
+            return Result.error("上传失败: " + e.getMessage());
         }
     }
-
 
     /**
      * 获取文件扩展名

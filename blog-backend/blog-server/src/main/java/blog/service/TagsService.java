@@ -6,6 +6,7 @@ import blog.vo.TagsVO;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public interface TagsService
@@ -17,4 +18,6 @@ public interface TagsService
     List<TagsVO> selectAll();
 
     void update(TagsDTO tagsDTO);
+
+    List<Map<String, Object>> getTagStatistics();
 }

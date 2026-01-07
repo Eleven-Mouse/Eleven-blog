@@ -122,21 +122,17 @@ public class ArticleController {
     {
         log.info("获取文章详情，ID：{}", id);
 
-        ArticleQueryDTO queryDTO = new ArticleQueryDTO();
         // 只获取已发布的文章
-        queryDTO.setStatus(1);
+        ArticleVO articleVO = new ArticleVO();
+        articleVO.setStatus(1);
 
-        List<ArticleVO> articles = articleService.listArticles(queryDTO);
-        ArticleVO article = articles.stream()
-                .filter(a -> a.getId().equals(id))
-                .findFirst()
-                .orElse(null);
+        articleVO = articleService.getArticleById(id);
 
-        if (article == null) {
+        if (articleVO == null) {
             return Result.error("文章不存在");
         }
 
-        return Result.success(article);
+        return Result.success(articleVO);
     }
 
     /**
@@ -185,5 +181,15 @@ public class ArticleController {
 
         return Result.success(articles);
     }
-
+    /**
+     * 增加文章浏览量
+     */
+    @PostMapping("/article/{id}/view")
+    @ApiOperation("增加文章浏览量")
+    public Result<Void> incrementArticleView(@PathVariable Long id)
+    {
+        log.info("增加文章浏览量，ID：{}", id);
+        // TODO: 实现浏览量增加逻辑
+        return Result.success();
+    }
 }

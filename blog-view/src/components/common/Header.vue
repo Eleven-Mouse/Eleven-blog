@@ -43,6 +43,9 @@
             {{ category.name }}
           </el-menu-item>
         </el-sub-menu>
+        <el-menu-item index="/moment"
+          ><el-icon><WalletFilled /></el-icon>Moment</el-menu-item
+        >
         <el-menu-item index="/archive"
           ><el-icon><WalletFilled /></el-icon>Archive</el-menu-item
         >
@@ -132,32 +135,42 @@ watch(
   { immediate: true },
 )
 
-// 计算页面滚动进度
-const calculateScrollProgress = () => {
-  const windowHeight = window.innerHeight
-  const documentHeight = document.documentElement.scrollHeight
-  const scrollTop = window.pageYOffset || document.documentElement.scrollTop
-  const scrollableHeight = documentHeight - windowHeight
+const calculateScrollProgress = (e) => {
+  // 注意：这里我们通过 e.target 获取滚动的元素
+  const target = e.target
+  if (!target) return
+
+  const scrollTop = target.scrollTop
+  const scrollHeight = target.scrollHeight
+  const clientHeight = target.clientHeight
+
+  const scrollableHeight = scrollHeight - clientHeight
   const progress = scrollableHeight > 0 ? (scrollTop / scrollableHeight) * 100 : 0
+
   scrollProgress.value = Math.min(Math.max(progress, 0), 100)
 }
 
-// 监听滚动事件
-const handleScroll = () => {
-  calculateScrollProgress()
-}
+let scrollContainer = null
 
 onMounted(() => {
   loadCategories()
   // 监听页面滚动
-  window.addEventListener('scroll', handleScroll)
-  // 初始化计算一次
-  calculateScrollProgress()
+  // 注意：querySelector 前面的点 . 代表 class
+  scrollContainer = document.querySelector('.main-scroll-container')
+
+  // 2. 如果找到了，就手动添加原生事件监听
+  if (scrollContainer) {
+    scrollContainer.addEventListener('scroll', calculateScrollProgress)
+  } else {
+    console.warn('未找到滚动容器 .main-scroll-container')
+  }
 })
 
 onUnmounted(() => {
-  // 移除滚动监听
-  window.removeEventListener('scroll', handleScroll)
+  // 3. 组件销毁时，记得移除监听，防止内存泄漏
+  if (scrollContainer) {
+    scrollContainer.removeEventListener('scroll', calculateScrollProgress)
+  }
 })
 
 // 自动补全：根据输入关键字异步获取文章标题列表
@@ -199,8 +212,6 @@ const handleSelectArticle = (item) => {
   position: relative;
   display: flex;
   align-items: center;
-  height: 100%;
-  padding: 0 20px;
   background-color: transparent;
 }
 /* 针对输入框的焦点状态 */
@@ -263,7 +274,7 @@ const handleSelectArticle = (item) => {
 .header-wrapper {
   position: relative;
   width: 100%;
-  animation: slideDown 0.5s ease-out forwards;
+  animation: slideDown 0.3s ease-out forwards;
 }
 
 .scroll-progress {

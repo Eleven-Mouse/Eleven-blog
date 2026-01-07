@@ -11,7 +11,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 文章管理控制器
@@ -66,7 +70,7 @@ public class ArticleController {
         log.info("更新文章，ID：{}，数据：{}", id, articleDTO);
 
 
-        Article existingArticle = articleService.getArticleById(id);
+        ArticleVO existingArticle = articleService.getArticleById(id);
         if (existingArticle == null) {
             return Result.error("文章不存在");
         }
@@ -82,10 +86,6 @@ public class ArticleController {
 
 
 
-
-
-
-
     /**
      * 查询所有文章（简单查询，用于下拉列表等）
      */
@@ -98,27 +98,91 @@ public class ArticleController {
         return Result.success(articles);
     }
 
+
     /**
-     * 查询文章列表（带条件查询）
+     * 获取文章列表（支持分页）
      */
     @GetMapping("/list")
-    public Result<List<ArticleVO>> listArticles(ArticleQueryDTO queryDTO)
+    @ApiOperation("获取文章列表")
+    public Result<Map<String, Object>> getArticlesList(
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size)
     {
-        log.info("查询文章列表：{}", queryDTO);
-        List<ArticleVO> articles;
+        log.info("获取文章列表，分类ID：{}，分类名称：{}，关键词：{}，页码：{}，每页数量：{}", categoryId, category, keyword, page, size);
 
-        if (queryDTO == null || (queryDTO.getKeyword() == null && queryDTO.getStatus() == null))
-        {
-            articles = articleService.listAllArticles();
-        }
-        else
-        {
-            //根据条件查询动态
-            articles = articleService.listArticles(queryDTO);
-        }
+        try {
+            ArticleQueryDTO queryDTO = new ArticleQueryDTO();
+            if (keyword != null && !keyword.trim().isEmpty())
+            {
+                queryDTO.setKeyword(keyword);
+            }
+            // 只获取已发布的文章
+            queryDTO.setStatus(1);
 
-        return Result.success(articles);
+            List<ArticleVO> allArticles = articleService.listArticles(queryDTO);
+            log.info("从数据库获取到文章数量：{}", allArticles != null ? allArticles.size() : 0);
+
+            if (allArticles == null) {
+                allArticles = new ArrayList<>();
+            }
+
+            // 如果有分类ID，过滤分类
+            if (categoryId != null)
+            {
+                allArticles = allArticles.stream()
+                        .filter(article -> article.getCategoryId() != null && article.getCategoryId().equals(categoryId))
+                        .collect(Collectors.toList());
+            }
+
+            // 如果有分类名称，按分类名称过滤
+            if (category != null && !category.trim().isEmpty())
+            {
+                allArticles = allArticles.stream()
+                        .filter(article -> article.getCategoryName() != null && article.getCategoryName().equals(category))
+                        .collect(Collectors.toList());
+            }
+            // 手动分页
+            int total = allArticles.size();
+            int startIndex = (page - 1) * size;
+            int endIndex = Math.min(startIndex + size, total);
+
+            List<ArticleVO> articles = startIndex < total ?
+                    allArticles.subList(startIndex, endIndex) : new ArrayList<>();
+
+            // 构造分页结果
+            Map<String, Object> result = new HashMap<>();
+            result.put("data", articles);
+
+            Map<String, Object> pagination = new HashMap<>();
+            pagination.put("currentPage", page);
+            pagination.put("totalPage", (int) Math.ceil((double) total / size));
+            pagination.put("total", total);
+            pagination.put("size", size);
+            result.put("pagination", pagination);
+
+            log.info("返回文章列表，当前页：{}，总数：{}，实际返回：{}", page, total, articles.size());
+            return Result.success(result);
+
+        } catch (Exception e) {
+            log.error("获取文章列表失败", e);
+            // 返回空数据而不是错误，避免前端报错
+            Map<String, Object> result = new HashMap<>();
+            result.put("data", new ArrayList<>());
+
+            Map<String, Object> pagination = new HashMap<>();
+            pagination.put("currentPage", page);
+            pagination.put("totalPage", 0);
+            pagination.put("total", 0);
+            pagination.put("size", size);
+            result.put("pagination", pagination);
+
+            return Result.success(result);
+        }
     }
+
 
     /**
      * 获取最近文章
@@ -141,10 +205,10 @@ public class ArticleController {
      * 根据ID查询文章详情
      */
     @GetMapping("/{id}")
-    public Result<Article> getArticle(@PathVariable Long id)
+    public Result<ArticleVO> getArticleById(@PathVariable Long id)
     {
         log.info("查询文章详情，ID：{}", id);
-        Article article = articleService.getArticleById(id);
+        ArticleVO article = articleService.getArticleById(id);
         return Result.success(article);
     }
 

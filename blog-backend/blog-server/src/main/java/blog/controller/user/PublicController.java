@@ -42,19 +42,6 @@ import java.util.stream.Collectors;
 public class PublicController {
 
 
-    @Autowired
-    private ArticleService articleService;
-    /**
-     * 增加文章浏览量
-     */
-    @PostMapping("/article/{id}/view")
-    @ApiOperation("增加文章浏览量")
-    public Result<Void> incrementArticleView(@PathVariable Long id)
-    {
-        log.info("增加文章浏览量，ID：{}", id);
-        // TODO: 实现浏览量增加逻辑
-        return Result.success();
-    }
 
 
     /**

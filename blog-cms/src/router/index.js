@@ -1,55 +1,72 @@
 import { createRouter, createWebHistory } from "vue-router";
-
+import { useAuthStore } from "../store/auth";
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      path: "/login",
+      name: "login",
+      component: () => import("../views/Login.vue"),
+    },
+    {
       path: "/",
       name: "layout",
-      component: () => import("@/views/Layout.vue"),
+      component: () => import("../views/Layout.vue"),
       redirect: "/home",
+      meta: { requiresAuth: true },
       children: [
         {
           path: "home",
           name: "home",
-          component: () => import("@/views/Home.vue"),
+          component: () => import("../views/Home.vue"),
         },
         {
           path: "articlemgmt",
           name: "articlemgmt",
-          component: () => import("@/views/blog/article/ArticleMgmt.vue"),
+          component: () => import("../views/blog/article/ArticleMgmt.vue"),
         },
         {
           path: "writearticle",
           name: "writearticle",
-          component: () => import("@/views/blog/article/WriteArticle.vue"),
+          component: () => import("../views/blog/article/WriteArticle.vue"),
         },
         {
           path: "categorisemgmt",
           name: "categorisemgmt",
-          component: () => import("@/views/blog/categorise/CategoriseMgmt.vue"),
+          component: () =>
+            import("../views/blog/categorise/CategoriseMgmt.vue"),
         },
         {
           path: "commentmgmt",
           name: "commentmgmt",
-          component: () => import("@/views/blog/comment/CommentMgmt.vue"),
+          component: () => import("../views/blog/comment/CommentMgmt.vue"),
+        },
+        {
+          path: "writemoment",
+          name: "writemoment",
+          component: () => import("../views/blog/moments/WriteMoment.vue"),
+        },
+        {
+          path: "momentsmgmt",
+          name: "momentsmgmt",
+          component: () => import("../views/blog/moments/MomentsMgmt.vue"),
         },
         {
           path: "tagsmgmt",
           name: "tagsmgmt",
-          component: () => import("@/views/blog/tags/TagsMgmt.vue"),
+          component: () => import("../views/blog/tags/TagsMgmt.vue"),
         },
         {
           path: "upload",
           name: "upload",
-          component: () => import("@/views/blog/article/UploadArticle.vue"),
+          component: () => import("../views/blog/article/UploadArticle.vue"),
         },
 
         {
           // :id 表示这是一个动态参数
           path: "/article/edit/:id?",
           name: "EditArticle",
-          component: () => import("@/components/ArticleFormCard.vue"),
+          component: () => import("../components/ArticleFormCard.vue"),
           meta: { title: "发布/编辑文章" },
         },
       ],
@@ -66,5 +83,17 @@ const router = createRouter({
       return { top: 0, left: 0, behavior: "smooth" };
     }
   },
+});
+
+// 全局前置守卫
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore();
+
+  // 如果去的页面需要登录，且没有 Token
+  if (to.meta.requiresAuth && !authStore.accessToken) {
+    next("/login"); // 滚去登录
+  } else {
+    next(); // 放行
+  }
 });
 export default router;

@@ -1,28 +1,19 @@
 <template>
-  <div class="common-layout">
-    <el-container>
-      <el-header style="position: fixed; width: 100%; z-index: 1000">
-        <Header></Header>
-      </el-header>
-      <el-main>
-        <router-view />
-      </el-main>
-      <Footer></Footer>
-    </el-container>
-  </div>
+  <el-container style="height: 97vh">
+    <el-header style="height: 60px"> <Header></Header> </el-header>
+
+    <el-main
+      style="overflow-y: auto; display: block; justify-content: center"
+      class="main-scroll-container"
+    >
+      <router-view /> <Footer></Footer>
+    </el-main>
+  </el-container>
 </template>
 
 <script setup>
-import Footer from './components/common/Footer.vue'
 import Header from './components/common/Header.vue'
-import { onMounted } from 'vue'
-import { useThemeStore } from './stores/theme'
-
-const themeStore = useThemeStore()
-
-onMounted(() => {
-  themeStore.initTheme()
-})
+import Footer from '@/components/common/Footer.vue'
 </script>
 
 <style>
@@ -39,20 +30,17 @@ html[data-theme='dark']::before {
   z-index: 9999;
   transition: background-color 0.3s;
 }
-
 .el-header {
-  background-color: var(--header-bg-color);
-  backdrop-filter: blur(10px);
-  color: var(--app-text-color);
-  line-height: 40px;
-  border-bottom: 1px solid var(--header-border-color);
-  transition:
-    background-color 0.3s,
-    border-color 0.3s;
+  top: 0;
+  z-index: 9999;
+  background-color: white;
 }
-
 .el-main {
-  min-height: calc(100vh - 60px);
-
+  scrollbar-width: 0;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
 }
 </style>

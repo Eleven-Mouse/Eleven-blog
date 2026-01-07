@@ -1,6 +1,5 @@
 # Spring Boot应用配置文件
 # 配置数据库连接、模板引擎、服务器端口等信息
-
 spring:
     # 数据源配置
     datasource:
@@ -11,39 +10,27 @@ spring:
         password: 20469960
         # MySQL驱动类名
         driver-class-name: com.mysql.cj.jdbc.Driver
-        # HikariCP连接池配置（使用默认值，避免配置冲突）
-        # hikari:
-        #     maximum-pool-size: 10
-        #     minimum-idle: 2
-        #     connection-timeout: 30000
     servlet:
         multipart:
             max-file-size: 10MB
             max-request-size: 50MB
-    # Thymeleaf模板引擎配置
-    thymeleaf:
-        # 检查模板位置
-        check-template-location: true
-        # 关闭模板缓存，开发环境下便于调试
-        cache: false
-        # 模板模式为HTML5
-        mode: HTML5
-        # 编码格式
-        encoding: UTF-8
-        # 模板文件后缀
-        suffix: .html
-        servlet:
-            # 内容类型
-            content-type: text/html
-        # 模板文件前缀路径
-        prefix: classpath:/templates/
+jwt:
+    secret: "MySuperSecretKeyForBlogProjectThatIsVeryLongAndSecure123"
+    access-token-expiration: 1800000
+    refresh-token-expiration: 604800000
 
     # 数据库初始化配置
     sql:
         init:
             mode: never  # 由 Docker 初始化脚本处理
             continue-on-error: false
-
+    data:
+        redis:
+            host: 127.0.0.1
+            password: 123456
+            port: 6379
+            database: 1
+            connect-timeout: 10000ms
 
 
 # 服务器配置
@@ -75,6 +62,8 @@ logging:
             service: info
             # controller层日志级别为info
             controller: info
+        org.springframework.security: debug
+        org.springframework.web: debug
 
 # 文件上传配置
 file:
@@ -97,8 +86,8 @@ management:
 blog:
     owner:
         # 你的博主邮箱
-        email: your-email@example.com
+        email: 3331379576@qq.com
         # 你的博主昵称
-        nickname: 博主
+        nickname: 困醒
         # 你的博主头像URL
         avatar: https://example.com/your-avatar.png

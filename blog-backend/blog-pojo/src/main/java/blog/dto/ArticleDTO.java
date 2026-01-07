@@ -1,6 +1,5 @@
 package blog.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.io.Serializable;
@@ -18,7 +17,7 @@ public class ArticleDTO implements Serializable {
     /**
      * 文章标题
      */
-    @NotBlank(message = "文章标题不能为空")
+
     private String title;
 
     /**
@@ -58,6 +57,6 @@ public class ArticleDTO implements Serializable {
      */
     private Integer status;
 
-    private Integer setViewCount;
+    private Integer ViewCount;
 }
 

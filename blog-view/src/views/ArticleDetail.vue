@@ -3,28 +3,54 @@
     <div v-if="loading" class="loading-tip">文章加载中...</div>
     <div v-if="error" class="error-tip">{{ error }}</div>
 
-    <el-card v-if="article" class="article-content-card">
-      <div class="article-meta">
-        <span>发布于：{{ formattedCreateDate }}</span>
+    <div class="main-content-area">
+      <div class="center">
+        <el-card v-if="article" class="article-content-card">
+          <div class="article-meta">
+            <span>发布于：{{ formattedCreateDate }}</span>
+
+            <span>浏览量：{{ article.viewCount }}</span>
+          </div>
+          <MdPreview
+            editorId="preview-only"
+            :modelValue="article.content"
+            @onGetCatalog="onGetCatalog"
+            :headingId="(index) => `heading-${index}`"
+            :markedHeadingId="(index) => `heading-${index}`"
+          />
+        </el-card>
       </div>
-      <MdPreview
-        editorId="preview-only"
-        :modelValue="article.content"
-        @onGetCatalog="onGetCatalog"
-      />
-    </el-card>
+      <div class="sidebar">
+        <el-affix :offset="130" target=".main-content-area">
+          <div class="catalog-card">
+            <div class="catalog-title">目录导航</div>
+            <el-anchor :container="scrollContainer" :offset="70" v-if="catalogList.length > 0">
+              <el-anchor-link
+                v-for="item in catalogList"
+                :key="item.uniqueId"
+                :href="`#${item.uniqueId}`"
+                :title="item.text"
+                :class="`indent-level-${item.level}`"
+                @click.prevent
+              />
+            </el-anchor>
+            <div v-else class="empty-catalog">暂无目录</div>
+          </div>
+        </el-affix>
+      </div>
+    </div>
+    <el-divider></el-divider>
     <!-- 评论区 -->
     <CommentsCard v-if="article && article.id" :blog-id="article.id" class="comments-section" />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { fetchArticleById } from '@/api/article.js'
 import CommentsCard from '@/components/CommentsCard.vue'
 
-// 1. Import the new editor and its styles
 import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/preview.css'
 
@@ -32,14 +58,29 @@ const route = useRoute()
 const article = ref(null)
 const loading = ref(false)
 const error = ref(null)
-const headers = ref([]) // Used to store article headers for the TOC
+const catalogList = ref([])
+const scrollContainer = ref(null)
 
-// 2. Use the onGetCatalog event to get the table of contents
+// list 里的 text 就是现在正文里的实际 ID
 const onGetCatalog = (list) => {
-  headers.value = list
-}
+  catalogList.value = list.map((item, index) => ({
+    ...item,
+    // 这里绝对不要用 item.text，只用 index
+    uniqueId: `heading-${index}`,
+  }))
 
-// Computed property to format the date
+  nextTick(() => {
+    // 找到预览区域内所有的标题标签
+    const previewEl = document.querySelector('#preview-only .md-editor-preview')
+    if (previewEl) {
+      const headings = previewEl.querySelectorAll('h1, h2, h3, h4, h5, h6')
+      headings.forEach((el, index) => {
+        // 强制覆盖原来的 ID，改为 heading-0, heading-1...
+        el.setAttribute('id', `heading-${index}`)
+      })
+    }
+  })
+}
 const formattedCreateDate = computed(() => {
   if (article.value && article.value.createTime) {
     return new Date(article.value.createTime).toLocaleString()
@@ -47,8 +88,9 @@ const formattedCreateDate = computed(() => {
   return '未知日期'
 })
 
-// Fetch article data
 onMounted(async () => {
+  const el = document.querySelector('.main-scroll-container')
+  scrollContainer.value = el ? el : window
   const articleId = route.params.id
   if (!articleId) {
     error.value = '未找到文章ID'
@@ -57,7 +99,9 @@ onMounted(async () => {
 
   loading.value = true
   try {
-    article.value = await fetchArticleById(articleId)
+    const data = await fetchArticleById(articleId)
+    console.log('后端返回的文章详情:', data)
+    article.value = data || null
   } catch (err) {
     error.value = '加载文章失败，请稍后再试。'
     console.error(err)
@@ -68,51 +112,106 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.article-detail-container {
-  width: 1500px;
-  margin: 0 auto;
-  padding-top: 50px;
-  border: 0;
+.main-content-area {
+  width: 90vw;
+  display: flex;
+}
+.sidebar {
+  width: 200px;
+
+  align-items: flex-start;
+  top: 60px;
+  margin-left: auto;
+}
+.catalog-card {
+  max-height: calc(500px - 100px);
+  overflow-y: auto;
+  top: 60px;
+  border: #333;
+  scrollbar-width: 0;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
 }
 
 .article-content-card {
-  padding: 20px;
-  border-radius: 8px;
-  width: 860px;
-  margin: 20px auto;
+  width: 900px;
   background-color: var(--card-bg-color);
   box-shadow: none;
   border: 0;
   transition:
     background-color 0.3s,
     border-color 0.3s;
+  scroll-behavior: smooth;
+  padding-left: 245px;
+  animation: fadeIn 0.5s ease-out 0.3s forwards;
+  opacity: 0; /* 初始状态为透明 */
 }
 
 .article-meta {
   color: var(--app-text-color);
   float: inline-end;
-  margin-top: 20px;
   margin-left: 25px;
   box-shadow: none;
   border: 0;
   transition: color 0.3s;
 }
 
-.toc {
-  position: fixed;
-  left: 50px;
-  top: 120px;
-  width: 250px;
+.catalog-title {
+  font-weight: bold;
+  margin-bottom: 12px;
+  font-size: 16px;
+  padding-left: 10px;
+  border-left: 4px solid #389747;
 }
-
+/* 目录层级缩进样式 */
+:deep(.el-anchor__link) {
+  font-size: 14px;
+  line-height: 2;
+}
+.indent-level-1 {
+  padding-left: 0px;
+}
+.indent-level-2 {
+  padding-left: 15px;
+}
+.indent-level-3 {
+  padding-left: 30px;
+}
+.indent-level-4 {
+  padding-left: 45px;
+}
 .comments-section {
-  width: 800px;
-  margin: 20px auto;
+  width: 900px;
+  margin: 0 auto;
 }
 
-/* 保持 md-editor-v3 预览区域与卡片背景一致 */
 :deep(#preview-only .md-editor-preview),
 :deep(#preview-only .md-editor-preview-wrapper) {
   background-color: transparent !important;
+}
+:deep(.el-main) {
+  overflow: visible !important;
+}
+@media screen and (max-width: 900px) {
+  .right-sidebar {
+    display: none;
+  }
+
+  .main-content-area {
+    display: block;
+  }
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

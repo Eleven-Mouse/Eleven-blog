@@ -32,7 +32,7 @@ public class MomentController
         return Result.success();
     }
 
-    @GetMapping({"/list", "/"})
+    @GetMapping({"/list"})
     @ApiOperation("查询动态")
     public Result<List<MomentVO>> listMoment(
             @RequestParam(required = false) String keyword,

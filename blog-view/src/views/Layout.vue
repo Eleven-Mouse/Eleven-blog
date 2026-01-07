@@ -16,6 +16,8 @@ const route = useRoute()
 .el-main {
   display: flex;
   justify-content: center;
+  flex-direction: column;
+  align-items: center;
   font-family: Georgia, 'Times New Roman', Times, serif;
 }
 </style>

@@ -1,4 +1,4 @@
-import service from '@/utils/request';
+import request from "@/utils/request";
 
 /**
  * @description: 创建文章
@@ -6,9 +6,9 @@ import service from '@/utils/request';
  * @returns {Promise}
  */
 export function createArticle(data) {
-  return service({
-    url: '/admin/articles',
-    method: 'post',
+  return request({
+    url: "/articles",
+    method: "post",
     data,
   });
 }
@@ -20,9 +20,9 @@ export function createArticle(data) {
  * @returns {Promise}
  */
 export function updateArticle(id, data) {
-  return service({
-    url: `/admin/articles/${id}`,
-    method: 'put',
+  return request({
+    url: `/articles/${id}`,
+    method: "put",
     data,
   });
 }
@@ -32,9 +32,9 @@ export function updateArticle(id, data) {
  * @returns {Promise}
  */
 export function getAllArticles() {
-  return service({
-    url: '/admin/articles',
-    method: 'get',
+  return request({
+    url: "/articles",
+    method: "get",
   });
 }
 
@@ -43,10 +43,10 @@ export function getAllArticles() {
  * @param {object} params 查询参数
  * @returns {Promise}
  */
-export function getArticleList(params) {
-  return service({
-    url: '/admin/articles/list',
-    method: 'get',
+export function getArticlesList(params) {
+  return request({
+    url: "/articles/list",
+    method: "get",
     params,
   });
 }
@@ -57,9 +57,9 @@ export function getArticleList(params) {
  * @returns {Promise}
  */
 export function getRecentArticles(params) {
-  return service({
-    url: '/admin/articles/recent',
-    method: 'get',
+  return request({
+    url: "/articles/recent",
+    method: "get",
     params,
   });
 }
@@ -70,9 +70,9 @@ export function getRecentArticles(params) {
  * @returns {Promise}
  */
 export function getArticleById(id) {
-  return service({
-    url: `/admin/articles/${id}`,
-    method: 'get',
+  return request({
+    url: `/articles/${id}`,
+    method: "get",
   });
 }
 
@@ -82,9 +82,8 @@ export function getArticleById(id) {
  * @returns {Promise}
  */
 export function deleteArticleById(id) {
-  return service({
-    url: `/admin/articles/${id}`,
-    method: 'delete',
+  return request({
+    url: `/articles/${id}`,
+    method: "delete",
   });
 }
-

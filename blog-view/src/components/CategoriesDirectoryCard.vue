@@ -81,7 +81,6 @@ watch(
   padding: 20px 0;
   border-top: 1px solid var(--card-border-color, #3a3a3a);
   border-bottom: 1px solid var(--card-border-color, #3a3a3a);
-  margin: 40px 0;
 }
 @keyframes fadeIn {
   from {

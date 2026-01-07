@@ -83,7 +83,8 @@ const getArticles = async (page = 1) => {
 const handlePageChange = (page) => {
   getArticles(page)
   // 手动滚动到页面顶部
-  window.scrollTo({ top: 0, behavior: 'smooth' })
+  const container = document.querySelector('.main-scroll-container')
+  container.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 // 组件挂载时获取第一页数据
@@ -108,7 +109,6 @@ watch(
   margin-top: 60px;
   animation: fadeIn 0.5s ease-out 0.3s forwards;
   opacity: 0; /* 初始状态为透明 */
-
 }
 
 .hero-content h1 {

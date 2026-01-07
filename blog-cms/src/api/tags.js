@@ -1,4 +1,4 @@
-import service from '@/utils/request';
+import request from "@/utils/request";
 
 /**
  * @description: 创建标签
@@ -6,9 +6,9 @@ import service from '@/utils/request';
  * @returns {Promise}
  */
 export function createTag(data) {
-  return service({
-    url: '/admin/tags',
-    method: 'post',
+  return request({
+    url: "/tags",
+    method: "post",
     data,
   });
 }
@@ -19,9 +19,9 @@ export function createTag(data) {
  * @returns {Promise}
  */
 export function updateTag(data) {
-  return service({
-    url: '/admin/tags',
-    method: 'put',
+  return request({
+    url: "/tags",
+    method: "put",
     data,
   });
 }
@@ -33,9 +33,9 @@ export function updateTag(data) {
  * @returns {Promise}
  */
 export function updateTagById(id, data) {
-  return service({
-    url: `/admin/tags/${id}`,
-    method: 'put',
+  return request({
+    url: `/tags/${id}`,
+    method: "put",
     data,
   });
 }
@@ -45,9 +45,9 @@ export function updateTagById(id, data) {
  * @returns {Promise}
  */
 export function getAllTags() {
-  return service({
-    url: '/admin/tags/list',
-    method: 'get',
+  return request({
+    url: "/tags/list",
+    method: "get",
   });
 }
 
@@ -57,9 +57,8 @@ export function getAllTags() {
  * @returns {Promise}
  */
 export function deleteTagById(id) {
-  return service({
-    url: `/admin/tags/${id}`,
-    method: 'delete',
+  return request({
+    url: `/tags/${id}`,
+    method: "delete",
   });
 }
-

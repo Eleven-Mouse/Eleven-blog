@@ -1,4 +1,4 @@
-import service from '@/utils/request';
+import request from "@/utils/request";
 
 /**
  * @description: 更新评论公开状态
@@ -6,9 +6,9 @@ import service from '@/utils/request';
  * @returns {Promise}
  */
 export function updateCommentStatus(params) {
-  return service({
-    url: '/admin/comments/status',
-    method: 'put',
+  return request({
+    url: "/comments/status",
+    method: "put",
     params,
   });
 }
@@ -19,9 +19,9 @@ export function updateCommentStatus(params) {
  * @returns {Promise}
  */
 export function updateCommentNotice(params) {
-  return service({
-    url: '/admin/comments/notice',
-    method: 'put',
+  return request({
+    url: "/comments/notice",
+    method: "put",
     params,
   });
 }
@@ -32,9 +32,9 @@ export function updateCommentNotice(params) {
  * @returns {Promise}
  */
 export function deleteCommentById(id) {
-  return service({
-    url: `/admin/comments/${id}`,
-    method: 'delete',
+  return request({
+    url: `/comments/${id}`,
+    method: "delete",
   });
 }
 
@@ -44,12 +44,9 @@ export function deleteCommentById(id) {
  * @returns {Promise}
  */
 export function getComments(params) {
-  return service({
-    url: '/admin/comments',
-    method: 'get',
+  return request({
+    url: "/comments",
+    method: "get",
     params,
   });
 }
-
-
-

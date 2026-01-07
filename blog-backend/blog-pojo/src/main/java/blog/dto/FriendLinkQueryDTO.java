@@ -8,7 +8,6 @@ import lombok.*;
  * @author Eleven
  * @version 1.0
  */
-@Data
 @NoArgsConstructor
 @Getter
 @Setter

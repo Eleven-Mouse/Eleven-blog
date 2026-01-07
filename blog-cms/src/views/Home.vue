@@ -1,24 +1,19 @@
 <template>
   <div class="home">
-
-    <div class="main">
-      <div class="statisti-ccard">
+    <div class="statics">
+      <div>
         <StatisticCard />
+      </div>
+      <div class="medium">
+        <div class="category">
+          <CategoryPieChart />
+        </div>
+        <div class="tags">
+          <TagsSunburst />
+        </div>
       </div>
       <div class="heatmap-card">
         <HeatmapCard></HeatmapCard>
-      </div>
-      <div class="views-num-card">
-        <ViewsNumCard />
-      </div>
-    </div>
-
-    <div class="hot-list">
-      <div class="hot-article">
-        <HotArticle />
-      </div>
-      <div class="hot-tags">
-        <HotTags />
       </div>
     </div>
   </div>
@@ -29,47 +24,29 @@ export default {
 };
 </script>
 <script setup>
+import CategoryPieChart from "@/components/CategoryPieChart.vue";
 import HeatmapCard from "@/components/HeatmapCard.vue";
-import HotArticle from "@/components/HotArticle.vue";
-import HotTags from "@/components/HotTags.vue";
 import StatisticCard from "@/components/StatisticCard.vue";
-import ViewsNumCard from "@/components/ViewsNumCard.vue";
-
+import TagsSunburst from "@/components/TagsSunburst.vue";
 </script>
 <style scoped>
 .home {
-  width: 100%;
   display: flex;
+  margin: 20px;
+  height: 80%;
 }
-
-.el-col {
-  border-radius: 4px;
-}
-
-.grid-content {
-  border-radius: 4px;
-  min-height: 36px;
-}
-
-.hot-list {
-  display: grid;
-  padding-left: 80px;
-  float: inline-end;
-}
-.hot-tags {
-  padding-top: 30px;
-}
-.v-card {
-  height: 50px;
-}
-.main {
-  display: grid;
+.statics {
   width: 100%;
-  height: 100%;
-  padding-left: 50px;
 }
-
-.statisti-ccard {
-  display: contents;
+.category {
+  width: 50%;
+  margin-right: 10px;
+}
+.tags {
+  width: 50%;
+  margin-left: 10px;
+}
+.medium {
+  display: flex;
 }
 </style>

@@ -18,6 +18,7 @@ import java.awt.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -83,5 +84,11 @@ public class TagsServiceImpl implements TagsService
         tagsMapper.update(tags);
 
         log.info("标签更新成功：{}", tags.getName());
+    }
+
+    @Override
+    public List<Map<String, Object>> getTagStatistics()
+    {
+        return tagsMapper.getTagStatistics();
     }
 }

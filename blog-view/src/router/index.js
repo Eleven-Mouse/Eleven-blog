@@ -30,6 +30,11 @@ const router = createRouter({
           component: () => import('@/views/About.vue'),
         },
         {
+          path: 'moment',
+          name: 'moment',
+          component: () => import('@/views/Moment.vue'),
+        },
+        {
           path: 'friendlinks',
           name: 'friendLinks',
           component: () => import('@/views/FriendLinks.vue'),
@@ -50,12 +55,17 @@ const router = createRouter({
   ],
   // 路由切换时自动滚动到页面顶部
   scrollBehavior(to, from, savedPosition) {
-    // 如果有保存的位置（例如，使用浏览器的后退/前进按钮），则返回该位置
-    if (savedPosition) {
-      return savedPosition
-    } else {
-      // 否则，始终滚动到页面顶部
-      return { top: 0, left: 0, behavior: 'smooth' }
+    // 如果路径变了（从页面A跳到页面B），但没有锚点，才回到顶部
+    if (to.path !== from.path && !to.hash) {
+      const container = document.querySelector('.main-scroll-container')
+      if (container) {
+        container.scrollTop = 0
+      }
+    }
+
+    // 如果有锚点，我们什么都不做，让 el-anchor 自己去处理跳转
+    if (to.hash) {
+      return false // 返回 false 表示不干预滚动
     }
   },
 })

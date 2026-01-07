@@ -1,4 +1,4 @@
-import service from '@/utils/request';
+import request from "@/utils/request";
 
 /**
  * @description: 创建动态
@@ -6,9 +6,9 @@ import service from '@/utils/request';
  * @returns {Promise}
  */
 export function createMoment(data) {
-  return service({
-    url: '/admin/moment',
-    method: 'post',
+  return request({
+    url: "/moment",
+    method: "post",
     data,
   });
 }
@@ -19,9 +19,9 @@ export function createMoment(data) {
  * @returns {Promise}
  */
 export function getMomentList(params) {
-  return service({
-    url: '/admin/moment/list',
-    method: 'get',
+  return request({
+    url: "/moment/list",
+    method: "get",
     params,
   });
 }
@@ -32,9 +32,9 @@ export function getMomentList(params) {
  * @returns {Promise}
  */
 export function getMomentById(id) {
-  return service({
-    url: `/admin/moment/${id}`,
-    method: 'get',
+  return request({
+    url: `/moment/${id}`,
+    method: "get",
   });
 }
 
@@ -44,9 +44,9 @@ export function getMomentById(id) {
  * @returns {Promise}
  */
 export function deleteMomentById(id) {
-  return service({
-    url: `/admin/moment/${id}`,
-    method: 'delete',
+  return request({
+    url: `/moment/${id}`,
+    method: "delete",
   });
 }
 
@@ -57,10 +57,9 @@ export function deleteMomentById(id) {
  * @returns {Promise}
  */
 export function updateMomentById(id, data) {
-  return service({
-    url: `/admin/moment/${id}`,
-    method: 'put',
+  return request({
+    url: `/moment/${id}`,
+    method: "put",
     data,
   });
 }
-

@@ -97,4 +97,30 @@
             COALESCE(a.publish_time, a.create_time) DESC
     </select>
 
+    <select id="getContributionData" resultType="java.util.Map">
+        SELECT
+            DATE_FORMAT(publish_time, '%Y-%m-%d') as date,
+            COUNT(*) as count
+        FROM
+            article
+        WHERE
+            create_time >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR) -- 只查最近一年的
+        GROUP BY
+            date
+    </select>
+    <select id="getCategoryCount" resultType="java.util.Map">
+        SELECT
+        c.name AS name,
+        COUNT(a.id) AS value
+        FROM
+        article a
+        LEFT JOIN
+        category c ON a.category_id = c.id
+        GROUP BY
+        a.category_id
+
+
+
+    </select>
+
 </mapper>

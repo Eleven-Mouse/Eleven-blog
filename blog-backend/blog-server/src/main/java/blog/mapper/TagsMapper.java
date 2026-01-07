@@ -8,6 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface TagsMapper
@@ -30,4 +31,6 @@ public interface TagsMapper
     List<Tags> selectByIds(List<Long> ids);
 
     List<TagsVO> selectTagListWithCount();
+
+    List<Map<String, Object>> getTagStatistics();
 }

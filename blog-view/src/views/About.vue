@@ -1,6 +1,4 @@
-<script setup>
-import CommentsCard from '@/components/CommentsCard.vue'
-</script>
+<script setup></script>
 
 <template>
   <div class="about-container">
@@ -8,15 +6,12 @@ import CommentsCard from '@/components/CommentsCard.vue'
       <div class="about-header">
         <h3 class="title-asd">关于</h3>
       </div>
-      <div class="about-main">
-        
-      </div>
+      <div class="about-main"></div>
     </el-text>
   </div>
 </template>
 
 <style scoped>
-
 .about-container {
   width: 650px;
   padding: 20px 0;

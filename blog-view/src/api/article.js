@@ -66,14 +66,3 @@ export function incrementArticleView(id) {
   })
 }
 
-/**
- * 创建文章 (根据文档，这是一个通用的POST接口)
- * @param {object} data - 文章数据
- */
-export function createArticle(data) {
-  return request({
-    url: '/api/articles',
-    method: 'post',
-    data,
-  })
-}

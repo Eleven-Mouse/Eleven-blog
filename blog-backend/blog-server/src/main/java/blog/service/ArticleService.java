@@ -7,6 +7,7 @@ import blog.vo.ArticleVO;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 文章服务接口
@@ -40,7 +41,7 @@ public interface ArticleService {
      * @param id 文章ID
      * @return 文章详情
      */
-    Article getArticleById(Long id);
+    ArticleVO getArticleById(Long id);
 
 
     /**
@@ -58,4 +59,7 @@ public interface ArticleService {
     Long saveArticle(ArticleDTO articleDTO);
 
 
+    List<Map<String, Object>> getContributionData();
+
+    List<Map<String, Object>> getCategoryCount();
 }

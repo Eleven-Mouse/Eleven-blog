@@ -1,5 +1,6 @@
 package blog.service.impl;
 
+import blog.dto.ArticleDTO;
 import blog.dto.CommentDTO;
 import blog.entity.Article;
 import blog.entity.Comment;
@@ -125,7 +126,7 @@ public class CommentServiceImpl implements CommentService {
         {
             if(vo.getBlogId() != null)
             {
-                Article article = articleMapper.selectById(vo.getBlogId());
+                ArticleDTO article = articleMapper.selectById(vo.getBlogId());
                 if(article != null)
                 {
                     vo.setTitle(article.getTitle());

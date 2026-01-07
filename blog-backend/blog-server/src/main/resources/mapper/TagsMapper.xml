@@ -36,4 +36,22 @@
         FROM
         tags t
     </select>
+
+
+    <select id="getTagStatistics" resultType="java.util.Map">
+        SELECT
+        t.name AS name,
+        COUNT(a.id) AS value
+        FROM
+        tags t
+        JOIN
+        article a
+        ON
+        FIND_IN_SET(t.id, a.tags)
+        GROUP BY
+        t.id
+        ORDER BY
+        value DESC
+        LIMIT 20
+    </select>
 </mapper>
