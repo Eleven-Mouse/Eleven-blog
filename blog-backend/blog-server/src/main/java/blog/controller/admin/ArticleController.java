@@ -6,15 +6,15 @@ import blog.entity.Article;
 import blog.result.Result;
 import blog.service.ArticleService;
 import blog.vo.ArticleVO;
+import blog.vo.MomentVO;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -91,11 +91,27 @@ public class ArticleController {
      */
     @GetMapping
     @ApiOperation("查询所有文章")
-    public Result<List<ArticleVO>> getAllArticles()
+    public Result<PageInfo<ArticleVO>> getAllArticles(@RequestParam(defaultValue = "1") int page,
+                                                  @RequestParam(defaultValue = "10") int size)
     {
-        log.info("查询所有文章");
-        List<ArticleVO> articles = articleService.listAllArticles();
-        return Result.success(articles);
+        log.info("获取文章列表 - 第{}页，每页{}条", page, size);
+
+        try {
+            PageHelper.startPage(page, size, "publish_time desc");
+            List<ArticleVO> articlevo = articleService.listAllArticles();
+            PageInfo<ArticleVO> pageInfo = new PageInfo<>(articlevo);
+
+
+            log.info("查询成功，当前页数量：{}，总数量：{}", pageInfo.getSize(), pageInfo.getTotal());
+
+            return Result.success(pageInfo);
+
+        } catch (Exception e) {
+            log.error("获取动态列表异常", e);
+            // 发生异常时也返回空数组，保证前端不报错
+            return Result.success(new PageInfo<>(Collections.emptyList()));
+        }
+
     }
 
 
@@ -119,8 +135,6 @@ public class ArticleController {
             {
                 queryDTO.setKeyword(keyword);
             }
-            // 只获取已发布的文章
-            queryDTO.setStatus(1);
 
             List<ArticleVO> allArticles = articleService.listArticles(queryDTO);
             log.info("从数据库获取到文章数量：{}", allArticles != null ? allArticles.size() : 0);

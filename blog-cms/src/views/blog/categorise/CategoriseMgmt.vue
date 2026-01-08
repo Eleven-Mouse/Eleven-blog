@@ -1,6 +1,7 @@
 <template>
   <div>
     <el-card shadow="never" style="border-radius: 10px">
+      <el-button type="success" plain @click="handleAdd">新增分类</el-button>
       <el-table
         :data="categories"
         :cell-style="{ textAlign: 'center' }"
@@ -23,7 +24,7 @@
                 plain
                 size="small"
                 :icon="Edit"
-                @click="onEdit(row)"
+                @click="handleEdit(row)"
                 >编辑</el-button
               >
               <DeleteButton
@@ -36,58 +37,29 @@
         </el-table-column>
       </el-table>
 
-      <!-- 引入封装好的弹窗组件 -->
-      <EditDialog
-        ref="editDialogRef"
-        title="编辑分类"
+      <CommonDialog
+        ref="dialogRef"
         :loading="submitLoading"
-        @confirm="handleUpdate"
+        @success="getAllCategoriesList"
       />
     </el-card>
   </div>
 </template>
 <script setup>
 import { ref, onMounted } from "vue";
-import { getAllCategories } from "@/api/category";
+import { createCategory, getAllCategories } from "@/api/category";
 import DeleteButton from "@/components/common/DeleteButton.vue";
 import { deleteCategoryById } from "@/api/category";
-import EditDialog from "@/components/common/EditDialog.vue";
 import { updateCategory } from "@/api/category";
 import { ElMessage } from "element-plus";
 import { Edit } from "@element-plus/icons-vue";
+import CommonDialog from "@/components/common/CommonDialog.vue";
 
 const categories = ref([]);
-const editDialogRef = ref(null);
+const dialogRef = ref(null);
 const submitLoading = ref(false);
 
-// 1. 点击编辑按钮，调用子组件的 open 方法
-const onEdit = (row) => {
-  editDialogRef.value.open(row);
-};
-
-// 2. 接收子组件传回的数据，调用 API
-const handleUpdate = async (formData) => {
-  submitLoading.value = true;
-  try {
-    console.log("正在调用后端接口，更新数据：", formData);
-
-    // 调用真实的后端接口
-    await updateCategory(formData);
-    ElMessage.success("修改成功");
-
-    // 修改成功后，通知子组件关闭
-    editDialogRef.value.close();
-
-    // 刷新页面列表
-    getAllArticles();
-  } catch (error) {
-    console.error("更新失败", error);
-  } finally {
-    submitLoading.value = false;
-  }
-};
-
-const getAllArticles = async () => {
+const getAllCategoriesList = async () => {
   try {
     categories.value = await getAllCategories();
   } catch (error) {
@@ -97,7 +69,7 @@ const getAllArticles = async () => {
 };
 
 onMounted(async () => {
-  getAllArticles();
+  getAllCategoriesList();
 });
 
 const formatTime = (datetime) => {
@@ -112,6 +84,22 @@ const formatTime = (datetime) => {
 
 const handleDeleteSuccess = (deleteId) => {
   categories.value = categories.value.filter((item) => item.id !== deleteId);
+};
+
+const handleAdd = () => {
+  dialogRef.value.open(null, {
+    itemName: "分类",
+    addApi: createCategory,
+    updateApi: updateCategory,
+  });
+};
+
+const handleEdit = (row) => {
+  dialogRef.value.open(row, {
+    itemName: "分类",
+    addApi: createCategory,
+    updateApi: updateCategory,
+  });
 };
 </script>
 <style scoped></style>

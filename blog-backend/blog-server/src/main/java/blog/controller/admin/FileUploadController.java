@@ -69,10 +69,10 @@ public class FileUploadController
             // 返回可访问的图片 URL
             // 注意：这里返回的是用于回显的 URL，你需要配置静态资源映射
             // 假设你配置了 /images/** 映射到本地目录
-            String imageUrl = "http://localhost:8081/images/" + fileName;
+            String imageUrl = "/images/" + fileName;
 
             log.info("图片上传成功: {}", imageUrl);
-            return Result.success(imageUrl);
+            return new Result<>(1,"操作成功",imageUrl);
 
         } catch (IOException e) {
             log.error("上传失败", e);
@@ -91,16 +91,6 @@ public class FileUploadController
         return "";
     }
 
-    /**
-     * 判断是否为图片文件
-     */
-    private boolean isImageFile(String extension) {
-        return "jpg".equals(extension) ||
-               "jpeg".equals(extension) ||
-               "png".equals(extension) ||
-               "gif".equals(extension) ||
-               "webp".equals(extension);
-    }
 
     /**
      * 上传Markdown文件并自动创建文章

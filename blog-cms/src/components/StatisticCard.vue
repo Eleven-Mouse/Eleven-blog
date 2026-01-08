@@ -41,9 +41,8 @@ import {
   ChatLineRound,
   Picture,
   Link,
-} from "@element-plus/icons-vue"; // 引入需要的图标
+} from "@element-plus/icons-vue"; 
 import { getStatistics } from "@/api/dashboard";
-// 定义数据源，初始值为 0
 const rawData = ref({
   articleCount: 0,
   commentCount: 0,

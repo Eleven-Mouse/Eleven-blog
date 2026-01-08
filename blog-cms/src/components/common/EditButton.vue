@@ -3,7 +3,6 @@
     <el-button
       type="success"
       :icon="Edit"
-      :loading="loading"
       size="small"
       plain
       @click="handleEdit"

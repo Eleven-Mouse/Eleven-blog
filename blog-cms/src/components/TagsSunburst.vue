@@ -31,16 +31,16 @@ const initChart = (data) => {
 
     tooltip: {
       trigger: "item",
-      formatter: "{b} : {c} 篇 ({d}%)", 
+      formatter: "{b} : {c} 篇 ({d}%)",
     },
     legend: {
       top: "bottom",
-      type: "scroll", 
+      type: "scroll",
     },
     toolbox: {
       show: true,
       feature: {
-        saveAsImage: { show: true }, 
+        saveAsImage: { show: true },
       },
     },
     series: [
@@ -50,7 +50,7 @@ const initChart = (data) => {
         roseType: "radius",
 
         radius: ["15%", "75%"],
-        center: ["50%", "50%"], 
+        center: ["50%", "50%"],
         itemStyle: {
           borderRadius: 8,
           borderColor: "#fff",
@@ -65,7 +65,7 @@ const initChart = (data) => {
             fontWeight: "bold",
           },
         },
-  
+
         data: data,
       },
     ],
@@ -78,7 +78,6 @@ const fetchData = async () => {
   try {
     const data = await getTagStatistics();
     const list = data || [];
-
 
     initChart(list);
   } catch (error) {

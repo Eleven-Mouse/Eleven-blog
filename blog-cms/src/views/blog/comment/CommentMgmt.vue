@@ -54,7 +54,7 @@ import { getComments } from "@/api/comment";
 import { onMounted, ref } from "vue";
 import { deleteCommentById } from "@/api/comment";
 import DeleteButton from "@/components/common/DeleteButton.vue";
-
+const defaultAvatar = "src/assetsavatar.png";
 const comments = ref([]);
 
 // 加载和错误状态

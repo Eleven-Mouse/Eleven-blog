@@ -1,5 +1,6 @@
 <template>
   <el-card shadow="never" style="border-radius: 10px">
+    <el-button type="success" plain @click="handleAdd">新增标签</el-button>
     <el-table
       :data="tags"
       :cell-style="{ textAlign: 'center' }"
@@ -9,7 +10,7 @@
       <el-table-column type="index" label="id" />
       <el-table-column prop="name" label="标签名称">
         <template #default="{ row }">
-          <el-tag size="normal"> {{ row.name }} </el-tag></template
+          <el-tag> {{ row.name }} </el-tag></template
         >
       </el-table-column>
       <el-table-column prop="articleCount" label="关联文章数量">
@@ -30,7 +31,7 @@
               plain
               size="small"
               :icon="Edit"
-              @click="onEdit(row)"
+              @click="handleEdit(row)"
               >编辑</el-button
             >
             <DeleteButton
@@ -43,25 +44,23 @@
       </el-table-column>
     </el-table>
 
-    <!-- 引入封装好的弹窗组件 -->
-    <EditDialog
-      ref="editDialogRef"
-      title="编辑分类"
+    <CommonDialog
+      ref="dialogRef"
       :loading="submitLoading"
-      @confirm="handleUpdate"
+      @success="getTagsList"
     />
   </el-card>
 </template>
 <script setup>
-import { deleteTagById, updateTag } from "@/api/tags";
+import { createTag, deleteTagById, updateTag } from "@/api/tags";
 import { ref, onMounted } from "vue";
 import { getAllTags } from "@/api/tags";
 import { Edit } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
-import EditDialog from "@/components/common/EditDialog.vue";
 import DeleteButton from "@/components/common/DeleteButton.vue";
+import CommonDialog from "@/components/common/CommonDialog.vue";
 const tags = ref([]);
-const editDialogRef = ref(null);
+const dialogRef = ref(null);
 const submitLoading = ref(false);
 
 const getTagsList = async () => {
@@ -85,34 +84,24 @@ const formatTime = (datetime) => {
   });
 };
 
-// 1. 点击编辑按钮，调用子组件的 open 方法
-const onEdit = (row) => {
-  editDialogRef.value.open(row);
-};
-
-// 2. 接收子组件传回的数据，调用 API
-const handleUpdate = async (formData) => {
-  submitLoading.value = true;
-  try {
-    console.log("正在调用后端接口，更新数据：", formData);
-
-    // 调用真实的后端接口
-    await updateTag(formData);
-    ElMessage.success("修改成功");
-
-    // 修改成功后，通知子组件关闭
-    editDialogRef.value.close();
-
-    getTagsList();
-  } catch (error) {
-    console.error("更新失败", error);
-  } finally {
-    submitLoading.value = false;
-  }
-};
-
 const handleDeleteSuccess = (deleteId) => {
   tags.value = tags.value.filter((item) => item.id !== deleteId);
+};
+
+const handleAdd = () => {
+  dialogRef.value.open(null, {
+    itemName: "标签",
+    addApi: createTag,
+    updateApi: updateTag,
+  });
+};
+
+const handleEdit = (row) => {
+  dialogRef.value.open(row, {
+    itemName: "标签",
+    addApi: createTag,
+    updateApi: updateTag,
+  });
 };
 </script>
 <style scoped></style>

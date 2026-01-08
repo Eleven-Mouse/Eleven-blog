@@ -28,18 +28,20 @@ export function updateArticle(id, data) {
 }
 
 /**
- * @description: 查询所有文章（简单查询，用于下拉列表等）
+ * @description: 查询文章列表
+ * @param {object} params 查询参数
  * @returns {Promise}
  */
-export function getAllArticles() {
+export function getAllArticles(params) {
   return request({
     url: "/articles",
     method: "get",
+    params,
   });
 }
 
 /**
- * @description: 查询文章列表（带条件查询）
+ * @description: 查询文章列表
  * @param {object} params 查询参数
  * @returns {Promise}
  */

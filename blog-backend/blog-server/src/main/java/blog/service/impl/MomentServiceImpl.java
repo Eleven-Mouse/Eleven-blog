@@ -23,27 +23,6 @@ public class MomentServiceImpl implements MomentService
     @Autowired
     private MomentMapper momentMapper;
 
-    @Override
-    public List<MomentVO> listMoments(MomentQueryDTO momentQueryDTO)
-    {
-        log.info("根据条件查询动态");
-        List<MomentVO> moments;
-
-        //根据不同条件查询
-        if (momentQueryDTO.getKeyword() != null && !momentQueryDTO.getKeyword().trim().isEmpty())
-        {
-            moments = momentMapper.selectByKeyword(momentQueryDTO.getKeyword());
-        }
-        else if (momentQueryDTO.getStatus() != null)
-        {
-            moments = momentMapper.selectByStatus(momentQueryDTO.getStatus());
-        }
-        else
-        {
-            moments = momentMapper.selectAll();
-        }
-        return moments;
-    }
 
     @Override
     public List<MomentVO> listAllMoments()
@@ -62,7 +41,7 @@ public class MomentServiceImpl implements MomentService
 
         log.info("动态创建成功");
     }
-    
+
     @Override
     public MomentVO getMomentById(Long id)
     {
@@ -103,7 +82,7 @@ public class MomentServiceImpl implements MomentService
         log.info("动态更新成功，动态ID：{}，状态：{}", id, moment.getStatus() == 1 ? "已发布" : "草稿");
 
     }
-    
+
     @Override
     public Long countTotal()
     {

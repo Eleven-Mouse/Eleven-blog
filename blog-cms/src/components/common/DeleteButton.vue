@@ -24,7 +24,7 @@
   </div>
 </template>
 <script setup>
-import { ref, defineProps, defineEmits, error } from "vue";
+import { ref, defineProps, defineEmits } from "vue";
 import { Delete } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 

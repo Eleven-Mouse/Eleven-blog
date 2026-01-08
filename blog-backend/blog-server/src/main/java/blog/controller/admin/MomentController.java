@@ -5,11 +5,14 @@ import blog.dto.MomentQueryDTO;
 import blog.result.Result;
 import blog.service.MomentService;
 import blog.vo.MomentVO;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestController("adminMomentController")
@@ -32,30 +35,32 @@ public class MomentController
         return Result.success();
     }
 
-    @GetMapping({"/list"})
-    @ApiOperation("查询动态")
-    public Result<List<MomentVO>> listMoment(
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) Integer status)
-    {
-        log.info("查询动态列表：keyword={}, status={}", keyword, status);
+    /**
+     * 获取动态列表
+     */
+    @GetMapping
+    @ApiOperation("获取动态列表")
+    public Result<PageInfo<MomentVO>> getMoment(@RequestParam(defaultValue = "1") int page,
+                                                @RequestParam(defaultValue = "10") int size) {
+        log.info("获取动态列表 - 第{}页，每页{}条", page, size);
 
-        List<MomentVO> moments;
+        try {
+            PageHelper.startPage(page, size, "publish_time desc");
+            List<MomentVO> moments = momentService.listAllMoments();
+            PageInfo<MomentVO> pageInfo = new PageInfo<>(moments);
 
-        if ((keyword == null || keyword.isEmpty()) && status == null)
-        {
-            moments = momentService.listAllMoments();
+
+            log.info("查询成功，当前页数量：{}，总数量：{}", pageInfo.getSize(), pageInfo.getTotal());
+
+            return Result.success(pageInfo);
+
+        } catch (Exception e) {
+            log.error("获取动态列表异常", e);
+            // 发生异常时也返回空数组，保证前端不报错
+            return Result.success(new PageInfo<>(Collections.emptyList()));
         }
-        else
-        {
-            MomentQueryDTO momentQueryDTO = new MomentQueryDTO();
-            momentQueryDTO.setKeyword(keyword);
-            momentQueryDTO.setStatus(status);
-            moments = momentService.listMoments(momentQueryDTO);
-        }
-
-        return Result.success(moments);
     }
+
 
     @GetMapping("/{id}")
     @ApiOperation("根据ID查询动态")

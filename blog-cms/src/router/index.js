@@ -63,7 +63,6 @@ const router = createRouter({
         },
 
         {
-          // :id 表示这是一个动态参数
           path: "/article/edit/:id?",
           name: "EditArticle",
           component: () => import("../components/ArticleFormCard.vue"),

@@ -1,5 +1,10 @@
 <template>
   <el-card class="article-container" shadow="never" style="border-radius: 10px">
+    <SelectArticlesByCategory
+      v-model="pagination.categoryId"
+      placeholder="请选择分类"
+      @change="handleFilterChange"
+    />
     <div class="article-list">
       <div class="article-card-container">
         <el-table
@@ -85,11 +90,13 @@
         v-if="!loading && !error && articles.length > 0"
       >
         <el-pagination
-          layout="prev, pager, next"
+          v-model:current-page="pagination.page"
+          v-model:page-size="pagination.size"
           :total="pagination.total"
-          :page-size="pagination.size"
-          :current-page="pagination.currentPage"
-          @current-change="handlePageChange"
+          :page-sizes="[10, 20, 50]"
+          layout="total, prev, pager, next, jumper"
+          @size-change="getArticles"
+          @current-change="getArticles"
         />
       </div>
     </div>
@@ -100,20 +107,22 @@ import { ref, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
 import {
   deleteArticleById,
-  getAllArticles,
+  getArticlesList,
   updateArticle,
 } from "@/api/article";
 import DeleteButton from "@/components/common/DeleteButton.vue";
 import EditButton from "@/components/common/EditButton.vue";
 import { ElMessage } from "element-plus";
+import SelectArticlesByCategory from "@/components/SelectArticlesByCategory.vue";
 const route = useRoute();
 // 文章列表
 const articles = ref([]);
 // 分页信息
 const pagination = ref({
-  currentPage: 1,
+  page: 1,
   total: 0,
   size: 10,
+  categoryId: null,
 });
 
 // 加载和错误状态
@@ -121,14 +130,18 @@ const loading = ref(true);
 const error = ref(null);
 
 // 获取文章列表
-const getArticles = async (page = 1) => {
+const getArticles = async () => {
   loading.value = true;
   error.value = null;
   try {
-    const response = await getAllArticles();
-    articles.value = response || [];
-    pagination.value.total = response.length;
-    pagination.value.currentPage = page;
+    const params = {
+      page: pagination.value.page,
+      size: pagination.value.size,
+      categoryId: pagination.value.categoryId,
+    };
+    const data = await getArticlesList(params);
+    articles.value = data.data || [];
+    pagination.value.total = data.pagination.total;
   } catch (err) {
     error.value = "获取文章列表失败，请稍后再试。";
     console.error(err);
@@ -136,12 +149,9 @@ const getArticles = async (page = 1) => {
     loading.value = false;
   }
 };
-
-// 分页
-const handlePageChange = (page) => {
-  getArticles(page);
-  // 手动滚动到页面顶部
-  window.scrollTo({ top: 0, behavior: "smooth" });
+const handleFilterChange = () => {
+  pagination.value.page = 1;
+  getArticles();
 };
 // 组件挂载时获取第一页数据
 onMounted(() => {
@@ -153,6 +163,7 @@ watch(
   () => route.query.keyword,
   () => {
     // 每次搜索关键字变化时，从第一页重新请求
+    pagination.value.page = 1;
     getArticles(1);
   }
 );
@@ -183,6 +194,10 @@ const formatTags = (tags) => {
 
 const handleDeleteSuccess = (deleteId) => {
   articles.value = articles.value.filter((item) => item.id !== deleteId);
+  if (articles.value.length === 0 && pagination.value.page > 1) {
+    pagination.value.page--;
+    getArticles();
+  }
 };
 
 // 处理状态变更

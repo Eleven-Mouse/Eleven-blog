@@ -149,7 +149,7 @@ watch(
   },
 
   {
-    immediate: true, //立即执行
+    immediate: true,
     deep: true,
   }
 );
@@ -250,17 +250,35 @@ const handleUploadImage = async (files, callback) => {
 
           uploadImage(formData)
             .then((response) => {
-              console.log("后端返回的原始数据:", response);
-              // 关键点 2: 假设后端返回的数据结构是 { code: 200, data: { url: '...' } }
-              // 这里 resolve 只要返回那个 URL 字符串即可
-              // 直接判断 url 是否存在
-              if (response && response.url) {
-                // 这里的 response 就是你打印出来的那个包含 url 的对象
-                resolve("http://localhost:8081/upload" + response.url);
+              const BASE_URL = import.meta.env.VITE_APP_UPLOAD_URL;
+              let relativePath = null;
+
+              if (typeof response === "string") {
+                relativePath = response;
+              }
+              // 情况2: 路径在 data 属性里 (例如 { data: "/uploads/xxx.jpg" })
+              else if (response && response.data) {
+                relativePath = response.data;
+              }
+              // 情况3: 路径真的在 url 属性里 (你原本的写法)
+              else if (response && response.url) {
+                relativePath = response.url;
+              }
+
+              if (relativePath) {
+                // 拼接完整地址
+                // 如果 relativePath 已经是 http 开头，就不用拼 BASE_URL 了
+                const fullUrl = relativePath.startsWith("http")
+                  ? relativePath
+                  : BASE_URL + relativePath;
+
+                resolve(fullUrl);
               } else {
-                reject(new Error("返回结果中没有URL"));
+                console.error("无法解析图片路径，返回数据为:", response);
+                reject(new Error("上传成功但无法获取图片地址"));
               }
             })
+
             .catch((err) => {
               console.error("单个图片上传失败", err);
               reject(err);
@@ -269,12 +287,9 @@ const handleUploadImage = async (files, callback) => {
       })
     );
 
-    // 关键点 3: res 现在是一个 URL 字符串数组，例如 ["/2025/12/31/xxx.png"]
-    // 这正是编辑器需要的格式
     callback(res);
   } catch (error) {
     console.error("图片上传过程中出现错误:", error);
-    // 这里可以加一个全局提示，比如 el-message
   }
 };
 </script>
@@ -284,7 +299,7 @@ const handleUploadImage = async (files, callback) => {
   width: 100%;
   height: 100%;
 }
-/* 修复全屏编辑时的层级问题 */
+
 .md-editor {
   z-index: 999 !important;
 }

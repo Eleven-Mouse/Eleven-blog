@@ -20,7 +20,7 @@ export function createMoment(data) {
  */
 export function getMomentList(params) {
   return request({
-    url: "/moment/list",
+    url: "/moment",
     method: "get",
     params,
   });

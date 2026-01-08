@@ -13,11 +13,19 @@
           <template #default="{ row }">
             <el-image
               style="width: 80px; height: 80px; border-radius: 4px"
-              :src="row.image"
-              :preview-src-list="[row.image]"
+              :src="parseImages(row.image)[0]"
+              :preview-src-list="parseImages(row.image)"
               fit="cover"
               preview-teleported
             />
+            <el-badge
+              v-if="parseImages(row.image).length > 1"
+              :value="parseImages(row.image).length - 1"
+              class="item"
+              type="primary"
+              style="position: absolute"
+            >
+            </el-badge>
           </template>
         </el-table-column>
 
@@ -29,14 +37,6 @@
         <el-table-column label="操作">
           <template #default="{ row }">
             <span>
-              <el-button
-                type="success"
-                plain
-                size="small"
-                :icon="Edit"
-                @click="onEdit(row)"
-                >编辑</el-button
-              >
               <DeleteButton
                 :id="row.id"
                 :api-func="deleteMomentById"
@@ -46,42 +46,49 @@
           </template>
         </el-table-column>
       </el-table>
-
-      <!-- 引入封装好的弹窗组件 -->
-      <EditDialog
-        ref="editDialogRef"
-        title="编辑分类"
-        :loading="submitLoading"
-        @confirm="handleUpdate"
-      />
+      <div style="margin-top: 20px">
+        <el-pagination
+          v-model:current-page="pagination.page"
+          v-model:page-size="pagination.size"
+          :total="pagination.total"
+          :page-sizes="[10, 20, 50]"
+          layout="total, prev, pager, next, jumper"
+          @size-change="getMoments"
+          @current-change="getMoments"
+        />
+      </div>
     </el-card>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { Edit } from "@element-plus/icons-vue";
-import EditDialog from "@/components/common/EditDialog.vue";
 import { ElMessage } from "element-plus";
 import { deleteMomentById, getMomentList } from "@/api/moment";
 import DeleteButton from "@/components/common/DeleteButton.vue";
 const moments = ref([]);
 const loading = ref(false);
 const error = ref(null);
-const keyword = ref([]);
-const status = ref(1);
-const editDialogRef = ref(null);
-const submitLoading = ref(false);
+const BASE_URL = import.meta.env.VITE_APP_UPLOAD_URL;
+
+const pagination = ref({
+  page: 1,
+  size: 10,
+  total: 0,
+});
 const getMoments = async () => {
   loading.value = true;
   error.value = null;
+
   try {
     const params = {
-      keyword: keyword.value,
-      status: status.value,
+      page: pagination.value.page,
+      size: pagination.value.size,
     };
     const data = await getMomentList(params);
-    moments.value = data || [];
+    moments.value = data.list || [];
+
+    pagination.value.total = data.total || 0;
   } catch (error) {
     console.error("加载动态失败:", error);
     ElMessage.error("加载动态失败");
@@ -97,12 +104,21 @@ const formatTime = (datetime) => {
     day: "numeric",
   });
 };
-// 1. 点击编辑按钮，调用子组件的 open 方法
-const onEdit = (row) => {
-  editDialogRef.value.open(row);
-};
 const handleDeleteSuccess = (deleteId) => {
   moments.value = moments.value.filter((item) => item.id !== deleteId);
+};
+
+const parseImages = (imageStr) => {
+  if (!imageStr) return [];
+
+  const paths = imageStr.split(",");
+
+  return paths.map((path) => {
+    if (path.startsWith("http")) {
+      return path;
+    }
+    return BASE_URL + path;
+  });
 };
 onMounted(async () => {
   getMoments();

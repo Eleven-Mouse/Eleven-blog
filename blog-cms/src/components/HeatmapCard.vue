@@ -21,8 +21,7 @@ const currentYear = new Date().getFullYear();
 
 // 1. 初始化图表配置
 const initChart = (data) => {
-  // ECharts 需要的数据格式是二维数组: [['2024-01-01', 1], ['2024-01-02', 5]]
-  // 将后端数据转换格式
+
   const formattedData = data.map((item) => {
     return [item.date, item.count];
   });

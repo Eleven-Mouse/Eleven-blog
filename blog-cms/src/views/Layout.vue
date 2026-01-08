@@ -7,7 +7,7 @@
         <DashboardPanel />
       </el-aside>
       <el-main class="scroll-main" style="overflow-y: auto; height: 95%"
-        ><router-view
+        ><router-view :key="$route.fullPath"
       /></el-main>
     </el-container>
   </el-container>
@@ -18,10 +18,8 @@ export default {
 };
 </script>
 <script setup>
-import DashboardPanel from '@/components/common/DashboardPanel.vue';
-import HeaderPanel from '@/components/common/HeaderPanel.vue';
-
-
+import DashboardPanel from "@/components/common/DashboardPanel.vue";
+import HeaderPanel from "@/components/common/HeaderPanel.vue";
 </script>
 <style scoped>
 .scroll-main {

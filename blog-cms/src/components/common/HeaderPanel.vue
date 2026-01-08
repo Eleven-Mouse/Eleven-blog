@@ -18,7 +18,7 @@
       />
     </div>
 
-    <el-button style="width: 60px; height: 60px" @click="showClick" type="text">
+    <el-button style="width: 60px; height: 60px" @click="showClick">
       <el-dropdown
         ref="dropdown1"
         trigger="contextmenu"
@@ -102,7 +102,7 @@ const querySearchAsync = (queryString, cb) => {
 // 选择某个搜索建议后，跳转到文章详情，并清空搜索框
 const handleSelectArticle = (item) => {
   if (!item || !item.id) return;
-  router.push(`/article/${item.id}`);
+  router.push(`/article/edit/${item.id}`);
 
   nextTick(() => {
     searchInput.value = "";

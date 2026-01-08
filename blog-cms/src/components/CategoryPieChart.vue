@@ -20,7 +20,7 @@ const initChart = (data) => {
   const option = {
     tooltip: {
       trigger: "item",
-      formatter: "{b}: {c} ({d}%)", // 显示格式：分类名: 数量 (百分比)
+      formatter: "{b}: {c} ({d}%)",
     },
     legend: {
       bottom: "0%",
@@ -30,7 +30,7 @@ const initChart = (data) => {
       {
         name: "文章分类",
         type: "pie",
-        radius: ["30%", "70%"], // 内圆和外圆的大小，设为 ['0%', '70%'] 就是实心饼图
+        radius: ["30%", "70%"],
         avoidLabelOverlap: false,
         itemStyle: {
           borderRadius: 10,
@@ -51,7 +51,7 @@ const initChart = (data) => {
         labelLine: {
           show: false,
         },
-        // 这里的数据直接使用后端返回的 [{name: 'Java', value: 10}, ...]
+
         data: data,
       },
     ],
@@ -64,11 +64,6 @@ const fetchData = async () => {
   try {
     const data = await getCategoryStatistics();
     const list = data || [];
-
-    // 如果数据为空，可以给个占位，防止图表空白
-    if (list.length === 0) {
-      // 可选：显示暂无数据
-    }
 
     initChart(list);
   } catch (error) {

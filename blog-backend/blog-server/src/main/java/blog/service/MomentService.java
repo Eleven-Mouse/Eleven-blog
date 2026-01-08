@@ -11,18 +11,17 @@ import java.util.List;
 public interface MomentService
 {
 
-    List<MomentVO> listMoments(MomentQueryDTO momentQueryDTO);
 
     List<MomentVO> listAllMoments();
 
     void createMoment(MomentDTO momentDTO);
-    
+
     MomentVO getMomentById(Long id);
 
     void deleteMoment(Long id);
 
     void updateMoment(Integer id, MomentDTO momentDTO);
-    
+
     /**
      * 统计动态总数
      */
