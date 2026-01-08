@@ -2,7 +2,7 @@
   <div class="moment-container">
     <el-text class="mx-1">
       <div class="about-header">
-        <h3 class="title-asd">动态</h3>
+        <h1>动态</h1>
       </div>
     </el-text>
     <!-- 加载中状态 -->
@@ -30,7 +30,7 @@
               :preview-src-list="parseImages(moment.image)"
               fit="cover"
               lazy
-              class="moment-image"
+              style="height: 220px; border-radius: 6px"
             />
           </div>
         </el-card>
@@ -40,29 +40,33 @@
     <!-- 没有更多动态或初始空状态 -->
     <el-empty description="暂无动态" v-if="moments.length === 0 && !loading && !error" />
 
-    <!-- 加载更多按钮或底部加载提示 -->
-    <div class="load-more" v-if="moments.length > 0 && hasMore">
-      <el-button type="primary" :loading="loading" @click="loadMoreMoments" plain>
-        {{ loading ? '加载中...' : '加载更多' }}
-      </el-button>
-    </div>
-    <div class="no-more-data" v-else-if="moments.length > 0 && !hasMore">
-      <el-divider> <span>没有更多了</span></el-divider>
+    <div style="margin-top: 20px; display: flex; justify-content: center">
+      <el-pagination
+        v-model:current-page="pagination.page"
+        v-model:page-size="pagination.size"
+        :total="pagination.total"
+        :page-sizes="[10, 20, 50]"
+        layout="prev, pager, next"
+        @size-change="getMomentsList"
+        @current-change="getMomentsList"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { fetchMoments } from '@/api/moment'
-import { ElMessage } from 'element-plus' // 用于错误提示
+import { getMoments } from '@/api/moment'
+import { ElMessage } from 'element-plus'
 const moments = ref([])
 const loading = ref(false)
 const error = ref(null)
-const currentPage = ref(1)
-const pageSize = 10
-const hasMore = ref(true)
-
+const BASE_URL = import.meta.env.VITE_APP_UPLOAD_URL
+const pagination = ref({
+  page: 1,
+  size: 10,
+  total: 0,
+})
 // 格式化日期时间
 const formatDate = (datetimeString) => {
   if (!datetimeString) return ''
@@ -70,62 +74,42 @@ const formatDate = (datetimeString) => {
   return date.toLocaleString()
 }
 
-// 解析图片字符串（假设是逗号分隔）
-const parseImages = (imagesString) => {
-  if (!imagesString) return []
-  // 假设 images 字段是 "url1,url2,url3"
-  return imagesString
-    .split(',')
-    .map((url) => url.trim())
-    .filter((url) => url)
+const parseImages = (imageStr) => {
+  if (!imageStr) return []
+
+  const paths = imageStr.split(',')
+
+  return paths.map((path) => {
+    if (path.startsWith('http')) {
+      return path
+    }
+    return BASE_URL + path
+  })
 }
 
 // 获取动态数据
-const getMoments = async () => {
-  if (!hasMore.value && currentPage.value > 1) return
-  if (loading.value) return
-
+const getMomentsList = async () => {
   loading.value = true
   error.value = null
   try {
     const params = {
-      page: currentPage.value,
-      size: pageSize.value,
+      page: pagination.value.page,
+      size: pagination.value.size,
     }
-    const res = await fetchMoments(params)
-
-    const newMoments = res || []
-    if (currentPage.value === 1) {
-      moments.value = newMoments
-    } else {
-      moments.value = [...moments.value, ...newMoments]
-    }
-
-    if (newMoments.length < pageSize) {
-      hasMore.value = false
-    } else {
-      hasMore.value = true
-    }
+    const res = await getMoments(params)
+    moments.value = res.list || []
+    pagination.value.total = res.total || 0
   } catch (err) {
     error.value = '获取动态数据失败，请稍后再试。'
     ElMessage.error(error.value)
-    console.error('Failed to fetch moments:', err)
   } finally {
     loading.value = false
   }
 }
 
-// 加载更多动态
-const loadMoreMoments = () => {
-  if (hasMore.value && !loading.value) {
-    currentPage.value++
-    getMoments()
-  }
-}
-
 // 初始化加载
 onMounted(() => {
-  getMoments()
+  getMomentsList()
 })
 </script>
 

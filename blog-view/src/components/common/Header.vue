@@ -212,7 +212,6 @@ const handleSelectArticle = (item) => {
   position: relative;
   display: flex;
   align-items: center;
-  background-color: transparent;
 }
 /* 针对输入框的焦点状态 */
 .search-bar ::v-deep(.el-input__wrapper.is-focus) {
@@ -245,9 +244,12 @@ const handleSelectArticle = (item) => {
 
 .nav-menu .el-menu-item:hover,
 .nav-menu .el-sub-menu__title:hover {
-  background-color: transparent !important;
+  background-color: rgba(0, 0, 0, 0.1) !important;
 }
-
+/* 带有子菜单的标题悬停 */
+:deep(.el-sub-menu__title:hover) {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+}
 .github-link {
   margin-left: auto;
 }
@@ -282,7 +284,6 @@ const handleSelectArticle = (item) => {
   bottom: 0;
   left: 0;
   width: 100%;
-  z-index: 1001;
   border-radius: 0;
 }
 @keyframes slideDown {

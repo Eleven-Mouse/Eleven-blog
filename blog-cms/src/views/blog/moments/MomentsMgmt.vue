@@ -46,7 +46,7 @@
           </template>
         </el-table-column>
       </el-table>
-      <div style="margin-top: 20px">
+      <div style="margin-top: 20px; display: flex; justify-content: center">
         <el-pagination
           v-model:current-page="pagination.page"
           v-model:page-size="pagination.size"

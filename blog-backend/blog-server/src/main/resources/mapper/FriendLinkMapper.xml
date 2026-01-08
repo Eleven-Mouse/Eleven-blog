@@ -7,12 +7,24 @@
     <!-- 更新友链 -->
     <update id="update" parameterType="blog.entity.FriendLink">
         UPDATE friend_link
-        SET name = #{name},
-            url = #{url},
-            description = #{description},
-            logo = #{logo},
-            status = #{status},
-            update_time = #{updateTime}
+        <set>
+        <if test="name != null">
+            name = #{name},
+        </if>
+            <if test="url != null">
+                url = #{url},
+            </if>
+            <if test="description != null">
+                description = #{description},
+            </if>
+            <if test="logo != null">
+                logo = #{logo},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            update_time = NOW()
+        </set>
         WHERE id = #{id}
     </update>
 

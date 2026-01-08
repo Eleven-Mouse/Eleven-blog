@@ -41,7 +41,7 @@ public class TagsController
 
     @PutMapping
     @ApiOperation("修改标签")
-    public Result update(@RequestBody TagsDTO tagsDTO)
+    public Result updateTag(@RequestBody TagsDTO tagsDTO)
     {
         log.info("修改标签：{}", tagsDTO);
         try

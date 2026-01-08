@@ -22,7 +22,8 @@ import java.util.List;
 @RequestMapping("/admin/friendlinks")
 @Slf4j
 @ApiOperation("友链管理")
-public class AdminFriendLinkController {
+public class FriendLinkController
+{
 
     @Autowired
     private FriendLinkService friendLinkService;
@@ -61,10 +62,10 @@ public class AdminFriendLinkController {
     /**
      * 更新友链
      */
-    @PutMapping("/{id}")
-    @ApiOperation("根据id更新友链")
-    public Result<Void> updateFriendLink(@PathVariable Long id, @RequestBody FriendLinkDTO friendLinkDTO) {
-        log.info("更新友链，ID：{}", id);
+    @PutMapping
+    @ApiOperation("更新友链")
+    public Result updateFriendLink(@RequestBody FriendLinkDTO friendLinkDTO) {
+        log.info("更新友链：{}", friendLinkDTO);
 
         try
         {
@@ -78,7 +79,7 @@ public class AdminFriendLinkController {
                 return Result.error("友链地址不能为空");
             }
 
-            friendLinkService.updateFriendLink(id, friendLinkDTO);
+            friendLinkService.updateFriendLink(friendLinkDTO);
             return Result.success("友链更新成功");
         }
         catch (RuntimeException e)

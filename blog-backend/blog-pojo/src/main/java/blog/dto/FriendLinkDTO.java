@@ -16,6 +16,10 @@ import lombok.*;
 public class FriendLinkDTO {
 
     /**
+     * 友链ID
+     */
+    private Long id;
+    /**
      * 昵称
      */
     private String name;

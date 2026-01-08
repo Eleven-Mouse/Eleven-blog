@@ -1,19 +1,23 @@
-<script setup></script>
-
 <template>
   <div class="about-container">
     <el-text class="mx-1">
       <div class="about-header">
-        <h3 class="title-asd">关于</h3>
+        <h1>关于</h1>
+        <h2>| Eleven-blog |</h2>
       </div>
-      <div class="about-main"></div>
+      <div class="about-main">
+        <my-bot-ui />
+      </div>
     </el-text>
   </div>
 </template>
+<script setup>
+import MyBotUi from '@/components/MyBotUI/MyBotUi.vue'
+</script>
 
 <style scoped>
 .about-container {
-  width: 650px;
+  width: 900px;
   padding: 20px 0;
   border-top: 1px solid var(--card-border-color, #3a3a3a);
   border-bottom: 1px solid var(--card-border-color, #3a3a3a);
@@ -36,7 +40,7 @@
   margin-bottom: 40px;
 }
 .about-main {
-  width: 100px;
-  height: 100px;
+  width: 900px;
+  height: 1000px;
 }
 </style>

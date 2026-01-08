@@ -1,11 +1,11 @@
 <template>
   <div class="directory-card">
-    <h3 class="directory-title">目录</h3>
+    <el-text class="mx-1"> <h3 class="directory-title">目录</h3></el-text>
     <div v-if="loading">正在加载文章...</div>
     <div v-if="error">{{ error }}</div>
 
     <div v-if="articleslist.length" class="dir-list">
-      <el-row>
+      <el-row :gutter="100">
         <el-col :span="12">
           <div class="grid-content ep-bg-purple">
             <router-link
@@ -32,7 +32,9 @@
         </el-col>
       </el-row>
     </div>
-    <div v-else-if="!loading">该分类下暂无文章。</div>
+    <div v-else-if="!loading" style="display: flex; justify-content: center">
+      该分类下暂无文章。
+    </div>
   </div>
 </template>
 
@@ -93,12 +95,8 @@ watch(
   }
 }
 .directory-title {
-  font-size: 1.8rem;
-  font-weight: 600;
+  font-size: 1.6rem;
   color: var(--app-secondary-text-color, #a2a2a2);
-  margin-top: 0;
-  margin-bottom: 25px;
-  right: 20px;
 }
 
 .dir-list {

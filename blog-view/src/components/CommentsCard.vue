@@ -63,14 +63,14 @@
 import { ref, onMounted, defineProps, reactive, onBeforeMount } from 'vue'
 import { fetchComments, createComment } from '@/api/comment.js'
 import CommentNode from './CommentNode.vue'
-
+import defaultAvatar from '../assets/(5).png'
 const props = defineProps({
   blogId: { type: [Number, String], default: null },
   page: { type: String, default: null },
 })
 
 const totalComments = ref(0)
-const defaultAvatar = 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'
+
 const comments = ref([])
 const commentForm = reactive({
   content: '',

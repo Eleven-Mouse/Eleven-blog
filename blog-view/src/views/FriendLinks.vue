@@ -3,129 +3,51 @@
     <div class="links">
       <el-text class="mx-1">
         <h3 class="friendslinks-title">友链</h3>
+
+        <!-- 加载状态 -->
         <div v-if="loading">正在加载...</div>
         <div v-if="error">{{ error }}</div>
-        <ul v-if="frindslinksdata.length" class="friendslinks-list">
+
+        <div v-if="frindslinksdata.length" class="friendslinks-list">
           <el-row :gutter="20">
-            <el-col :span="6"
-              ><div class="grid-content ep-bg-purple">
-                <el-card
-                  class="friendscard"
-                  shadow="hover"
-                  v-for="friendslink in frindslinksdata.slice(
-                    0,
-                    Math.ceil(frindslinksdata.length / 4),
-                  )"
-                  :key="friendslink.id"
-                  @click="openFriend(friendslink)"
-                >
-                  <img
-                    v-if="friendslink.logo"
-                    :src="friendslink.logo"
-                    :alt="friendslink.name"
-                    class="friendslink-avatar"
-                    @error="(e) => (e.target.src = 'src/assets/ (11).png')"
-                    loading="lazy"
-                  />
-                  <br />
-                  <span class="friendslink-name">{{ friendslink.name }}</span>
-                  <br />
-                  <span v-if="friendslink.description" class="friendslink-description">
-                    {{ friendslink.description }}
-                  </span>
-                </el-card>
-              </div></el-col
+            <el-col
+              v-for="item in frindslinksdata"
+              :key="item.id"
+              :xs="24"
+              :sm="12"
+              :md="6"
+              :lg="6"
+              style="margin-bottom: 20px"
             >
-
-            <el-col :span="6"
-              ><div class="grid-content ep-bg-purple">
-                <el-card
-                  class="friendscard"
-                  shadow="hover"
-                  v-for="friendslink in frindslinksdata.slice(
-                    Math.ceil(frindslinksdata.length / 4),
-                    Math.ceil(frindslinksdata.length / 2),
-                  )"
-                  :key="friendslink.id"
-                  @click="openFriend(friendslink)"
-                >
+              <el-card class="friendscard" shadow="hover" @click="openFriend(item)">
+                <div class="card-content">
+                  <!-- 头像部分 -->
                   <img
-                    v-if="friendslink.logo"
-                    :src="friendslink.logo"
-                    :alt="friendslink.name"
+                    :src="getAvatarUrl(item.logo)"
+                    :alt="item.name"
                     class="friendslink-avatar"
-                    @error="(e) => (e.target.src = 'src/assets/ (11).png')"
+                    @error="handleImgError"
                     loading="lazy"
                   />
-                  <br />
-                  <span class="friendslink-name">{{ friendslink.name }}</span>
-                  <br />
-                  <span v-if="friendslink.description" class="friendslink-description">
-                    {{ friendslink.description }}
-                  </span>
-                </el-card>
-              </div>
+
+                  <div class="info-content">
+                    <div class="friendslink-name">{{ item.name }}</div>
+                    <div
+                      v-if="item.description"
+                      class="friendslink-description"
+                      :title="item.description"
+                    >
+                      {{ item.description }}
+                    </div>
+                  </div>
+                </div>
+              </el-card>
             </el-col>
-            <el-col :span="6"
-              ><div class="grid-content ep-bg-purple">
-                <el-card
-                  class="friendscard"
-                  shadow="hover"
-                  v-for="friendslink in frindslinksdata.slice(
-                    Math.ceil(frindslinksdata.length / 2),
-                    Math.ceil((frindslinksdata.length * 3) / 4),
-                  )"
-                  :key="friendslink.id"
-                  @click="openFriend(friendslink)"
-                >
-                  <img
-                    v-if="friendslink.logo"
-                    :src="friendslink.logo"
-                    :alt="friendslink.name"
-                    class="friendslink-avatar"
-                    @error="(e) => (e.target.src = 'src/assets/ (11).png')"
-                    loading="lazy"
-                  />
-                  <br />
-                  <span class="friendslink-name">{{ friendslink.name }}</span>
-                  <br />
-                  <span v-if="friendslink.description" class="friendslink-description">
-                    {{ friendslink.description }}
-                  </span>
-                </el-card>
-              </div></el-col
-            >
-
-            <el-col :span="6"
-              ><div class="grid-content ep-bg-purple">
-                <el-card
-                  class="friendscard"
-                  shadow="hover"
-                  v-for="friendslink in frindslinksdata.slice(
-                    Math.ceil((frindslinksdata.length * 3) / 4),
-                  )"
-                  :key="friendslink.id"
-                  @click="openFriend(friendslink)"
-                >
-                  <img
-                    v-if="friendslink.logo"
-                    :src="friendslink.logo"
-                    :alt="friendslink.name"
-                    class="friendslink-avatar"
-                    @error="(e) => (e.target.src = 'src/assets/ (11).png')"
-                    loading="lazy"
-                  />
-                  <br />
-                  <span class="friendslink-name">{{ friendslink.name }}</span>
-                  <br />
-                  <span v-if="friendslink.description" class="friendslink-description">
-                    {{ friendslink.description }}
-                  </span>
-                </el-card>
-              </div></el-col
-            >
           </el-row>
-        </ul>
+        </div>
+
+        <!-- 空状态 -->
+        <el-empty v-else description="暂无友链" />
       </el-text>
     </div>
 
@@ -134,33 +56,32 @@
 </template>
 <script setup>
 import { onMounted, ref } from 'vue'
-import { fetchFriends } from '@/api/friend.js'
+import { getFriendLinks } from '../api/friendLink'
 
 import CommentsCard from '@/components/CommentsCard.vue'
 const frindslinksdata = ref([])
 const loading = ref(false)
 const error = ref(null)
+const BASE_URL = import.meta.env.VITE_APP_UPLOAD_URL || ''
+import defaultAvatar from '../assets/(5).png'
 
-// 点击友链卡片，跳转到对应站点
-const openFriend = (friendslink) => {
-  if (!friendslink || !friendslink.url) return
+const getAvatarUrl = (logoPath) => {
+  if (!logoPath) return defaultAvatar
 
-  let targetUrl = friendslink.url.trim()
-  // 如果后端只给了域名或不带协议，默认补上 https://
-  if (!/^https?:\/\//i.test(targetUrl)) {
-    targetUrl = `https://${targetUrl}`
+  let path = logoPath.split(',')[0]
+
+  if (path.startsWith('http') || path.startsWith('https')) {
+    return path
   }
 
-  window.open(targetUrl, '_blank')
+  return BASE_URL + path
 }
-
 //获取友情链接列表信息
-const getFrindslinks = async () => {
+const getFrindslinksList = async () => {
   loading.value = true
   error.value = null
-
   try {
-    const data = await fetchFriends()
+    const data = await getFriendLinks()
     frindslinksdata.value = data || []
   } catch (err) {
     error.value = '获取友链数据失败'
@@ -169,9 +90,20 @@ const getFrindslinks = async () => {
     loading.value = false
   }
 }
+// 图片加载失败时的处理
+const handleImgError = (e) => {
+  // 防止死循环：如果默认图也挂了，就不再触发 error
+  e.target.onerror = null
+  e.target.src = defaultAvatar
+}
 
+const openFriend = (item) => {
+  if (item.url) {
+    window.open(item.url, '_blank')
+  }
+}
 onMounted(() => {
-  getFrindslinks()
+  getFrindslinksList()
 })
 </script>
 <style scoped>

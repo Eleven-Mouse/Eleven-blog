@@ -10,17 +10,6 @@ export function fetchTags() {
   });
 }
 
-/**
- * 创建标签
- * @param {object} data - 标签数据
- */
-export function createTag(data) {
-  return request({
-    url: '/api/tags',
-    method: 'post',
-    data,
-  });
-}
 
 /**
  * 根据标签ID获取文章列表

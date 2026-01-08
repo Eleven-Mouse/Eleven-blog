@@ -17,7 +17,6 @@ import Footer from '@/components/common/Footer.vue'
 </script>
 
 <style>
-/* Dark mode using a semi-transparent overlay */
 html[data-theme='dark']::before {
   content: '';
   position: fixed;
@@ -25,14 +24,14 @@ html[data-theme='dark']::before {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(16, 16, 27, 0.38); /* Adjust the opacity here */
-  pointer-events: none; /* Make sure the overlay doesn't block interactions */
+  background-color: rgba(16, 16, 27, 0.38);
+  pointer-events: none;
   z-index: 9999;
   transition: background-color 0.3s;
 }
 .el-header {
   top: 0;
-  z-index: 9999;
+  z-index: 2000;
   background-color: white;
 }
 .el-main {

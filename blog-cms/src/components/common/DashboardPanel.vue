@@ -41,6 +41,10 @@
           <el-icon><Discount /></el-icon>
           <h4>标签管理</h4>
         </el-menu-item>
+        <el-menu-item index="/friendlinks">
+          <el-icon><UploadFilled /></el-icon>
+          <h4>友链管理</h4>
+        </el-menu-item>
         <el-menu-item index="/upload">
           <el-icon><UploadFilled /></el-icon>
           <h4>上传文章</h4>
@@ -74,7 +78,7 @@ defineProps({
 <style scoped>
 .menu-scrollbar {
   border: 1px, #27272a;
-  height: 480px;
+  height: 600px;
 }
 .el-menu-vertical {
   border-right: none;

@@ -27,9 +27,6 @@ public class TagsServiceImpl implements TagsService
     @Autowired
     private TagsMapper tagsMapper;
 
-    @Autowired
-    private ArticleMapper articleMapper;
-
 
     @Override
     @Transactional

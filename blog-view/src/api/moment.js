@@ -3,10 +3,10 @@ import request from '@/utils/request'
 /**
  * 获取动态列表
  */
-export function fetchMoments(queryParams) {
+export function getMoments(params) {
   return request({
     url: '/api/moments',
     method: 'get',
-    params: queryParams,
+    params,
   })
 }

@@ -2324,6 +2324,11 @@ type-check@^0.4.0, type-check@~0.4.0:
   dependencies:
     prelude-ls "^1.2.1"
 
+typed.js@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.npmmirror.com/typed.js/-/typed.js-2.1.0.tgz"
+  integrity sha512-bDuXEf7YcaKN4g08NMTUM6G90XU25CK3bh6U0THC/Mod/QPKlEt9g/EjvbYB8x2Qwr2p6J6I3NrsoYaVnY6wsQ==
+
 undici-types@~7.16.0:
   version "7.16.0"
   resolved "https://registry.npmmirror.com/undici-types/-/undici-types-7.16.0.tgz"

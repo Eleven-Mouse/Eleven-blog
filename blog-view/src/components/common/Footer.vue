@@ -2,7 +2,7 @@
 <template>
   <div class="footer">
     <h3>hello,world</h3>
-    <p>© 2024 Eleven-Mouse. All rights reserved.</p>
+    <p>© 2026 Eleven-Mouse.🕶️</p>
   </div>
 </template>
 <style scoped>

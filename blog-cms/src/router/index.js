@@ -61,7 +61,11 @@ const router = createRouter({
           name: "upload",
           component: () => import("../views/blog/article/UploadArticle.vue"),
         },
-
+        {
+          path: "friendlinks",
+          name: "friendlinks",
+          component: () => import("../views/blog/friendlinks/FriendLinks.vue"),
+        },
         {
           path: "/article/edit/:id?",
           name: "EditArticle",

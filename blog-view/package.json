@@ -19,19 +19,20 @@
     "highlight.js": "^11.11.1",
     "pinia": "^3.0.4",
     "prismjs": "^1.30.0",
+    "typed.js": "^2.1.0",
     "vue": "^3.5.25",
     "vue-advanced-chat": "^2.1.2",
     "vue-router": "^4.6.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@vitejs/plugin-vue": "^6.0.3",
     "@vue/eslint-config-prettier": "^10.2.0",
     "eslint": "^9.39.1",
     "eslint-plugin-vue": "~10.5.1",
     "globals": "^16.5.0",
     "prettier": "3.6.2",
     "sass-embedded": "^1.97.1",
-    "@vitejs/plugin-vue": "^6.0.3",
     "vite": "^7.3.0",
     "vite-plugin-vue-devtools": "^8.0.5"
   }

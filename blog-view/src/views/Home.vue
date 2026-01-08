@@ -1,8 +1,6 @@
 <template>
   <div class="home-container">
-    <!-- Main Content -->
     <el-row :gutter="20" class="main-content">
-      <!-- Article List -->
       <el-col :xs="20" :sm="10" :md="18">
         <div class="article-list">
           <ArticleCard v-for="(article, index) in articles" :key="index" :article="article" />
@@ -103,7 +101,6 @@ watch(
 </script>
 
 <style scoped>
-@import '../assets/font.css';
 .home-container {
   max-width: 1050px;
   margin-top: 60px;

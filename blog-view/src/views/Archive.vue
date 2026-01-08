@@ -2,7 +2,7 @@
   <div class="archive-container">
     <el-text class="mx-1">
       <div class="archive-header">
-        <h3 class="title-asd">归档</h3>
+        <h1>归档</h1>
         <p>真棒！目前共计 {{ totalArticles }} 篇文章。</p>
       </div>
       <div v-if="loading">正在加载归档数据...</div>
@@ -99,11 +99,6 @@ onMounted(() => {
 .archive-header {
   text-align: center;
   margin-bottom: 40px;
-}
-
-.archive-header h2 {
-  font-size: 2rem;
-  margin-bottom: 10px;
 }
 
 .archive-header p {

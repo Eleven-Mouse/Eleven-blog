@@ -11,18 +11,6 @@ export function fetchCategories() {
 }
 
 /**
- * 创建分类
- * @param {object} data - 分类数据
- */
-export function createCategory(data) {
-  return request({
-    url: '/api/categories',
-    method: 'post',
-    data,
-  });
-}
-
-/**
  * 根据ID获取分类详情
  * @param {number} id - 分类ID
  */

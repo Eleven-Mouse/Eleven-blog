@@ -14,14 +14,13 @@ export function createFriendLink(data) {
 }
 
 /**
- * @description: 根据id更新友链
- * @param {number | string} id 友链ID
+ * @description: 更新友链
  * @param {object} data 请求体
  * @returns {Promise}
  */
-export function updateFriendLinkById(id, data) {
+export function updateFriendLink(data) {
   return request({
-    url: `/friendlinks/${id}`,
+    url: `/friendlinks`,
     method: "put",
     data,
   });
@@ -56,7 +55,7 @@ export function getFriendLinkById(id) {
  * @param {object} params 查询参数
  * @returns {Promise}
  */
-export function getFriendLinkList(params) {
+export function getFriendLinks(params) {
   return request({
     url: "/friendlinks",
     method: "get",

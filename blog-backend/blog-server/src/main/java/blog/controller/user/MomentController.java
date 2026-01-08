@@ -32,7 +32,7 @@ public class MomentController
      */
     @GetMapping
     @ApiOperation("获取动态列表")
-    public Result<PageInfo<MomentVO>> getMoment(@RequestParam(defaultValue = "1") int page,
+    public Result<PageInfo<MomentVO>> getMoments(@RequestParam(defaultValue = "1") int page,
                                             @RequestParam(defaultValue = "10") int size) {
         log.info("获取动态列表 - 第{}页，每页{}条", page, size);
 
