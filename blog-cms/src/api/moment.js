@@ -26,17 +26,6 @@ export function getMomentList(params) {
   });
 }
 
-/**
- * @description: 根据ID查询动态
- * @param {number | string} id 动态ID
- * @returns {Promise}
- */
-export function getMomentById(id) {
-  return request({
-    url: `/moment/${id}`,
-    method: "get",
-  });
-}
 
 /**
  * @description: 根据ID删除动态
@@ -47,19 +36,5 @@ export function deleteMomentById(id) {
   return request({
     url: `/moment/${id}`,
     method: "delete",
-  });
-}
-
-/**
- * @description: 根据ID更新动态
- * @param {number | string} id 动态ID
- * @param {object} data 请求体
- * @returns {Promise}
- */
-export function updateMomentById(id, data) {
-  return request({
-    url: `/moment/${id}`,
-    method: "put",
-    data,
   });
 }

@@ -1,30 +1,6 @@
 import request from "@/utils/request";
 
-/**
- * @description: 更新评论公开状态
- * @param {object} params { id: number, status: boolean }
- * @returns {Promise}
- */
-export function updateCommentStatus(params) {
-  return request({
-    url: "/comments/status",
-    method: "put",
-    params,
-  });
-}
 
-/**
- * @description: 更新评论邮件提醒状态
- * @param {object} params { id: number, notice: boolean }
- * @returns {Promise}
- */
-export function updateCommentNotice(params) {
-  return request({
-    url: "/comments/notice",
-    method: "put",
-    params,
-  });
-}
 
 /**
  * @description: 删除评论(所有子评论)

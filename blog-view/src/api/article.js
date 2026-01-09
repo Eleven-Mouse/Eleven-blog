@@ -30,26 +30,4 @@ export function fetchArticleById(id) {
   })
 }
 
-/**
- * 根据分类和slug获取文章详情
- * @param {string} category - 分类名
- * @param {string} slug - 文章slug
- */
-export function fetchArticleBySlug(category, slug) {
-  return request({
-    url: `/articles/${category}/${slug}`,
-    method: 'get',
-  })
-}
-
-/**
- * 增加文章浏览量
- * @param {number} id - 文章ID
- */
-export function incrementArticleView(id) {
-  return request({
-    url: `/article/${id}/view`,
-    method: 'post',
-  })
-}
 

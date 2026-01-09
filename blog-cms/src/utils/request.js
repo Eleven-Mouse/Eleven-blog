@@ -34,9 +34,9 @@ service.interceptors.response.use(
     }
 
     if (res.code === 1) {
-      return res.data; // code 为 1 表示成功，直接返回 data 部分
+      return res.data;
     } else {
-      // 处理已知的错误情况 (code 不为 1)
+
       ElMessage({
         message: res.msg || "请求失败",
         type: "error",
@@ -46,13 +46,8 @@ service.interceptors.response.use(
     }
   },
   (error) => {
-    console.log("【请求进入了错误回调】");
-    console.dir(error); // 使用 dir 可以展开看详细对象
+    console.dir(error);
 
-    if (error.response) {
-      console.log("错误状态码:", error.response.status);
-      console.log("错误数据:", error.response.data);
-    }
     // 处理 HTTP 状态码错误
     if (error.response && error.response.status === 401) {
       localStorage.removeItem("token");

@@ -27,18 +27,7 @@ export function updateArticle(id, data) {
   });
 }
 
-/**
- * @description: 查询文章列表
- * @param {object} params 查询参数
- * @returns {Promise}
- */
-export function getAllArticles(params) {
-  return request({
-    url: "/articles",
-    method: "get",
-    params,
-  });
-}
+
 
 /**
  * @description: 查询文章列表

@@ -38,17 +38,6 @@ export function deleteFriendLinkById(id) {
   });
 }
 
-/**
- * @description: 根据id查询友链详情
- * @param {number | string} id 友链ID
- * @returns {Promise}
- */
-export function getFriendLinkById(id) {
-  return request({
-    url: `/friendlinks/${id}`,
-    method: "get",
-  });
-}
 
 /**
  * @description: 查询友链列表

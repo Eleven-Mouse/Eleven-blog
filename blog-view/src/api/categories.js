@@ -10,16 +10,6 @@ export function fetchCategories() {
   });
 }
 
-/**
- * 根据ID获取分类详情
- * @param {number} id - 分类ID
- */
-export function fetchCategoryById(id) {
-  return request({
-    url: `/categories/${id}`,
-    method: 'get',
-  });
-}
 
 /**
  * 根据分类ID获取文章列表

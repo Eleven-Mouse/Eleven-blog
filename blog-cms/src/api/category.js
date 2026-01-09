@@ -26,19 +26,7 @@ export function updateCategory(data) {
   });
 }
 
-/**
- * @description: 根据id修改分类
- * @param {number | string} id 分类ID
- * @param {object} data 请求体
- * @returns {Promise}
- */
-export function updateCategoryById(id, data) {
-  return request({
-    url: `/categories/${id}`,
-    method: "put",
-    data,
-  });
-}
+
 
 /**
  * @description: 查询所有分类

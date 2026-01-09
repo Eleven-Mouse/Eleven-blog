@@ -26,19 +26,7 @@ export function updateTag(data) {
   });
 }
 
-/**
- * @description: 根据id修改标签
- * @param {number | string} id 标签ID
- * @param {object} data 请求体
- * @returns {Promise}
- */
-export function updateTagById(id, data) {
-  return request({
-    url: `/tags/${id}`,
-    method: "put",
-    data,
-  });
-}
+
 
 /**
  * @description: 查询所有标签
