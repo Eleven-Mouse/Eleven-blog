@@ -3,6 +3,7 @@ package blog.dto;
 import lombok.*;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * 创建文章DTO
@@ -57,6 +58,14 @@ public class ArticleDTO implements Serializable {
      */
     private Integer status;
 
+    /**
+     * 浏览量
+     */
     private Integer ViewCount;
+
+    /**
+     * 发布时间
+     */
+    private LocalDateTime publishTime;
 }
 

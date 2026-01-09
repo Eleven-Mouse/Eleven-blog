@@ -16,6 +16,9 @@
           <span v-if="article.categoryName"
             ><el-icon><FolderOpened /></el-icon> {{ article.categoryName }}</span
           >
+          <span v-if="article.viewCount"
+          ><el-icon><View /></el-icon>{{ article.viewCount }}</span
+          >
         </div>
 
         <div class="more">
@@ -27,7 +30,7 @@
 </template>
 
 <script setup>
-import { Clock, FolderOpened, PriceTag } from '@element-plus/icons-vue'
+import { Clock, FolderOpened, PriceTag,View  } from '@element-plus/icons-vue'
 import { defineProps, computed } from 'vue'
 
 const props = defineProps({

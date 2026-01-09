@@ -7,9 +7,7 @@
       <div class="center">
         <el-card v-if="article" class="article-content-card">
           <div class="article-meta">
-            <span>发布于：{{ formattedCreateDate }}</span>
-
-            <span>浏览量：{{ article.viewCount }}</span>
+            <span>发布于：{{ formatTime(article.publishTime) }}</span>
           </div>
           <MdPreview
             editorId="preview-only"
@@ -46,7 +44,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, nextTick } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { fetchArticleById } from '@/api/article.js'
 import CommentsCard from '@/components/CommentsCard.vue'
@@ -81,12 +79,15 @@ const onGetCatalog = (list) => {
     }
   })
 }
-const formattedCreateDate = computed(() => {
-  if (article.value && article.value.createTime) {
-    return new Date(article.value.createTime).toLocaleString()
-  }
-  return '未知日期'
-})
+const formatTime = (datetime) => {
+  if (!datetime) return '--'
+  const date = new Date(datetime)
+  return date.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
+}
 
 onMounted(async () => {
   const el = document.querySelector('.main-scroll-container')

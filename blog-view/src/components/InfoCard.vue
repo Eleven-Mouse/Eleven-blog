@@ -7,7 +7,7 @@
         </div>
         <div class="info-section">
           <h3>Eleven-Mouse</h3>
-          <p>行者常至，为者常成</p>
+          <p>will yow?</p>
         </div>
         <div class="social-links">
           <a href="#" target="_blank"
