@@ -24,11 +24,11 @@
   </div>
 </template>
 
-<script lang="ts" setup>
+<script  setup>
 import { ChatLineRound, Message, Share } from '@element-plus/icons-vue'
 import { reactive, toRefs } from 'vue'
 const state = reactive({
-  squareUrl: 'src/assets/小二.jpg',
+  squareUrl: '/avatar.png',
 })
 
 const { squareUrl } = toRefs(state)

@@ -23,7 +23,7 @@ import java.util.Map;
  * @version 1.0
  */
 @RestController("userCommentsController")
-@RequestMapping("/api")
+@RequestMapping("/api/comments")
 @Slf4j
 @ApiOperation("评论管理")
 public class CommentController {
@@ -37,7 +37,7 @@ public class CommentController {
      * 	 @param page     要查询的页面(博客文章or友链...)
      * 	 @param blogId   如果是博客文章页面 需要提供博客id
      */
-    @GetMapping("/comments")
+    @GetMapping
     @ApiOperation("查询评论详情")
     public Result<List<CommentVO>> getComments(@RequestParam(required = false) String page,
                                                @RequestParam(required = false) Long blogId)

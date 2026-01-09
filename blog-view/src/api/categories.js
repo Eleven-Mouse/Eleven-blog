@@ -5,7 +5,7 @@ import request from '@/utils/request';
  */
 export function fetchCategories() {
   return request({
-    url: '/api/categories',
+    url: '/categories',
     method: 'get',
   });
 }
@@ -16,7 +16,7 @@ export function fetchCategories() {
  */
 export function fetchCategoryById(id) {
   return request({
-    url: `/api/categories/${id}`,
+    url: `/categories/${id}`,
     method: 'get',
   });
 }
@@ -28,7 +28,7 @@ export function fetchCategoryById(id) {
  */
 export function fetchArticlesByCategoryId(id, params) {
   return request({
-    url: `/api/categories/${id}/articles`,
+    url: `/categories/${id}/articles`,
     method: 'get',
     params,
   });

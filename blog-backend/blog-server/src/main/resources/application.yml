@@ -14,16 +14,6 @@ spring:
         multipart:
             max-file-size: 10MB
             max-request-size: 50MB
-jwt:
-    secret: "MySuperSecretKeyForBlogProjectThatIsVeryLongAndSecure123"
-    access-token-expiration: 1800000
-    refresh-token-expiration: 604800000
-
-    # 数据库初始化配置
-    sql:
-        init:
-            mode: never  # 由 Docker 初始化脚本处理
-            continue-on-error: false
     data:
         redis:
             host: 127.0.0.1
@@ -31,7 +21,15 @@ jwt:
             port: 6379
             database: 1
             connect-timeout: 10000ms
-
+    # 数据库初始化配置
+    sql:
+        init:
+            mode: never  # 由 Docker 初始化脚本处理
+            continue-on-error: false
+jwt:
+    secret: "MySuperSecretKeyForBlogProjectThatIsVeryLongAndSecure123"
+    access-token-expiration: 1800000
+    refresh-token-expiration: 604800000
 
 # 服务器配置
 server:
@@ -90,4 +88,4 @@ blog:
         # 你的博主昵称
         nickname: 困醒
         # 你的博主头像URL
-        avatar: https://example.com/your-avatar.png
+        avatar: static/images/Image_1761740285982.jpg

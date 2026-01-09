@@ -5,7 +5,7 @@ import request from '@/utils/request'
  */
 export function getMoments(params) {
   return request({
-    url: '/api/moments',
+    url: '/moments',
     method: 'get',
     params,
   })

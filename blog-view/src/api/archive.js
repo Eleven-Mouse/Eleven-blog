@@ -5,7 +5,7 @@ import request from '@/utils/request';
  */
 export function fetchArchive() {
   return request({
-    url: '/api/archive',
+    url: '/archive',
     method: 'get',
   });
 }

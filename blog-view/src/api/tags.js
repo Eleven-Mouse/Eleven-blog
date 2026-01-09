@@ -5,7 +5,7 @@ import request from '@/utils/request';
  */
 export function fetchTags() {
   return request({
-    url: '/api/tags',
+    url: '/tags',
     method: 'get',
   });
 }
@@ -18,7 +18,7 @@ export function fetchTags() {
  */
 export function fetchArticlesByTagId(id, params) {
   return request({
-    url: `/api/tags/${id}/articles`,
+    url: `/tags/${id}/articles`,
     method: 'get',
     params,
   });

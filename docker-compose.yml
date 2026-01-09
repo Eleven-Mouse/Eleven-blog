@@ -1,0 +1,92 @@
+
+services:
+  # --- 1. MySQL 服务 ---
+  mysql_db:
+    image: mysql:8.0
+    container_name: blog-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 20469960
+      MYSQL_DATABASE: eleven_blog
+      MYSQL_TZ: Asia/Shanghai
+    volumes:
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - db_data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    networks:
+      - blog-net
+
+  # --- 2. Redis 服务 ---
+  redis:
+    image: redis:alpine
+    container_name: blog-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass "123456"
+    volumes:
+      - redis_data:/data
+    networks:
+      - blog-net
+
+  # --- 3. 后端服务 ---
+  blog-backend:
+    build: ./blog-backend
+    container_name: blog-backend
+    restart: always
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mysql_db
+      - redis
+    volumes:
+      - ./upload_data:/app/uploads
+    environment:
+      # MySQL 配置
+      - SPRING_DATASOURCE_URL=jdbc:mysql://blog-mysql:3306/eleven_blog?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=20469960
+
+      - SPRING_DATA_REDIS_HOST=blog-redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_DATA_REDIS_PASSWORD=123456
+      - SPRING_DATA_REDIS_DATABASE=1
+
+      # 文件上传路径
+      - FILE_UPLOAD_DIR=/app/uploads
+    networks:
+      - blog-net
+
+  # --- 4. 前端 (博客前台) ---
+  blog-view:
+    build: ./blog-view
+    container_name: blog-view
+    restart: always
+    ports:
+
+      - "3000:3000"
+    depends_on:
+      - blog-backend
+    networks:
+      - blog-net
+
+  # --- 5. 前端 (后台管理) ---
+  blog-cms:
+    build: ./blog-cms
+    container_name: blog-cms
+    restart: always
+    ports:
+
+      - "8080:8080"
+    depends_on:
+      - blog-backend
+    networks:
+      - blog-net
+
+volumes:
+  db_data:
+  redis_data:
+
+networks:
+  blog-net:
+    driver: bridge

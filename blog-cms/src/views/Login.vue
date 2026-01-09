@@ -40,7 +40,7 @@ const errorMsg = ref("");
 
 const handleLogin = async () => {
   try {
-  
+
     const data = await request.post("/auth/login", form.value);
 
     console.log("登录成功，返回数据：", data);

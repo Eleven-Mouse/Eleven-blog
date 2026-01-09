@@ -6,7 +6,7 @@ import request from '@/utils/request'
  */
 export function getFriendLinks() {
   return request({
-    url: '/api/friendlinks',
+    url: '/friendlinks',
     method: 'get',
   })
 }

@@ -38,7 +38,7 @@
   </div>
 </template>
 <script setup>
-import avatarImg from "@/assets/avatar.png";
+import avatarImg from "../../../public/avatar.png";
 import { Search } from "@element-plus/icons-vue";
 import { ref, nextTick } from "vue";
 import { useRouter } from "vue-router";

@@ -25,9 +25,8 @@ export default defineConfig({
     open: true, // 启动后自动打开浏览器
     proxy: {
       "/admin": {
-        // 匹配以 /api 开头的请求
-        target: "http://localhost:8081", // 后台服务地址
-        changeOrigin: true, // 允许跨域
+        target: "http://localhost:8081",
+        changeOrigin: true,
       },
     },
   },

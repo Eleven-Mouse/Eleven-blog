@@ -84,37 +84,6 @@ public class ArticleController {
         return Result.success(message);
     }
 
-
-
-    /**
-     * 查询所有文章（简单查询，用于下拉列表等）
-     */
-    @GetMapping
-    @ApiOperation("查询所有文章")
-    public Result<PageInfo<ArticleVO>> getAllArticles(@RequestParam(defaultValue = "1") int page,
-                                                  @RequestParam(defaultValue = "10") int size)
-    {
-        log.info("获取文章列表 - 第{}页，每页{}条", page, size);
-
-        try {
-            PageHelper.startPage(page, size, "publish_time desc");
-            List<ArticleVO> articlevo = articleService.listAllArticles();
-            PageInfo<ArticleVO> pageInfo = new PageInfo<>(articlevo);
-
-
-            log.info("查询成功，当前页数量：{}，总数量：{}", pageInfo.getSize(), pageInfo.getTotal());
-
-            return Result.success(pageInfo);
-
-        } catch (Exception e) {
-            log.error("获取动态列表异常", e);
-            // 发生异常时也返回空数组，保证前端不报错
-            return Result.success(new PageInfo<>(Collections.emptyList()));
-        }
-
-    }
-
-
     /**
      * 获取文章列表（支持分页）
      */

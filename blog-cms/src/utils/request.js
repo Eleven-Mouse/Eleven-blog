@@ -5,7 +5,7 @@ import router from "../router";
 
 // 创建 axios 实例
 const service = axios.create({
-  baseURL: "/admin",
+  baseURL:  import.meta.env.VITE_APP_API_URL,
   timeout: 5000, // 请求超时时间
 });
 

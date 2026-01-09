@@ -8,7 +8,7 @@ import request from '@/utils/request'
 // 查询评论列表，queryParams 支持 blogId、page(pageName) 或分页参数等
 export function fetchComments(queryParams) {
   return request({
-    url: '/api/comments',
+    url: '/comments',
     method: 'get',
     params: queryParams,
   })
@@ -20,7 +20,7 @@ export function fetchComments(queryParams) {
  */
 export function createComment(commentData) {
   return request({
-    url: '/api/comment',
+    url: '/comments/comment',
     method: 'post',
     data: commentData,
   })

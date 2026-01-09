@@ -75,15 +75,19 @@ public class SecurityConfig {
                         .requestMatchers("/images/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
                         // 放行登录接口、刷新 Token 接口
-                        .requestMatchers("/admin/auth/**","api/**").permitAll()
+                        .requestMatchers("/admin/auth/**").permitAll()
 
                         // 3. 公共只读接口 (GET 请求) - 所有人(包括游客)可访问
-                        // 这里合并了你之前的重复配置
                         .requestMatchers(HttpMethod.GET,
-                                "/articles/**",
-                                "/moment/**",
-                                "/friendlinks/**"
+                                "/api/articles/**",
+                                "/api/categories/**",
+                                "/api/tags/**",
+                                "/api/moments/**",
+                                "/api/friendlinks/**",
+                                "/api/archive/**",
+                                "/api/comments/**"
                         ).permitAll()
+
 
                         // 4. 管理员写操作 (POST/PUT/DELETE) - 只有 ADMIN 角色可访问
                         // 包含了新增(POST)、修改(PUT)、删除(DELETE)、上传(POST)
@@ -110,7 +114,7 @@ public class SecurityConfig {
 
     /**
      * 4. CORS 跨域配置源
-     * 解决前端 (localhost:5173) 访问后端 (localhost:8080) 时的跨域报错
+     * 解决前端 (localhost:3000) 访问后端 (localhost:8080) 时的跨域报错
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -118,7 +122,7 @@ public class SecurityConfig {
 
         // 允许的前端域名 (上线时建议修改为具体的域名，开发环境可用 *)
         // 如果 allowCredentials 为 true，这里不能写 "*"，必须写具体域名
-        configuration.setAllowedOrigins(List.of("http://localhost:8080", "http://localhost:5173" ));
+        configuration.setAllowedOrigins(List.of("http://localhost:8080", "http://localhost:3000" ));
 
         // 允许的方法
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));

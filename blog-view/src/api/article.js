@@ -13,7 +13,7 @@ import request from '@/utils/request'
  */
 export function fetchArticles(params) {
   return request({
-    url: '/api/articles',
+    url: '/articles',
     method: 'get',
     params,
   })
@@ -25,7 +25,7 @@ export function fetchArticles(params) {
  */
 export function fetchArticleById(id) {
   return request({
-    url: `/api/articles/${id}`,
+    url: `/articles/${id}`,
     method: 'get',
   })
 }
@@ -37,21 +37,8 @@ export function fetchArticleById(id) {
  */
 export function fetchArticleBySlug(category, slug) {
   return request({
-    url: `/api/articles/${category}/${slug}`,
+    url: `/articles/${category}/${slug}`,
     method: 'get',
-  })
-}
-
-/**
- * 获取随机文章
- * @param {object} params - 查询参数
- * @param {number} params.limit - 获取数量
- */
-export function fetchRandomArticles(params) {
-  return request({
-    url: '/api/articles/random',
-    method: 'get',
-    params,
   })
 }
 
@@ -61,7 +48,7 @@ export function fetchRandomArticles(params) {
  */
 export function incrementArticleView(id) {
   return request({
-    url: `/api/article/${id}/view`,
+    url: `/article/${id}/view`,
     method: 'post',
   })
 }
