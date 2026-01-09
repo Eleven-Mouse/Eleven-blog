@@ -18,7 +18,7 @@
       />
     </div>
 
-    <el-button style="width: 60px; height: 60px" @click="showClick">
+    <el-button style="width: 60px; height: 60px; border: 0" @click="showClick">
       <el-dropdown
         ref="dropdown1"
         trigger="contextmenu"
@@ -29,7 +29,12 @@
         <el-avatar shape="square" :src="avatarUrl" />
         <template #dropdown>
           <el-dropdown-menu>
-            <el-dropdown-item><a href="">github</a></el-dropdown-item>
+            <el-dropdown-item
+              ><a
+                href="https://github.com/Eleven-Mouse/Eleven-blog"
+                style="text-decoration: none; color: #333"
+                >github<el-icon><Promotion /></el-icon></a
+            ></el-dropdown-item>
             <el-dropdown-item command="logout">logout</el-dropdown-item>
           </el-dropdown-menu>
         </template>
@@ -39,7 +44,7 @@
 </template>
 <script setup>
 import avatarImg from "@/assets/avatar.png";
-import { Search } from "@element-plus/icons-vue";
+import { Search, Promotion } from "@element-plus/icons-vue";
 import { ref, nextTick } from "vue";
 import { useRouter } from "vue-router";
 

@@ -24,7 +24,7 @@
   </div>
 </template>
 
-<script  setup>
+<script setup>
 import { ChatLineRound, Message, Share } from '@element-plus/icons-vue'
 import { reactive, toRefs } from 'vue'
 const state = reactive({

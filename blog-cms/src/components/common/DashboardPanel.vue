@@ -42,7 +42,7 @@
           <h4>标签管理</h4>
         </el-menu-item>
         <el-menu-item index="/friendlinks">
-          <el-icon><UploadFilled /></el-icon>
+          <el-icon><Share /></el-icon>
           <h4>友链管理</h4>
         </el-menu-item>
         <el-menu-item index="/upload">
@@ -65,6 +65,7 @@ import {
   Comment,
   Discount,
   UploadFilled,
+  Share
 } from "@element-plus/icons-vue";
 import { defineProps } from "vue";
 defineProps({
