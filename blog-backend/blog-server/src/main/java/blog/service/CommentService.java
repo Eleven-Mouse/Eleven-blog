@@ -15,10 +15,6 @@ import java.util.List;
  */
 public interface CommentService {
 
-    /**
-     * 删除子评论
-     */
-    void deleteChildCommentById(Long parentCommentId, Long childCommentId);
 
     /**
      * 创建评论
@@ -37,6 +33,5 @@ public interface CommentService {
 
     void updateStatus(Long id, Boolean status);
 
-    void updateCommentNoticeById(Long id, Boolean notice);
 }
 

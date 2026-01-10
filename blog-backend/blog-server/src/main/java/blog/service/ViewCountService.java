@@ -7,7 +7,7 @@ import java.util.Map;
 @Service
 public interface ViewCountService
 {
-    void incrementViewCount(Long id);
+    void incrementViewCount(Long id,String ip);
 
     Integer getViewCount(Long id);
     Map<Object,Object> getAllViewCounts();

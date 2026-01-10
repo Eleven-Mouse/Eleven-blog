@@ -10,6 +10,7 @@ import blog.vo.MomentVO;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import io.swagger.annotations.ApiOperation;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -70,12 +71,6 @@ public class ArticleController {
         log.info("更新文章，ID：{}，数据：{}", id, articleDTO);
 
 
-        ArticleVO existingArticle = articleService.getArticleById(id);
-        if (existingArticle == null) {
-            return Result.error("文章不存在");
-        }
-
-
 
         articleService.updateArticle(id, articleDTO);
 
@@ -85,7 +80,7 @@ public class ArticleController {
     }
 
     /**
-     * 获取文章列表（支持分页）
+     * 获取文章列表
      */
     @GetMapping("/list")
     @ApiOperation("获取文章列表")
@@ -167,34 +162,21 @@ public class ArticleController {
     }
 
 
-    /**
-     * 获取最近文章
-     */
-    @GetMapping("/recent")
-    public Result<List<ArticleVO>> getRecentArticles(@RequestParam(defaultValue = "10") Integer limit)
-    {
-        log.info("获取最近文章，数量：{}", limit);
-        List<ArticleVO> articles = articleService.listAllArticles();
-
-        if (articles.size() > limit)
-        {
-            articles = articles.subList(0, limit);
-        }
-
-        return Result.success(articles);
-    }
 
     /**
-     * 根据ID查询文章详情
+     * 根据ID获取文章详情
      */
     @GetMapping("/{id}")
-    public Result<ArticleVO> getArticleById(@PathVariable Long id)
+    @ApiOperation("获取文章详情")
+    public Result<ArticleVO> getArticleById(@PathVariable Long id, HttpServletRequest request)
     {
-        log.info("查询文章详情，ID：{}", id);
-        ArticleVO article = articleService.getArticleById(id);
+        log.info("获取文章详情，ID：{}", id);
+        String userIp = getIpAddress(request);
+
+        ArticleVO article = articleService.getArticleById(id,userIp);
+
         return Result.success(article);
     }
-
     /**
      * 删除文章
      */
@@ -206,5 +188,28 @@ public class ArticleController {
         return Result.success();
     }
 
-
+    /**
+     * 获取真实IP
+     */
+    private String getIpAddress(HttpServletRequest request)
+    {
+        String ip = request.getHeader("x-forwarded-for");
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip))
+        {
+            ip = request.getHeader("Proxy-Client-IP");
+        }
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip))
+        {
+            ip = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip))
+        {
+            ip = request.getRemoteAddr();
+        }
+        // 如果是多级代理，x-forwarded-for 可能是 "1.1.1.1, 2.2.2.2"，第一个才是真实IP
+        if (ip != null && ip.contains(",")) {
+            ip = ip.split(",")[0].trim();
+        }
+        return ip;
+    }
 }

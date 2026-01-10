@@ -56,23 +56,7 @@ public class TagsController
         }
     }
 
-    @PutMapping("/{id}")
-    @ApiOperation("根据id修改标签")
-    public Result updateById(@PathVariable Long id, @RequestBody TagsDTO tagsDTO)
-    {
-        log.info("修改标签，ID：{}，数据：{}", id, tagsDTO);
-        tagsDTO.setId(id);
-        try
-        {
-            tagsService.update(tagsDTO);
-            return Result.success("标签修改成功");
-        }
-        catch (RuntimeException e)
-        {
-            log.warn("修改标签失败：{}", e.getMessage());
-            return Result.error(e.getMessage());
-        }
-    }
+
 
 
     @GetMapping("/list")

@@ -6,6 +6,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class ViewCountServiceImpl implements ViewCountService
@@ -18,9 +19,19 @@ public class ViewCountServiceImpl implements ViewCountService
     /**
      * 1. 增加浏览量 (每次调用+1)
      */
-    public void incrementViewCount(Long articleId) {
+    public void incrementViewCount(Long articleId,String ip)
+    {
+        String ipRecordKey = "article:view:record:" + articleId + ":" + ip;
+        Boolean isFirstVisit = redisTemplate.opsForValue()
+                .setIfAbsent(ipRecordKey, "1", 10, TimeUnit.MINUTES);
 
-        redisTemplate.opsForHash().increment(VIEW_COUNT_KEY, String.valueOf(articleId), 1);
+
+        if (Boolean.TRUE.equals(isFirstVisit))
+        {
+            redisTemplate.opsForHash().increment(VIEW_COUNT_KEY, String.valueOf(articleId), 1);
+        }
+
+
     }
 
     public Integer getViewCount (Long articleId)

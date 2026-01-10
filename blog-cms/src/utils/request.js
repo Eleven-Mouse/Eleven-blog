@@ -1,11 +1,10 @@
 import axios from "axios";
 import { ElMessage } from "element-plus";
 import { useAuthStore } from "../store/auth";
-import router from "../router";
 
 // 创建 axios 实例
 const service = axios.create({
-  baseURL:  import.meta.env.VITE_APP_API_URL,
+  baseURL:  '/admin',
   timeout: 5000, // 请求超时时间
 });
 
@@ -28,7 +27,6 @@ service.interceptors.request.use(
 service.interceptors.response.use(
   (response) => {
     const res = response.data;
-    console.log("后端返回的完整数据:", res);
     if (res.code === undefined) {
       return res;
     }

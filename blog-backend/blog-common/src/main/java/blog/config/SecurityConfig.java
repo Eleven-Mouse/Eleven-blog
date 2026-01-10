@@ -87,7 +87,10 @@ public class SecurityConfig {
                                 "/api/archive/**",
                                 "/api/comments/**"
                         ).permitAll()
-
+                        // 评论接口 (post 请求)
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/comments/**"
+                        ).permitAll()
 
                         // 4. 管理员写操作 (POST/PUT/DELETE) - 只有 ADMIN 角色可访问
                         // 包含了新增(POST)、修改(PUT)、删除(DELETE)、上传(POST)

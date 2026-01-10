@@ -55,23 +55,6 @@ public class CategoryController{
 
     }
 
-    @PutMapping("/{id}")
-    @ApiOperation("根据id修改分类")
-    public Result updateById(@PathVariable Long id, @RequestBody CategoryDTO categoryDTO)
-    {
-        log.info("修改分类，ID：{}，数据：{}",id, categoryDTO);
-        categoryDTO.setId(id);
-        try
-        {
-            categoryService.update(categoryDTO);
-            return Result.success("修改分类成功");
-        }
-        catch (RuntimeException e)
-        {
-            log.warn("修改分类失败：{}", e.getMessage());
-            return Result.error(e.getMessage());
-        }
-    }
 
     @GetMapping
     @ApiOperation("查询所有分类")

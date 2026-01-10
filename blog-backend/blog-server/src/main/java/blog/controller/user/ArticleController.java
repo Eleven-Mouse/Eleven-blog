@@ -7,6 +7,7 @@ import blog.result.Result;
 import blog.service.ArticleService;
 import blog.vo.ArticleVO;
 import io.swagger.annotations.ApiOperation;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -118,15 +119,16 @@ public class ArticleController {
      */
     @GetMapping("/{id}")
     @ApiOperation("获取文章详情")
-    public Result<ArticleVO> getArticleById(@PathVariable Long id)
+    public Result<ArticleVO> getArticleById(@PathVariable Long id, HttpServletRequest request)
     {
         log.info("获取文章详情，ID：{}", id);
+        String userIp = getIpAddress(request);
 
         // 只获取已发布的文章
         ArticleVO articleVO = new ArticleVO();
         articleVO.setStatus(1);
 
-        articleVO = articleService.getArticleById(id);
+        articleVO = articleService.getArticleById(id,userIp);
 
         if (articleVO == null) {
             return Result.error("文章不存在");
@@ -134,29 +136,31 @@ public class ArticleController {
 
         return Result.success(articleVO);
     }
-
     /**
-     * 根据分类和slug获取文章详情（兼容前端路由）
+     * 获取真实IP
      */
-    @GetMapping("/articles/{category}/{slug}")
-    @ApiOperation("根据分类和slug获取文章详情")
-    public Result<ArticleVO> getArticleBySlug(
-            @PathVariable String category,
-            @PathVariable String slug)
-    {
-        log.info("获取文章详情，分类：{}，slug：{}", category, slug);
-
-        // 暂时返回第一篇文章作为示例
-        ArticleQueryDTO queryDTO = new ArticleQueryDTO();
-        queryDTO.setStatus(1);
-
-        List<ArticleVO> articles = articleService.listArticles(queryDTO);
-        if (!articles.isEmpty()) {
-            return Result.success(articles.get(0));
+    private String getIpAddress(HttpServletRequest request) {
+        String ip = request.getHeader("x-forwarded-for");
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip))
+        {
+            ip = request.getHeader("Proxy-Client-IP");
         }
-
-        return Result.error("文章不存在");
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip))
+        {
+            ip = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip))
+        {
+            ip = request.getRemoteAddr();
+        }
+        // 如果是多级代理，x-forwarded-for 可能是 "1.1.1.1, 2.2.2.2"，第一个才是真实IP
+        if (ip != null && ip.contains(",")) {
+            ip = ip.split(",")[0].trim();
+        }
+        return ip;
     }
+
+
 
     /**
      * 获取随机文章（推荐文章）
@@ -181,15 +185,5 @@ public class ArticleController {
 
         return Result.success(articles);
     }
-    /**
-     * 增加文章浏览量
-     */
-    @PostMapping("/article/{id}/view")
-    @ApiOperation("增加文章浏览量")
-    public Result<Void> incrementArticleView(@PathVariable Long id)
-    {
-        log.info("增加文章浏览量，ID：{}", id);
-        // TODO: 实现浏览量增加逻辑
-        return Result.success();
-    }
+
 }

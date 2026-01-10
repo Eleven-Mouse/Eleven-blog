@@ -4,6 +4,7 @@ import blog.dto.ArticleDTO;
 import blog.dto.ArticleQueryDTO;
 import blog.entity.Article;
 import blog.vo.ArticleVO;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,11 +24,6 @@ public interface ArticleService {
      */
     void updateArticle(Long id, ArticleDTO articleDTO);
 
-    /**
-     * 查询所有文章
-     * @return 文章列表
-     */
-    List<ArticleVO> listAllArticles();
 
     /**
      * 根据条件查询文章
@@ -41,7 +37,7 @@ public interface ArticleService {
      * @param id 文章ID
      * @return 文章详情
      */
-    ArticleVO getArticleById(Long id);
+    ArticleVO getArticleById(Long id,String request);
 
 
     /**

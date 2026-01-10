@@ -115,13 +115,7 @@ public class FriendLinkServiceImpl implements FriendLinkService
         return friendLinks;
     }
 
-    @Override
-    public void incrementViewCount(Long id)
-    {
-        log.info("增加友链浏览次数，ID：{}", id);
 
-        friendLinkMapper.incrementViewCount(id);
-    }
 
     @Override
     public Long countTotal()

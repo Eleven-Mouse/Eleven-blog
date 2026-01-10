@@ -9,6 +9,7 @@ import blog.mapper.TagsMapper;
 import blog.service.ArticleService;
 import blog.service.ViewCountService;
 import blog.vo.ArticleVO;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,47 +111,7 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
 
-    @Override
-    public List<ArticleVO> listAllArticles()
-    {
-        log.info("查询所有文章");
-        List<ArticleVO> articles = articleMapper.selectAll();
 
-        if (articles == null || articles.isEmpty()) {
-            return articles;
-        }
-
-        // 提取所有文章中的所有标签ID
-        java.util.Set<Long> tagIds = articles.stream()
-                .filter(article -> article.getTags() != null && !article.getTags().trim().isEmpty())
-                .flatMap(article -> java.util.Arrays.stream(article.getTags().split(",")))
-                .map(Long::valueOf)
-                .collect(java.util.stream.Collectors.toSet());
-
-        if (!tagIds.isEmpty()) {
-            // 一次性查询所有标签ID对应的标签名称
-            List<blog.entity.Tags> tagsList = tagsMapper.selectByIds(new java.util.ArrayList<>(tagIds));
-            java.util.Map<Long, String> tagIdToNameMap = tagsList.stream()
-                    .collect(java.util.stream.Collectors.toMap(blog.entity.Tags::getId, blog.entity.Tags::getName));
-
-            // 遍历文章，将标签ID替换为名称
-            articles.forEach(article -> {
-                article.setStatusText(getStatusText(article.getStatus()));
-                if (article.getTags() != null && !article.getTags().trim().isEmpty()) {
-                    String tagNames = java.util.Arrays.stream(article.getTags().split(","))
-                            .map(idStr -> tagIdToNameMap.getOrDefault(Long.valueOf(idStr), ""))
-                            .collect(java.util.stream.Collectors.joining(","));
-                    article.setTags(tagNames);
-                }
-            });
-        } else {
-            articles.forEach(article -> {
-                article.setStatusText(getStatusText(article.getStatus()));
-            });
-        }
-
-        return articles;
-    }
 
     @Override
     public List<ArticleVO> listArticles(ArticleQueryDTO queryDTO)
@@ -208,20 +169,17 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public ArticleVO getArticleById(Long id)
+    public ArticleVO getArticleById(Long id,String userIp)
     {
         log.info("查询文章详情，ID：{}", id);
-
-
         ArticleDTO article = articleMapper.selectById(id);
-        ArticleVO vo = new ArticleVO();
 
+        ArticleVO vo = new ArticleVO();
         BeanUtils.copyProperties(article,vo);
         vo.setId(id);
-        viewCountService.incrementViewCount(id);
+        viewCountService.incrementViewCount(id,userIp);
 
         Integer viewCount = viewCountService.getViewCount(id);
-
 
         vo.setViewCount(viewCount);
         return vo;

@@ -173,28 +173,6 @@ public class FileUploadController
         }
     }
 
-    /**
-     * 获取图片列表
-     */
-    @GetMapping("/images")
-    @ApiOperation("获取图片列表")
-    public Result<List<Map<String, Object>>> getImageList()
-    {
-        log.info("获取图片列表");
-
-        try
-        {
-            // 这里应该从数据库或文件系统获取图片列表
-            // 暂时返回空列表
-            List<Map<String, Object>> images = new ArrayList<>();
-            return Result.success(images);
-        }
-        catch (Exception e)
-        {
-            log.error("获取图片列表失败", e);
-            return Result.error("获取图片列表失败：" + e.getMessage());
-        }
-    }
 
     /**
      * 删除图片

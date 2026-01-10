@@ -44,7 +44,7 @@
           </el-menu-item>
         </el-sub-menu>
         <el-menu-item index="/moment"
-          ><el-icon><WalletFilled /></el-icon>Moment</el-menu-item
+          ><el-icon><Comment /></el-icon>Moment</el-menu-item
         >
         <el-menu-item index="/archive"
           ><el-icon><WalletFilled /></el-icon>Archive</el-menu-item
@@ -87,6 +87,7 @@ import {
   UserFilled,
   WalletFilled,
   Promotion,
+  Comment,
 } from '@element-plus/icons-vue'
 import ThemeSwitcher from './ThemeSwitcher.vue'
 

@@ -43,13 +43,7 @@ public class CommentServiceImpl implements CommentService {
     @Value("${blog.owner.nickname:博主}")
     private String ownerNickname;
 
-    @Override
-    @Transactional
-    public void deleteChildCommentById(Long parentCommentId, Long childCommentId)
-    {
-        commentMapper.deleteChildCommentById(parentCommentId,childCommentId);
-        log.info("成功删除子评论，ID: {}",childCommentId );
-    }
+
 
     @Override
     @Transactional
@@ -170,9 +164,4 @@ public class CommentServiceImpl implements CommentService {
         commentMapper.updateStatus(id,status);
     }
 
-    @Override
-    public void updateCommentNoticeById(Long id, Boolean notice)
-    {
-        commentMapper.updateCommentNoticeById(id,notice);
-    }
 }

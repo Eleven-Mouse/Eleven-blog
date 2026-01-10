@@ -42,19 +42,7 @@ public class CommentController {
         return Result.success("操作成功");
     }
 
-    /**
-     * 更新评论接收邮件提醒状态
-     *
-     * @param id     评论id
-     * @param notice 是否接收提醒
-     * @return
-     */
-    @ApiOperation("更新评论邮件提醒状态")
-    @PutMapping("/notice")
-    public Result updateNotice(@RequestParam Long id, @RequestParam Boolean notice) {
-        commentService.updateCommentNoticeById(id, notice);
-        return Result.success("操作成功");
-    }
+
     /**
      * 按id删除该评论,且一并所有子评论
      * 评论id
@@ -68,7 +56,6 @@ public class CommentController {
         commentService.deleteCommentById(id);
         return Result.success("评论删除成功");
     }
-
 
 
     /**
@@ -88,19 +75,7 @@ public class CommentController {
         return Result.success(comments);
     }
 
-    /**
-     * 按id删除子评论
-     * 子评论id
-     * @return
-     */
-    @DeleteMapping
-    private Result deleteChildCommentById( @RequestParam Long parentCommentId, @RequestParam Long childCommentId)
-    {
-        log.info("删除子评论：{},父评论：{}",childCommentId,parentCommentId);
-        commentService.deleteChildCommentById(childCommentId,parentCommentId);
-        return Result.success("评论删除成功");
 
-    }
 
 }
 

@@ -44,10 +44,7 @@ public interface FriendLinkService {
      */
     List<FriendLinkVO> listFriendLinks(FriendLinkQueryDTO queryDTO);
 
-    /**
-     * 增加浏览次数
-     */
-    void incrementViewCount(Long id);
+
 
     /**
      * 统计友链总数
