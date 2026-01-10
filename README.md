@@ -27,7 +27,7 @@ Eleven-blog/
 ### 后端 (blog-backend)
 - 核心框架: Spring Boot 
 - 安全框架：Spring Security
-- Token：jjwt
+- Token：jwt
 - 数据库: MySQL,Redis
 - ORM框架: MyBatis 
 ### 前端 (blog-cms & blog-view)
@@ -73,6 +73,7 @@ npm run build  //打包
 
 # 🤝 贡献
 欢迎提交 Issue 或 Pull Request 来改进这个项目！
+
 
 
 
