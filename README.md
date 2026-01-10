@@ -1,36 +1,35 @@
-﻿# Eleven-blog
-
-  一个以简约为主的个人主题博客
+﻿#  ̲̅  𝑬𝒍𝒆𝒗𝒆𝒏 𝒃𝒍𝒐𝒈
+ **一个以简约为主的个人主题博客**
 
 # ✨ 项目结构
 ```
 Eleven-blog/
-├── blog-backend/            # 后端工程根目录
-│   ├── blog-common/         # 公共模块 (工具类、通用配置)
-│   ├── blog-pojo/           # 实体类模块 (Entity, DTO, VO)
+├── blog-backend/            
+│   ├── blog-common/         # 公共模块
+│   ├── blog-pojo/           # 实体类模块 
 │   ├── blog-server/         # 核心业务服务 (启动入口, Controller, Service)
 │   └── Dockerfile          
-├── blog-cms/                # 后台管理系统前端 (Admin)
+├── blog-cms/                # 后台管理系统前端
 │   ├── src/                 
 │   ├── public/            
 │   ├── vite.config.js      
 │   └── nginx.conf          
-├── blog-view/               # 博客前台展示前端 (Portal)
+├── blog-view/               # 博客前台展示前端
 │   ├── src/                 
 │   ├── vite.config.js    
 │   └── nginx.conf      
 ├── sql/                     # 数据库初始化脚本 (.sql 文件)
 ├── upload_data/             # 文件上传存储目录 (挂载卷)
-└── docker-compose.yml       # Docker Compose 编排文件 (一键启动)
+└── docker-compose.yml       # Docker Compose 
 
 ```
 # 🛠️ 技术栈
-- 后端 (blog-backend)
+### 后端 (blog-backend)
 - 核心框架: Spring Boot 
 - 构建工具: Maven
 - 数据库: MySQL,Redis
 - ORM框架: MyBatis 
-- 前端 (blog-cms & blog-view)
+### 前端 (blog-cms & blog-view)
 - 构建工具: Vite
 - 语言: JavaScript 
 - 框架: Vue 3 
@@ -73,3 +72,4 @@ npm run build  //打包
 
 # 🤝 贡献
 欢迎提交 Issue 或 Pull Request 来改进这个项目！
+
