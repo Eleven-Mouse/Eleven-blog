@@ -25,7 +25,6 @@ public class SecurityConfig {
     private final JwtFilter jwtFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
-    // 使用构造器注入自定义的 Filter 和 EntryPoint
     public SecurityConfig(JwtFilter jwtFilter, JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) {
         this.jwtFilter = jwtFilter;
         this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
