@@ -18,16 +18,18 @@ Eleven Blog is a full-stack personal blog platform featuring a **public-facing b
 
 <div align="center">
 
-### Public Blog
+### Public blog
 
-<img width="1000" height="500" alt="Blog Homepage" src="https://github.com/user-attachments/assets/c03e7230-60f4-4275-9a8a-efff87b96592" />
-<img width="1000" height="500" alt="Article Detail" src="https://github.com/user-attachments/assets/f7ca07f4-59aa-4f07-a960-59d2f2699a59" />
+<img width="1920" height="869" alt="image" src="https://github.com/user-attachments/assets/2713d415-2be5-4cad-9e85-fce19dcca8e4" />
+<img width="1920" height="869" alt="image" src="https://github.com/user-attachments/assets/be9f10af-e10c-47e2-99b5-02f1e87116b4" />
 
-### Admin Panel
+<img width="418" height="885" alt="image" src="https://github.com/user-attachments/assets/2d2abad2-6681-44c6-ab3f-cc9fb66a6c7a" /> <img width="413" height="778" alt="image" src="https://github.com/user-attachments/assets/a04a9936-5d82-470b-a902-8fbd729e7b73" />
 
-<img width="1000" height="500" alt="Dashboard" src="https://github.com/user-attachments/assets/f789a6f1-c389-4c61-a019-26ec947dcc7a" />
-<img width="1000" height="500" alt="Article Management" src="https://github.com/user-attachments/assets/6515e309-44bd-4ec1-8722-ccc9afcbde07" />
-<img width="1000" height="500" alt="Write Article" src="https://github.com/user-attachments/assets/2904549a-f101-419c-b7a4-d3d60be38fff" />
+
+
+### Admin penl
+
+<img width="1000" height="500" alt="写文章" src="https://github.com/user-attachments/assets/2904549a-f101-419c-b7a4-d3d60be38fff" />
 
 </div>
 
