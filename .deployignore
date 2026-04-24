@@ -1,0 +1,9 @@
+node_modules
+.git
+target
+*.log
+hs_err_pid*.log
+blog-cms/node_modules
+blog-view/node_modules
+blog-backend/blog-server/target
+blog-backend/blog-server/bin

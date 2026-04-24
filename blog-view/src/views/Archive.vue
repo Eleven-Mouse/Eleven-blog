@@ -1,33 +1,29 @@
 <template>
-  <div class="archive-container">
-    <el-text class="mx-1">
-      <div class="archive-header">
-        <h1>归档</h1>
-        <p>真棒！目前共计 {{ totalArticles }} 篇文章。</p>
+  <div class="archive-page page-container">
+    <div class="page-header">
+      <h1 class="page-header__title">归档</h1>
+      <p class="page-header__desc">真棒！目前共计 {{ totalArticles }} 篇文章。</p>
+    </div>
+
+    <div v-if="loading" class="loading-tip">正在加载归档数据...</div>
+    <div v-if="error" class="error-tip">{{ error }}</div>
+
+    <div v-if="!loading && !error" class="archive-list">
+      <div v-for="(articles, month) in archiveData" :key="month" class="archive-group">
+        <div class="archive-group__label">{{ month }}</div>
+        <div class="archive-group__items">
+          <router-link
+            v-for="article in articles"
+            :key="article.id"
+            :to="`/article/${article.id}`"
+            class="archive-item"
+          >
+            <span class="archive-item__date">{{ formatDate(article.publishTime) }}</span>
+            <span class="archive-item__title">{{ article.title }}</span>
+          </router-link>
+        </div>
       </div>
-      <div v-if="loading">正在加载归档数据...</div>
-      <div v-if="error">{{ error }}</div>
-      <el-timeline v-if="!loading && !error">
-        <el-timeline-item
-          v-for="(articles, month) in archiveData"
-          :key="month"
-          :timestamp="`${month}`"
-          placement="top"
-          type="primary"
-          :hollow="true"
-          size="large"
-        >
-          <ul class="article-list">
-            <li v-for="article in articles" :key="article.id" class="article-item">
-              <span class="date">{{ formatDate(article.publishTime) }}</span>
-              <router-link :to="`/article/${article.id}`" class="title">{{
-                article.title
-              }}</router-link>
-            </li>
-          </ul>
-        </el-timeline-item>
-      </el-timeline>
-    </el-text>
+    </div>
   </div>
 </template>
 
@@ -40,14 +36,11 @@ const totalArticles = ref(0)
 const loading = ref(false)
 const error = ref(null)
 
-// 获取归档数据
 const getArchiveData = async () => {
   loading.value = true
   error.value = null
   try {
-    //获得归档数据
     const response = await fetchArchive()
-    //获得归档数据和文章总数
     archiveData.value = response.archive || {}
     totalArticles.value = response.total || 0
   } catch (err) {
@@ -58,106 +51,87 @@ const getArchiveData = async () => {
   }
 }
 
-// 格式化日期，只显示 'MM-DD'
 const formatDate = (datetime) => {
   if (!datetime) return ''
   const date = new Date(datetime)
-  const month = (date.getMonth() + 1).toString().padStart(2, '0')
-  const day = date.getDate().toString().padStart(2, '0')
-  return `${month}-${day}`
+  const m = (date.getMonth() + 1).toString().padStart(2, '0')
+  const d = date.getDate().toString().padStart(2, '0')
+  return `${m}-${d}`
 }
 
-onMounted(() => {
-  getArchiveData()
-})
+onMounted(() => { getArchiveData() })
 </script>
 
 <style scoped>
-.archive-container {
-  width: 650px;
-  padding: 20px 0;
-  border-top: 1px solid var(--card-border-color, #3a3a3a);
-  border-bottom: 1px solid var(--card-border-color, #3a3a3a);
-  margin: 40px auto;
-  animation: fadeIn 0.5s ease-out 0.3s forwards;
-  opacity: 0; /* 初始状态为透明 */
-}
-.archive-card {
-  padding: 20px 0;
-  border-top: 1px solid var(--card-border-color, #3a3a3a);
-  border-bottom: 1px solid var(--card-border-color, #3a3a3a);
-  margin: 40px 0;
-}
-.title-asd {
-  font-size: 1.8rem;
-  font-weight: 600;
-  color: var(--app-text-color, #545252);
-  margin-top: 0;
-  margin-bottom: 25px;
+.archive-list {
+  max-width: 700px;
+  margin: 0 auto;
 }
 
-.archive-header {
-  text-align: center;
+.archive-group {
   margin-bottom: 40px;
 }
 
-.archive-header p {
-  color: #888;
+.archive-group__label {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 14px;
+  padding-left: 16px;
+  border-left: 3px solid var(--accent);
+  letter-spacing: -0.01em;
 }
 
-.article-list {
-  list-style: none;
-  padding: 0;
-  position: relative;
-}
-
-.article-item {
+.archive-group__items {
   display: flex;
-  align-items: center;
-  margin-bottom: 15px;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.date {
-  color: #888;
-  font-size: 0.9em;
-  margin-right: 120px;
-  width: 80px;
-}
-
-.title {
-  color: #434343;
+.archive-item {
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+  padding: 10px 16px;
   text-decoration: none;
-  transition: color 0.3s;
-  position: relative;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast), color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
-.title:hover {
-  color: #333;
+.archive-item:hover {
+  background: var(--accent-light);
+  transform: translateX(4px);
 }
 
-/* 下划线动画 */
-.title::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: -2px;
-  width: 0%;
-  height: 2px;
-  background-color: currentColor;
-  transition: width 0.3s ease-in-out;
+.archive-item__date {
+  font-size: 13px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  width: 48px;
+  font-variant-numeric: tabular-nums;
 }
 
-.title:hover::after {
-  width: 100%;
+.archive-item__title {
+  font-size: 15px;
+  color: var(--text-secondary);
+  transition: color var(--transition-fast);
 }
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+
+.archive-item:hover .archive-item__title {
+  color: var(--accent);
+}
+
+@media (max-width: 768px) {
+  .archive-item {
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 16px;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  .archive-item__date {
+    width: auto;
+    font-size: 12px;
   }
 }
 </style>

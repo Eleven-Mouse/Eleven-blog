@@ -4,6 +4,6 @@
   </div>
 </template>
 <script setup>
-import MomentFromCard from "@/components/MomentFromCard.vue";
+import MomentFromCard from "@/components/editor/MomentFormCard.vue";
 </script>
 <style scoped></style>

@@ -31,7 +31,7 @@ import { UploadFilled } from "@element-plus/icons-vue";
 import { ref } from "vue";
 import { ElMessage } from "element-plus";
 import fm from "front-matter";
-import ArticleFormCard from "@/components/ArticleFormCard.vue";
+import ArticleFormCard from "@/components/editor/ArticleFormCard.vue";
 
 const parsedArticleData = ref({
   title: "",

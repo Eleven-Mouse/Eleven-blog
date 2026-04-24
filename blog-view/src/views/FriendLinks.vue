@@ -1,189 +1,162 @@
 <template>
-  <div class="container">
-    <div class="links">
-      <el-text class="mx-1">
-        <h3 class="friendslinks-title">友链</h3>
-
-        <!-- 加载状态 -->
-        <div v-if="loading">正在加载...</div>
-        <div v-if="error">{{ error }}</div>
-
-        <div v-if="frindslinksdata.length" class="friendslinks-list">
-          <el-row :gutter="20">
-            <el-col
-              v-for="item in frindslinksdata"
-              :key="item.id"
-              :xs="24"
-              :sm="12"
-              :md="6"
-              :lg="6"
-              style="margin-bottom: 20px"
-            >
-              <el-card class="friendscard" shadow="hover" @click="openFriend(item)">
-                <div class="card-content">
-                  <!-- 头像部分 -->
-                  <img
-                    :src="getAvatarUrl(item.logo)"
-                    :alt="item.name"
-                    class="friendslink-avatar"
-                    @error="handleImgError"
-                    loading="lazy"
-                  />
-
-                  <div class="info-content">
-                    <div class="friendslink-name">{{ item.name }}</div>
-                    <div
-                      v-if="item.description"
-                      class="friendslink-description"
-                      :title="item.description"
-                    >
-                      {{ item.description }}
-                    </div>
-                  </div>
-                </div>
-              </el-card>
-            </el-col>
-          </el-row>
-        </div>
-
-        <!-- 空状态 -->
-        <el-empty v-else description="暂无友链" />
-      </el-text>
+  <div class="friends-page page-container">
+    <div class="page-header">
+      <h1 class="page-header__title">友链</h1>
+      <p class="page-header__desc">海内存知己，天涯若比邻</p>
     </div>
 
-    <comments-card :page="'friends'" />
+    <div v-if="loading" class="loading-tip">正在加载...</div>
+    <div v-if="error" class="error-tip">{{ error }}</div>
+
+    <div v-if="friends.length" class="friends-grid">
+      <a
+        v-for="(item, index) in friends"
+        :key="item.id"
+        :href="item.url"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="friend-card modern-card stagger-item"
+        :style="{ animationDelay: `${index * 0.06}s` }"
+      >
+        <div class="friend-card__avatar">
+          <img :src="getAvatarUrl(item.logo)" :alt="item.name" loading="lazy" @error="handleImgError" />
+        </div>
+        <div class="friend-card__info">
+          <div class="friend-card__name">{{ item.name }}</div>
+          <div v-if="item.description" class="friend-card__desc">{{ item.description }}</div>
+        </div>
+        <svg class="friend-card__arrow" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 12L12 4M12 4H6M12 4v6"/></svg>
+      </a>
+    </div>
+
+    <el-empty v-else-if="!loading" description="暂无友链" />
+
+    <div class="friends-comments">
+      <CommentsCard :page="'friends'" />
+    </div>
   </div>
 </template>
+
 <script setup>
 import { onMounted, ref } from 'vue'
 import { getFriendLinks } from '../api/friendLink'
-
 import CommentsCard from '@/components/CommentsCard.vue'
-const frindslinksdata = ref([])
+import defaultAvatar from '../assets/(5).png'
+
+const friends = ref([])
 const loading = ref(false)
 const error = ref(null)
 const BASE_URL = import.meta.env.VITE_APP_UPLOAD_URL || ''
-import defaultAvatar from '../assets/(5).png'
 
 const getAvatarUrl = (logoPath) => {
   if (!logoPath) return defaultAvatar
-
-  let path = logoPath.split(',')[0]
-
-  if (path.startsWith('http') || path.startsWith('https')) {
-    return path
-  }
-
+  const path = logoPath.split(',')[0]
+  if (path.startsWith('http')) return path
   return BASE_URL + path
 }
-//获取友情链接列表信息
-const getFrindslinksList = async () => {
+
+const handleImgError = (e) => {
+  e.target.onerror = null
+  e.target.src = defaultAvatar
+}
+
+onMounted(async () => {
   loading.value = true
-  error.value = null
   try {
     const data = await getFriendLinks()
-    frindslinksdata.value = data || []
+    friends.value = data || []
   } catch (err) {
     error.value = '获取友链数据失败'
     console.error(err)
   } finally {
     loading.value = false
   }
-}
-// 图片加载失败时的处理
-const handleImgError = (e) => {
-  // 防止死循环：如果默认图也挂了，就不再触发 error
-  e.target.onerror = null
-  e.target.src = defaultAvatar
-}
-
-const openFriend = (item) => {
-  if (item.url) {
-    window.open(item.url, '_blank')
-  }
-}
-onMounted(() => {
-  getFrindslinksList()
 })
 </script>
+
 <style scoped>
-.container {
-  animation: fadeIn 0.5s ease-out 0.3s forwards;
-  opacity: 0; /* 初始状态为透明 */
-}
-.links {
-  padding: 20px 0;
-  border-top: 1px solid var(--card-border-color, #3a3a3a);
-  border-bottom: 1px solid var(--card-border-color, #3a3a3a);
-  margin: 40px 0;
-  width: 750px;
+.friends-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
 }
 
-.el-row {
-  margin-bottom: 20px;
-}
-.el-row:last-child {
-  margin-bottom: 0;
-}
-.el-col {
-  border-radius: 4px;
-}
-
-.grid-content {
-  border-radius: 4px;
-  min-height: 36px;
-}
-.friendslinks-title {
-  font-size: 1.8rem;
-  font-weight: 600;
-  color: var(--app-text-color, #545252);
-  margin-top: 0;
-  margin-bottom: 25px;
-  text-align: center;
-}
-
-.friendscard {
-  text-align: center;
+.friend-card {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 50px;
-  margin: 10px 0;
-  border-radius: 10%;
+  gap: 14px;
+  padding: 18px 22px;
+  text-decoration: none;
+  color: inherit;
   cursor: pointer;
-  box-shadow: none;
-  border: 0;
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal),
+    border-color var(--transition-normal);
 }
 
-.friendslink-avatar {
-  width: 100px;
-  height: 100px;
-  border-radius: 10%;
+.friend-card:hover {
+  transform: translateY(-3px) scale(1.01);
+  border-color: rgba(var(--accent-rgb), 0.15);
+}
+
+.friend-card__avatar img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
   object-fit: cover;
+  flex-shrink: 0;
+  transition: box-shadow var(--transition-fast);
 }
 
-.friendslink-name {
-  font-size: 14px;
-  color: var(--app-text-color, #545252);
-  text-align: center;
+.friend-card:hover .friend-card__avatar img {
+  box-shadow: 0 0 0 2px var(--accent);
 }
 
-.friendslink-description {
-  font-size: 12px;
-  color: #888;
-  text-align: center;
+.friend-card__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.friend-card__name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: color var(--transition-fast);
+}
+
+.friend-card:hover .friend-card__name {
+  color: var(--accent);
+}
+
+.friend-card__desc {
+  font-size: 13px;
+  color: var(--text-muted);
   margin-top: 4px;
-  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+.friend-card__arrow {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  opacity: 0;
+  transform: translate(-4px, 4px);
+  transition: all var(--transition-fast);
+}
+
+.friend-card:hover .friend-card__arrow {
+  opacity: 1;
+  transform: translate(0, 0);
+  color: var(--accent);
+}
+
+.friends-comments {
+  margin-top: 48px;
+}
+
+@media (max-width: 768px) {
+  .friends-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

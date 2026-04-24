@@ -1,89 +1,88 @@
 <template>
-  <div>
-    <el-card shadow="never" style="border-radius: 10px">
-      <el-button type="success" plain @click="handleAdd">新增分类</el-button>
-      <el-table
-        :data="categories"
-        :cell-style="{ textAlign: 'center' }"
-        :header-cell-style="{ textAlign: 'center' }"
-        table-layout="fixed"
+  <div class="page-container">
+    <el-card shadow="never" class="page-card">
+      <SearchToolbar>
+        <template #filters>
+          <el-input
+            v-model="keyword"
+            placeholder="搜索分类..."
+            :prefix-icon="Search"
+            clearable
+            style="width: 220px"
+            @input="handleSearch"
+          />
+        </template>
+        <template #actions>
+          <el-button type="primary" :icon="Plus" @click="handleAdd">
+            新增分类
+          </el-button>
+        </template>
+      </SearchToolbar>
+
+      <CommonTable
+        :data="filteredList"
+        :loading="loading"
+        :show-pagination="false"
       >
-        <el-table-column type="index" label="id" />
+        <el-table-column type="index" label="ID" width="80" />
         <el-table-column prop="name" label="分类名称" />
-        <el-table-column prop="articleCount" label="关联文章数量" />
-        <el-table-column prop="createTime" label="创建时间">
+        <el-table-column prop="articleCount" label="关联文章数" width="140">
+          <template #default="{ row }">
+            <el-tag type="info" effect="plain">{{ row.articleCount }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="创建时间" width="180">
           <template #default="{ row }">
             {{ formatTime(row.createTime) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作">
+        <el-table-column label="操作" width="160">
           <template #default="{ row }">
-            <span>
-              <el-button
-                type="success"
-                plain
-                size="small"
-                :icon="Edit"
-                @click="handleEdit(row)"
-                >编辑</el-button
-              >
+            <div class="table-actions">
+              <EditButton :id="row.id" target-path="/article/edit" />
               <DeleteButton
                 :id="row.id"
                 :api-func="deleteCategoryById"
+                :item-type="'分类'"
                 @success="handleDeleteSuccess"
               />
-            </span>
+            </div>
           </template>
         </el-table-column>
-      </el-table>
+      </CommonTable>
 
       <CommonDialog
         ref="dialogRef"
-        :loading="submitLoading"
-        @success="getAllCategoriesList"
+        @success="refresh"
       />
     </el-card>
   </div>
 </template>
+
 <script setup>
-import { ref, onMounted } from "vue";
-import { createCategory, getAllCategories } from "@/api/category";
-import DeleteButton from "@/components/common/DeleteButton.vue";
-import { deleteCategoryById } from "@/api/category";
-import { updateCategory } from "@/api/category";
-import { ElMessage } from "element-plus";
-import { Edit } from "@element-plus/icons-vue";
+import { ref, computed } from "vue";
+import { Plus, Search } from "@element-plus/icons-vue";
+import { createCategory, getAllCategories, deleteCategoryById, updateCategory } from "@/api/category";
+import { useSimpleList } from "@/composables/useTable";
+import { formatTime } from "@/composables/useFormat";
+import SearchToolbar from "@/components/common/SearchToolbar.vue";
+import CommonTable from "@/components/common/CommonTable.vue";
 import CommonDialog from "@/components/common/CommonDialog.vue";
+import EditButton from "@/components/common/EditButton.vue";
+import DeleteButton from "@/components/common/DeleteButton.vue";
 
-const categories = ref([]);
+const { data: categories, loading, refresh, handleDeleteSuccess } = useSimpleList(getAllCategories);
 const dialogRef = ref(null);
-const submitLoading = ref(false);
+const keyword = ref("");
 
-const getAllCategoriesList = async () => {
-  try {
-    categories.value = await getAllCategories();
-  } catch (error) {
-    console.error("加载分类失败:", error);
-    ElMessage.error("加载分类失败");
-  }
-};
-
-onMounted(async () => {
-  getAllCategoriesList();
+const filteredList = computed(() => {
+  if (!keyword.value) return categories.value;
+  const k = keyword.value.toLowerCase();
+  return categories.value.filter((item) => item.name?.toLowerCase().includes(k));
 });
 
-const formatTime = (datetime) => {
-  if (!datetime) return "--";
-  const date = new Date(datetime);
-  return date.toLocaleDateString("zh-CN", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-};
-
-const handleDeleteSuccess = (deleteId) => {
-  categories.value = categories.value.filter((item) => item.id !== deleteId);
+const handleSearch = () => {
+  // filteredList is computed, updates reactively
 };
 
 const handleAdd = () => {
@@ -93,13 +92,10 @@ const handleAdd = () => {
     updateApi: updateCategory,
   });
 };
-
-const handleEdit = (row) => {
-  dialogRef.value.open(row, {
-    itemName: "分类",
-    addApi: createCategory,
-    updateApi: updateCategory,
-  });
-};
 </script>
-<style scoped></style>
+
+<style scoped>
+.page-card {
+  border-radius: 8px;
+}
+</style>

@@ -1,45 +1,45 @@
 <template>
   <div class="comments-card">
-    <h3 class="title">评论</h3>
+    <h3 class="comments-card__title">评论</h3>
 
-    <!-- 主评论表单 -->
-    <div class="comment-form-wrapper">
-      <div class="user-info-inputs">
-        <el-row :gutter="20">
-          <el-col :span="12">
+    <!-- Comment Form -->
+    <div class="comment-form">
+      <div class="comment-form__fields">
+        <el-row :gutter="16">
+          <el-col :xs="24" :sm="12">
             <el-input v-model="commentForm.nickname" placeholder="昵称 (必填)" />
           </el-col>
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-input v-model="commentForm.email" type="email" placeholder="邮箱 (必填，不公开)" />
           </el-col>
         </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
+        <el-row :gutter="16">
+          <el-col :xs="24" :sm="12">
             <el-input v-model="commentForm.website" type="url" placeholder="网站 (可选)" />
           </el-col>
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-input v-model="commentForm.avatar" type="url" placeholder="头像URL (可选)" />
           </el-col>
         </el-row>
         <el-input
           v-model="commentForm.content"
           placeholder="请输入评论..."
-          :rows="5"
+          :rows="4"
           type="textarea"
-        ></el-input>
+        />
       </div>
-
-      <div class="form-footer">
-        <el-button @click="submitRootComment"> 发表评论</el-button>
+      <div class="comment-form__actions">
+        <el-button type="primary" @click="submitRootComment">发表评论</el-button>
       </div>
     </div>
 
     <el-divider />
-    <h3>共有{{ totalComments }}条评论</h3>
+
+    <h3 class="comments-card__subtitle">共有 {{ totalComments }} 条评论</h3>
+
     <div v-if="loading && comments.length === 0" class="loading-tip">评论加载中...</div>
     <div v-if="error" class="error-tip">{{ error }}</div>
 
-    <!-- 评论列表 -->
     <div class="comments-list" v-if="comments.length > 0">
       <CommentNode
         v-for="comment in comments"
@@ -53,24 +53,25 @@
         @cancel-reply="handleCancelReply"
       />
     </div>
-    <div v-else-if="!loading" class="no-comments-tip">暂无评论，快来抢沙发吧！</div>
+    <div v-else-if="!loading" class="empty-tip">暂无评论，快来抢沙发吧！</div>
 
-    <div v-if="noMore && comments.length > 0" class="no-more-tip">已加载所有评论</div>
+    <div v-if="noMore && comments.length > 0" class="comments-card__nomore">已加载所有评论</div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, defineProps, reactive, onBeforeMount } from 'vue'
 import { fetchComments, createComment } from '@/api/comment.js'
+import { ElMessage } from 'element-plus'
 import CommentNode from './CommentNode.vue'
 import defaultAvatar from '../assets/(5).png'
+
 const props = defineProps({
   blogId: { type: [Number, String], default: null },
   page: { type: String, default: null },
 })
 
 const totalComments = ref(0)
-
 const comments = ref([])
 const commentForm = reactive({
   content: '',
@@ -85,8 +86,7 @@ const commentForm = reactive({
 const loading = ref(false)
 const error = ref(null)
 const noMore = ref(false)
-const pagination = reactive({ pageNum: 1, pageSize: 1000 }) // Load all comments at once for tree building
-
+const pagination = reactive({ pageNum: 1, pageSize: 1000 })
 const replyingToId = ref(null)
 
 const buildTree = (commentsList) => {
@@ -115,7 +115,6 @@ const buildTree = (commentsList) => {
   })
 
   rootComments.sort((a, b) => new Date(a.createTime) - new Date(b.createTime))
-
   return rootComments
 }
 
@@ -126,12 +125,12 @@ const getComments = async () => {
   try {
     const params = { blogId: props.blogId, page: props.page, ...pagination }
     const res = await fetchComments(params)
-    const flatList = res || [] // The interceptor returns the data directly
-    totalComments.value = flatList.length // 在这里更新总数
+    const flatList = res || []
+    totalComments.value = flatList.length
     comments.value = buildTree(flatList)
     if (flatList.length < pagination.pageSize) noMore.value = true
   } catch (err) {
-    error.value = '评论加载失败，请稍后重试。'
+    error.value = '评论加载失败'
     console.error(err)
   } finally {
     loading.value = false
@@ -139,50 +138,47 @@ const getComments = async () => {
 }
 
 const submitComment = async (commentData) => {
-  if (!commentForm.nickname.trim()) return alert('昵称不能为空！')
-  if (!commentForm.content.trim()) return alert('内容不能为空！')
+  if (!commentForm.nickname.trim()) {
+    ElMessage.warning('昵称不能为空')
+    return
+  }
+  if (!commentForm.content.trim()) {
+    ElMessage.warning('评论内容不能为空')
+    return
+  }
 
   try {
     await createComment(commentData)
-
     localStorage.setItem('comment_nickname', commentForm.nickname)
     localStorage.setItem('comment_email', commentForm.email)
     localStorage.setItem('comment_website', commentForm.website)
     localStorage.setItem('comment_avatar', commentForm.avatar)
-    commentForm.page = props.page
-    clearForm.blogId = props.blogId
 
-    alert('评论成功！')
+    ElMessage.success('评论成功！')
     resetAndReload()
-    clearForm()
   } catch (err) {
-    alert(err.message || '评论失败，请稍后重试。')
+    ElMessage.error(err.message || '评论失败，请稍后重试。')
     console.error(err)
   }
 }
+
 const submitRootComment = () => {
-  if (!commentForm.content.trim()) return alert('评论内容不能为空！')
+  if (!commentForm.content.trim()) {
+    ElMessage.warning('评论内容不能为空')
+    return
+  }
   const data = { ...commentForm, blogId: props.blogId, page: props.page, parentCommentId: null }
   submitComment(data)
 }
 
-const handleShowReply = (comment) => {
-  replyingToId.value = comment.id
-}
+const handleShowReply = (comment) => { replyingToId.value = comment.id }
 
 const handleSubmitReply = (parentComment) => {
-  const data = {
-    ...commentForm,
-    blogId: props.blogId,
-    page: props.page,
-    parentCommentId: parentComment.id,
-  }
+  const data = { ...commentForm, blogId: props.blogId, page: props.page, parentCommentId: parentComment.id }
   submitComment(data)
 }
 
-const handleCancelReply = () => {
-  replyingToId.value = null
-}
+const handleCancelReply = () => { replyingToId.value = null }
 
 const clearForm = () => {
   commentForm.content = ''
@@ -194,90 +190,75 @@ const clearForm = () => {
 
 const resetAndReload = () => {
   replyingToId.value = null
-  clearForm() // 调用清空函数
+  clearForm()
   comments.value = []
   pagination.pageNum = 1
   noMore.value = false
   getComments()
 }
+
 onBeforeMount(clearForm)
 onMounted(getComments)
 </script>
 
 <style scoped>
 .comments-card {
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 8px;
+  padding: 24px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
 }
-.title {
+
+.comments-card__title {
   font-size: 20px;
   font-weight: 600;
+  color: var(--text-primary);
   margin-bottom: 20px;
 }
-.comment-form-wrapper {
-  margin-bottom: 30px;
+
+.comments-card__subtitle {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
 }
 
-.input-field {
-  flex: 1 1 200px;
-  padding: 8px 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-}
-.comment-textarea {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  box-sizing: border-box;
-  resize: vertical;
-}
-.el-row {
-  margin-bottom: 20px;
-}
-.el-row:last-child {
-  margin-bottom: 0;
-}
-.el-col {
-  border-radius: 4px;
+.comment-form {
+  margin-bottom: 8px;
 }
 
-.grid-content {
-  border-radius: 4px;
-  min-height: 36px;
+.comment-form__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
-.form-footer {
+
+.comment-form__actions {
   display: flex;
   justify-content: flex-end;
-  margin-top: 10px;
+  margin-top: 12px;
 }
-.submit-btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  background-color: #333;
-  color: white;
-}
-.loading-tip,
-.error-tip,
-.no-comments-tip,
-.no-more-tip {
-  text-align: center;
-  color: #888;
-  padding: 20px 0;
-}
-.error-tip {
-  color: #f56c6c;
-}
+
 .comments-list {
-  margin-top: 20px;
+  margin-top: 16px;
 }
-.no-more-tip {
-  color: #999;
+
+.comments-card__nomore {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 16px 0;
+}
+
+@media (max-width: 768px) {
+  .comments-card {
+    padding: 16px;
+    border-radius: var(--radius-md);
+  }
+
+  .comments-card :deep(.el-col) {
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+  }
 }
 </style>

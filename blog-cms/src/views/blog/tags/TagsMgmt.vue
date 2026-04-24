@@ -1,92 +1,95 @@
 <template>
-  <el-card shadow="never" style="border-radius: 10px">
-    <el-button type="success" plain @click="handleAdd">新增标签</el-button>
-    <el-table
-      :data="tags"
-      :cell-style="{ textAlign: 'center' }"
-      :header-cell-style="{ textAlign: 'center' }"
-      table-layout="fixed"
-    >
-      <el-table-column type="index" label="id" />
-      <el-table-column prop="name" label="标签名称">
-        <template #default="{ row }">
-          <el-tag> {{ row.name }} </el-tag></template
-        >
-      </el-table-column>
-      <el-table-column prop="articleCount" label="关联文章数量">
-        <template #default="{ row }">
-          <el-tag type="warning">{{ row.articleCount }}</el-tag></template
-        >
-      </el-table-column>
-      <el-table-column prop="createTime" label="创建时间">
-        <template #default="{ row }">
-          {{ formatTime(row.createTime) }}
+  <div class="page-container">
+    <el-card shadow="never" class="page-card">
+      <SearchToolbar>
+        <template #filters>
+          <el-input
+            v-model="keyword"
+            placeholder="搜索标签..."
+            :prefix-icon="Search"
+            clearable
+            style="width: 220px"
+          />
         </template>
-      </el-table-column>
-      <el-table-column label="操作">
-        <template #default="{ row }">
-          <span>
-            <el-button
-              type="success"
-              plain
-              size="small"
-              :icon="Edit"
-              @click="handleEdit(row)"
-              >编辑</el-button
-            >
-            <DeleteButton
-              :id="row.id"
-              :api-func="deleteTagById"
-              @success="handleDeleteSuccess"
-            />
-          </span>
+        <template #actions>
+          <el-button type="primary" :icon="Plus" @click="handleAdd">
+            新增标签
+          </el-button>
         </template>
-      </el-table-column>
-    </el-table>
+      </SearchToolbar>
 
-    <CommonDialog
-      ref="dialogRef"
-      :loading="submitLoading"
-      @success="getTagsList"
-    />
-  </el-card>
+      <CommonTable
+        :data="filteredList"
+        :loading="loading"
+        :show-pagination="false"
+      >
+        <el-table-column type="index" label="ID" width="80" />
+        <el-table-column prop="name" label="标签名称">
+          <template #default="{ row }">
+            <el-tag effect="plain">{{ row.name }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="articleCount" label="关联文章数" width="140">
+          <template #default="{ row }">
+            <el-tag type="warning" effect="plain">{{ row.articleCount }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="创建时间" width="180">
+          <template #default="{ row }">
+            {{ formatTime(row.createTime) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="160">
+          <template #default="{ row }">
+            <div class="table-actions">
+              <el-button
+                type="primary"
+                :icon="Edit"
+                size="small"
+                plain
+                @click="handleEdit(row)"
+              >
+                编辑
+              </el-button>
+              <DeleteButton
+                :id="row.id"
+                :api-func="deleteTagById"
+                :item-type="'标签'"
+                @success="handleDeleteSuccess"
+              />
+            </div>
+          </template>
+        </el-table-column>
+      </CommonTable>
+
+      <CommonDialog
+        ref="dialogRef"
+        @success="refresh"
+      />
+    </el-card>
+  </div>
 </template>
+
 <script setup>
-import { createTag, deleteTagById, updateTag } from "@/api/tags";
-import { ref, onMounted } from "vue";
-import { getAllTags } from "@/api/tags";
-import { Edit } from "@element-plus/icons-vue";
-import { ElMessage } from "element-plus";
-import DeleteButton from "@/components/common/DeleteButton.vue";
+import { ref, computed } from "vue";
+import { Plus, Search, Edit } from "@element-plus/icons-vue";
+import { createTag, deleteTagById, getAllTags, updateTag } from "@/api/tags";
+import { useSimpleList } from "@/composables/useTable";
+import { formatTime } from "@/composables/useFormat";
+import SearchToolbar from "@/components/common/SearchToolbar.vue";
+import CommonTable from "@/components/common/CommonTable.vue";
 import CommonDialog from "@/components/common/CommonDialog.vue";
-const tags = ref([]);
+import DeleteButton from "@/components/common/DeleteButton.vue";
+
+const { data: tags, loading, refresh, handleDeleteSuccess } = useSimpleList(getAllTags);
 const dialogRef = ref(null);
-const submitLoading = ref(false);
+const keyword = ref("");
 
-const getTagsList = async () => {
-  try {
-    tags.value = await getAllTags();
-  } catch (error) {
-    console.error("加载标签失败:", error);
-    ElMessage.error("加载标签失败");
-  }
-};
-onMounted(async () => {
-  getTagsList();
+const filteredList = computed(() => {
+  if (!keyword.value) return tags.value;
+  const k = keyword.value.toLowerCase();
+  return tags.value.filter((item) => item.name?.toLowerCase().includes(k));
 });
-const formatTime = (datetime) => {
-  if (!datetime) return "--";
-  const date = new Date(datetime);
-  return date.toLocaleDateString("zh-CN", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-};
-
-const handleDeleteSuccess = (deleteId) => {
-  tags.value = tags.value.filter((item) => item.id !== deleteId);
-};
 
 const handleAdd = () => {
   dialogRef.value.open(null, {
@@ -104,4 +107,9 @@ const handleEdit = (row) => {
   });
 };
 </script>
-<style scoped></style>
+
+<style scoped>
+.page-card {
+  border-radius: 8px;
+}
+</style>

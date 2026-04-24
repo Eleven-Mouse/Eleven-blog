@@ -2,10 +2,10 @@ package blog.controller.admin;
 
 import blog.dto.Login.LoginRequest;
 import blog.dto.Login.LoginResponse;
+import blog.dto.Login.RefreshRequest;
 import blog.service.AuthService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -27,5 +27,10 @@ public class AuthController {
     @PostMapping("/login")
     public LoginResponse login(@RequestBody LoginRequest request) {
         return authService.login(request);
+    }
+
+    @PostMapping("/refresh")
+    public LoginResponse refresh(@RequestBody RefreshRequest request) {
+        return authService.refresh(request);
     }
 }

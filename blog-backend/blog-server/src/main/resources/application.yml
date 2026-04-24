@@ -3,11 +3,11 @@
 spring:
     # 数据源配置
     datasource:
-        url: jdbc:mysql://localhost:3306/eleven_blog?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useOldAliasMetadataBehavior=true&zeroDateTimeBehavior=convertToNull&autoCommit=true&rewriteBatchedStatements=true
+        url: jdbc:mysql://blog-mysql:3306/eleven_blog?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useOldAliasMetadataBehavior=true&zeroDateTimeBehavior=convertToNull&autoCommit=true&rewriteBatchedStatements=true
         # 数据库用户名
         username: root
         # 数据库密码（请修改为你的MySQL密码）
-        password: 20469960
+        password: 123456
         # MySQL驱动类名
         driver-class-name: com.mysql.cj.jdbc.Driver
     servlet:
@@ -16,7 +16,7 @@ spring:
             max-request-size: 50MB
     data:
         redis:
-            host: 127.0.0.1
+            host: localhost
             password: 123456
             port: 6379
             database: 1
@@ -28,7 +28,7 @@ spring:
             continue-on-error: false
 jwt:
     secret: "MySuperSecretKeyForBlogProjectThatIsVeryLongAndSecure123"
-    access-token-expiration: 1800000
+    access-token-expiration: 7200000
     refresh-token-expiration: 604800000
 
 # 服务器配置

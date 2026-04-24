@@ -6,6 +6,7 @@
         :rules="rules"
         ref="articleFormRef"
         label-position="top"
+        @submit.prevent
       >
         <el-form-item label="文章标题" prop="title">
           <el-input v-model="articleForm.title" placeholder="请输入文章标题" />

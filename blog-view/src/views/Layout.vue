@@ -1,23 +1,17 @@
 <template>
-  <div class="common-layout">
-    <el-main>
-      <router-view :key="route.fullPath" />
-    </el-main>
+  <div class="layout">
+    <router-view :key="route.fullPath" />
   </div>
 </template>
 
 <script setup>
 import { useRoute } from 'vue-router'
-
 const route = useRoute()
 </script>
 
 <style scoped>
-.el-main {
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-  align-items: center;
-  font-family: Georgia, 'Times New Roman', Times, serif;
+.layout {
+  width: 100%;
+  min-height: calc(100vh - 60px);
 }
 </style>

@@ -1,20 +1,20 @@
 <template>
-  <el-card class="category-card">
-    <template #header>
-      <div class="card-header">
-        <span> 分类</span>
-      </div>
-    </template>
-    <div v-if="loading">正在加载...</div>
-    <div v-if="error">{{ error }}</div>
-    <ul v-if="categories.length" class="category-list">
-      <li v-for="category in categories" :key="category.id" class="category-item">
-        <router-link :to="`/category/${category.id}`" class="category-link parent-category">
-          {{ category.name }}
-        </router-link>
-      </li>
-    </ul>
-  </el-card>
+  <div class="sidebar-cats modern-card">
+    <div class="section-title">分类</div>
+    <div v-if="loading" class="sidebar-cats__loading">加载中...</div>
+    <div v-if="error" class="sidebar-cats__error">{{ error }}</div>
+    <div v-if="categories.length" class="sidebar-cats__list">
+      <router-link
+        v-for="cat in categories"
+        :key="cat.id"
+        :to="`/category/${cat.id}`"
+        class="sidebar-cats__item"
+      >
+        <span class="sidebar-cats__name">{{ cat.name }}</span>
+        <span class="sidebar-cats__arrow">&rarr;</span>
+      </router-link>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -25,7 +25,6 @@ const categories = ref([])
 const loading = ref(false)
 const error = ref(null)
 
-//获取分类列表
 const getCategories = async () => {
   loading.value = true
   error.value = null
@@ -33,74 +32,65 @@ const getCategories = async () => {
     const data = await fetchCategories()
     categories.value = data || []
   } catch (err) {
-    error.value = '获取分类数据失败'
+    error.value = '获取分类失败'
     console.error(err)
   } finally {
     loading.value = false
   }
 }
-onMounted(() => {
-  getCategories()
-})
+
+onMounted(() => { getCategories() })
 </script>
 
 <style scoped>
-.category-card {
-  margin-bottom: 20px;
-  background-color: var(--card-bg-color);
-  border: 1px solid var(--card-border-color);
-  box-shadow: var(--card-box-shadow);
-  transition:
-    background-color 0.3s,
-    border-color 0.3s;
-  box-shadow: none;
-  border: 0;
+.sidebar-cats {
+  padding: 20px;
 }
 
-.card-header {
-  font-weight: bold;
-  color: var(--app-text-color);
-  transition: color 0.3s;
+.sidebar-cats__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.category-list,
-.child-category-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.category-item {
-  margin-bottom: 10px;
-}
-
-.parent-category {
-  font-weight: bold;
-  font-size: 15px;
-}
-
-.child-category-list {
-  padding-left: 20px;
-  margin-top: 8px;
-}
-
-.child-category-item {
-  margin-bottom: 5px;
-}
-
-.category-link {
-  text-decoration: none;
-  color: var(--app-text-color);
-  transition: color 0.3s;
-}
-
-.category-link:hover {
-  color: var(--link-hover-color);
-}
-
-.child-category-text {
-  color: var(--app-secondary-text-color);
+.sidebar-cats__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
   font-size: 14px;
-  transition: color 0.3s;
+  color: var(--text-secondary);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s;
+}
+
+.sidebar-cats__item:hover {
+  color: var(--accent);
+  background: var(--accent-light);
+}
+
+.sidebar-cats__name {
+  font-weight: 500;
+}
+
+.sidebar-cats__arrow {
+  font-size: 12px;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: all 0.15s;
+}
+
+.sidebar-cats__item:hover .sidebar-cats__arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.sidebar-cats__loading,
+.sidebar-cats__error {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 8px 0;
 }
 </style>

@@ -1,38 +1,63 @@
 <template>
-  <el-container style="height: 97vh; overflow: hidden">
-    <el-header style="width: 100%"> <HeaderPanel /></el-header>
+  <el-container class="admin-layout">
+    <el-aside :width="isCollapse ? '64px' : '220px'" class="layout-sidebar">
+      <AppSidebar :is-collapse="isCollapse" />
+    </el-aside>
 
-    <el-container class="main-container" style="width: 100%; height: 100%">
-      <el-aside style="width: 240px">
-        <DashboardPanel />
-      </el-aside>
-      <el-main class="scroll-main" style="overflow-y: auto; height: 95%"
-        ><router-view :key="$route.fullPath"
-      /></el-main>
+    <el-container class="layout-main-container">
+      <el-header class="layout-header" height="56px">
+        <AppHeader
+          :is-collapse="isCollapse"
+          @toggle-collapse="toggleCollapse"
+        />
+      </el-header>
+
+      <el-main class="layout-content custom-scrollbar">
+        <router-view :key="$route.fullPath" />
+      </el-main>
     </el-container>
   </el-container>
 </template>
-<script>
-export default {
-  name: "MyLayout",
+
+<script setup>
+import { ref } from "vue";
+import AppSidebar from "@/components/common/AppSidebar.vue";
+import AppHeader from "@/components/common/AppHeader.vue";
+
+const isCollapse = ref(false);
+
+const toggleCollapse = () => {
+  isCollapse.value = !isCollapse.value;
 };
 </script>
-<script setup>
-import DashboardPanel from "@/components/common/DashboardPanel.vue";
-import HeaderPanel from "@/components/common/HeaderPanel.vue";
-</script>
-<style scoped>
-.scroll-main {
-  background-color: #fafafa;
 
+<style scoped>
+.admin-layout {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.layout-sidebar {
+  transition: width 0.25s ease;
+  overflow: hidden;
+  border-right: 1px solid #ebeef5;
+}
+
+.layout-main-container {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.layout-header {
+  padding: 0;
+  z-index: 10;
+}
+
+.layout-content {
   flex: 1;
   overflow-y: auto;
   padding: 20px;
-  scrollbar-width: 0;
-  -ms-overflow-style: none;
-  &::-webkit-scrollbar {
-    width: 0;
-    height: 0;
-  }
+  background-color: #f5f7fa;
 }
 </style>

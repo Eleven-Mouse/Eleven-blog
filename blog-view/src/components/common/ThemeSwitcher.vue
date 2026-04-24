@@ -5,7 +5,7 @@
     inline-prompt
     :active-icon="Moon"
     :inactive-icon="Sunny"
-    style="--el-switch-on-color: #4C4D4F; --el-switch-off-color: #C0C4CC;"
+    style="--el-switch-on-color: #2a2d3a; --el-switch-off-color: #d1d5db;"
   />
 </template>
 

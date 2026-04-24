@@ -1,40 +1,21 @@
 <template>
   <div class="directory-card">
-    <el-text class="mx-1"> <h3 class="directory-title">目录</h3></el-text>
-    <div v-if="loading">正在加载文章...</div>
-    <div v-if="error">{{ error }}</div>
+    <div class="section-title">文章列表</div>
+    <div v-if="loading" class="loading-tip">正在加载文章...</div>
+    <div v-if="error" class="error-tip">{{ error }}</div>
 
-    <div v-if="articleslist.length" class="dir-list">
-      <el-row :gutter="100">
-        <el-col :span="12">
-          <div class="grid-content ep-bg-purple">
-            <router-link
-              v-for="article in articleslist.slice(0, Math.ceil(articleslist.length / 2))"
-              :key="article.id"
-              :to="`/article/${article.id}`"
-              class="articlestitle"
-            >
-              {{ article.title }}
-            </router-link>
-          </div>
-        </el-col>
-        <el-col :span="12">
-          <div class="grid-content ep-bg-purple-light">
-            <router-link
-              v-for="article in articleslist.slice(Math.ceil(articleslist.length / 2))"
-              :key="article.id"
-              :to="`/article/${article.id}`"
-              class="articlestitle"
-            >
-              {{ article.title }}
-            </router-link>
-          </div>
-        </el-col>
-      </el-row>
+    <div v-if="articlesList.length" class="directory-list">
+      <router-link
+        v-for="article in articlesList"
+        :key="article.id"
+        :to="`/article/${article.id}`"
+        class="directory-item stagger-item"
+      >
+        <span class="directory-item__bullet" />
+        <span class="directory-item__title">{{ article.title }}</span>
+      </router-link>
     </div>
-    <div v-else-if="!loading" style="display: flex; justify-content: center">
-      该分类下暂无文章。
-    </div>
+    <div v-else-if="!loading" class="empty-tip">该分类下暂无文章。</div>
   </div>
 </template>
 
@@ -44,17 +25,16 @@ import { useRoute } from 'vue-router'
 import { fetchArticlesByCategoryId } from '@/api/categories'
 
 const route = useRoute()
-const articleslist = ref([])
+const articlesList = ref([])
 const loading = ref(false)
 const error = ref(null)
-const categoryId = ref(route.params.id)
 
-const getArticlesByCategoryId = async (id) => {
+const getArticles = async (id) => {
   loading.value = true
   error.value = null
   try {
     const response = await fetchArticlesByCategoryId(id)
-    articleslist.value = response.data || []
+    articlesList.value = response.data || []
   } catch (err) {
     error.value = '获取分类列表失败'
     console.error(err)
@@ -64,71 +44,58 @@ const getArticlesByCategoryId = async (id) => {
 }
 
 onMounted(() => {
-  getArticlesByCategoryId(categoryId.value)
+  getArticles(route.params.id)
 })
 
 watch(
   () => route.params.id,
   (newId) => {
-    if (newId) {
-      categoryId.value = newId
-      getArticlesByCategoryId(newId)
-    }
+    if (newId) getArticles(newId)
   },
 )
 </script>
 
 <style scoped>
 .directory-card {
-  padding: 20px 0;
-  border-top: 1px solid var(--card-border-color, #3a3a3a);
-  border-bottom: 1px solid var(--card-border-color, #3a3a3a);
+  max-width: 700px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
 }
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.directory-title {
-  font-size: 1.6rem;
-  color: var(--app-secondary-text-color, #a2a2a2);
+.directory-list {
+  display: flex;
+  flex-direction: column;
 }
 
-.dir-list {
-  counter-reset: directory-counter;
-  animation: fadeIn 0.5s ease-out 0.3s forwards;
-  opacity: 0; /* 初始状态为透明 */
-}
-
-.dir-list li {
-  margin-bottom: 15px;
-  counter-increment: directory-counter;
-  line-height: 1.6;
-}
-.articlestitle {
-  display: block;
-  margin-bottom: 10px;
-  color: #676767;
-  transition: color 0.3s;
+.directory-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
   text-decoration: none;
-  color: #555555;
-  transition: color 0.3s;
-  text-shadow: #666;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s;
 }
 
-.articlestitle:hover {
-  color: #000000;
+.directory-item:hover {
+  background: var(--bg-secondary);
 }
 
-/* 在小屏幕上，恢复为单栏布局 */
-@media (max-width: 768px) {
-  .dir-list {
-    column-count: 1;
-  }
+.directory-item__bullet {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.directory-item__title {
+  font-size: 15px;
+  color: var(--text-secondary);
+  transition: color 0.15s;
+}
+
+.directory-item:hover .directory-item__title {
+  color: var(--accent);
 }
 </style>

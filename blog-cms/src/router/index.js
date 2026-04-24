@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuthStore } from "../store/auth";
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -7,6 +8,7 @@ const router = createRouter({
       path: "/login",
       name: "login",
       component: () => import("../views/Login.vue"),
+      meta: { title: "登录" },
     },
     {
       path: "/",
@@ -19,84 +21,107 @@ const router = createRouter({
           path: "home",
           name: "home",
           component: () => import("../views/Home.vue"),
+          meta: { title: "仪表盘", icon: "Odometer" },
         },
         {
           path: "articlemgmt",
           name: "articlemgmt",
-          component: () => import("../views/blog/article/ArticleMgmt.vue"),
+          component: () =>
+            import("../views/blog/article/ArticleMgmt.vue"),
+          meta: { title: "文章管理", icon: "Document", group: "content" },
         },
         {
           path: "writearticle",
           name: "writearticle",
-          component: () => import("../views/blog/article/WriteArticle.vue"),
+          component: () =>
+            import("../views/blog/article/WriteArticle.vue"),
+          meta: { title: "发布文章", icon: "EditPen", group: "content" },
+        },
+        {
+          path: "/article/edit/:id?",
+          name: "editArticle",
+          component: () =>
+            import("../components/editor/ArticleFormCard.vue"),
+          meta: { title: "编辑文章", group: "content", hidden: true },
+        },
+        {
+          path: "momentsmgmt",
+          name: "momentsmgmt",
+          component: () =>
+            import("../views/blog/moments/MomentsMgmt.vue"),
+          meta: {
+            title: "动态管理",
+            icon: "ChatDotRound",
+            group: "content",
+          },
+        },
+        {
+          path: "writemoment",
+          name: "writemoment",
+          component: () =>
+            import("../views/blog/moments/WriteMoment.vue"),
+          meta: { title: "发布动态", icon: "Promotion", group: "content" },
         },
         {
           path: "categorisemgmt",
           name: "categorisemgmt",
           component: () =>
             import("../views/blog/categorise/CategoriseMgmt.vue"),
-        },
-        {
-          path: "commentmgmt",
-          name: "commentmgmt",
-          component: () => import("../views/blog/comment/CommentMgmt.vue"),
-        },
-        {
-          path: "writemoment",
-          name: "writemoment",
-          component: () => import("../views/blog/moments/WriteMoment.vue"),
-        },
-        {
-          path: "momentsmgmt",
-          name: "momentsmgmt",
-          component: () => import("../views/blog/moments/MomentsMgmt.vue"),
+          meta: {
+            title: "分类管理",
+            icon: "FolderOpened",
+            group: "system",
+          },
         },
         {
           path: "tagsmgmt",
           name: "tagsmgmt",
-          component: () => import("../views/blog/tags/TagsMgmt.vue"),
+          component: () =>
+            import("../views/blog/tags/TagsMgmt.vue"),
+          meta: { title: "标签管理", icon: "PriceTag", group: "system" },
         },
         {
-          path: "upload",
-          name: "upload",
-          component: () => import("../views/blog/article/UploadArticle.vue"),
+          path: "commentmgmt",
+          name: "commentmgmt",
+          component: () =>
+            import("../views/blog/comment/CommentMgmt.vue"),
+          meta: { title: "评论管理", icon: "Comment", group: "system" },
         },
         {
           path: "friendlinks",
           name: "friendlinks",
-          component: () => import("../views/blog/friendlinks/FriendLinks.vue"),
+          component: () =>
+            import("../views/blog/friendlinks/FriendLinks.vue"),
+          meta: { title: "友链管理", icon: "Link", group: "system" },
         },
         {
-          path: "/article/edit/:id?",
-          name: "EditArticle",
-          component: () => import("../components/ArticleFormCard.vue"),
-          meta: { title: "发布/编辑文章" },
+          path: "upload",
+          name: "upload",
+          component: () =>
+            import("../views/blog/article/UploadArticle.vue"),
+          meta: { title: "导入文章", icon: "Upload", group: "tools" },
         },
       ],
     },
   ],
 
-  // 路由切换时自动滚动到页面顶部
   scrollBehavior(to, from, savedPosition) {
-    // 如果有保存的位置（例如，使用浏览器的后退/前进按钮），则返回该位置
     if (savedPosition) {
       return savedPosition;
     } else {
-      // 否则，始终滚动到页面顶部
       return { top: 0, left: 0, behavior: "smooth" };
     }
   },
 });
 
-// 全局前置守卫
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
 
-  // 如果去的页面需要登录，且没有 Token
   if (to.meta.requiresAuth && !authStore.accessToken) {
-    next("/login"); // 滚去登录
+    next("/login");
   } else {
-    next(); // 放行
+    next();
   }
 });
+
 export default router;

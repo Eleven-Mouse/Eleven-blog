@@ -1,0 +1,77 @@
+// ============================================
+// Common Global Styles
+// ============================================
+
+@use "./variables" as *;
+
+// Page card wrapper
+.page-container {
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $spacing-md;
+
+    .page-title {
+      font-size: $font-size-xl;
+      font-weight: 600;
+      color: $text-primary;
+    }
+  }
+}
+
+// Table action buttons
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  justify-content: center;
+}
+
+// Tag group with gap
+.tag-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+}
+
+// Scrollbar styles
+.custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #c0c4cc;
+    border-radius: 3px;
+
+    &:hover {
+      background: #909399;
+    }
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+// Text ellipsis
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Flex utilities
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}

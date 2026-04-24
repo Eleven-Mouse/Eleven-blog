@@ -18,6 +18,18 @@ export default defineConfig({
     },
   },
 
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "element-plus": ["element-plus"],
+          echarts: ["echarts"],
+          "md-editor": ["md-editor-v3"],
+        },
+      },
+    },
+  },
+
   server: {
     // 【情况一】修改前端项目启动端口
     port: 8080,

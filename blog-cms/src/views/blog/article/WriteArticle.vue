@@ -5,7 +5,7 @@
 </template>
 
 <script setup>
-import ArticleFormCard from "@/components/ArticleFormCard.vue";
+import ArticleFormCard from "@/components/editor/ArticleFormCard.vue";
 </script>
 
 <style scoped></style>

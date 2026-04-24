@@ -17,6 +17,7 @@
     "element-plus": "^2.13.0",
     "emoji-picker-element": "^1.28.1",
     "highlight.js": "^11.11.1",
+    "md-editor-v3": "^6.4.2",
     "pinia": "^3.0.4",
     "prismjs": "^1.30.0",
     "typed.js": "^2.1.0",

@@ -1,128 +1,102 @@
 <template>
-  <div>
-    <el-card shadow="never" style="border-radius: 10px">
-      <el-table
-        :data="moments"
-        :cell-style="{ textAlign: 'center' }"
-        :header-cell-style="{ textAlign: 'center' }"
-        table-layout="fixed"
+  <div class="page-container">
+    <el-card shadow="never" class="page-card">
+      <SearchToolbar>
+        <template #actions>
+          <el-button type="primary" :icon="Plus" @click="router.push('/writemoment')">
+            发布动态
+          </el-button>
+        </template>
+      </SearchToolbar>
+
+      <CommonTable
+        :data="data"
+        :loading="loading"
+        :page="pagination.page"
+        :size="pagination.size"
+        :total="pagination.total"
+        @page-change="handlePageChange"
+        @size-change="handleSizeChange"
       >
-        <el-table-column type="index" label="id" />
-        <el-table-column prop="content" label="内容" />
-        <el-table-column label="图片">
+        <el-table-column type="index" label="ID" width="70" />
+        <el-table-column prop="content" label="内容" min-width="280" show-overflow-tooltip />
+        <el-table-column label="图片" width="120">
           <template #default="{ row }">
-            <el-image
-              style="width: 80px; height: 80px; border-radius: 4px"
-              :src="parseImages(row.image)[0]"
-              :preview-src-list="parseImages(row.image)"
-              fit="cover"
-              preview-teleported
-            />
-            <el-badge
-              v-if="parseImages(row.image).length > 1"
-              :value="parseImages(row.image).length - 1"
-              class="item"
-              type="primary"
-              style="position: absolute"
-            >
-            </el-badge>
+            <template v-if="parseImages(row.image).length > 0">
+              <el-image
+                style="width: 60px; height: 60px; border-radius: 6px"
+                :src="parseImages(row.image)[0]"
+                :preview-src-list="parseImages(row.image)"
+                fit="cover"
+                preview-teleported
+              />
+              <el-tag
+                v-if="parseImages(row.image).length > 1"
+                size="small"
+                type="info"
+                style="margin-left: 6px"
+              >
+                +{{ parseImages(row.image).length - 1 }}
+              </el-tag>
+            </template>
+            <span v-else class="text-placeholder">--</span>
           </template>
         </el-table-column>
-
-        <el-table-column prop="createTime" label="创建时间">
+        <el-table-column label="状态" width="90">
+          <template #default="{ row }">
+            <StatusTag :status="row.status" />
+          </template>
+        </el-table-column>
+        <el-table-column label="创建时间" width="160">
           <template #default="{ row }">
             {{ formatTime(row.createTime) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作">
+        <el-table-column label="操作" width="100">
           <template #default="{ row }">
-            <span>
+            <div class="table-actions">
               <DeleteButton
                 :id="row.id"
                 :api-func="deleteMomentById"
+                :item-type="'动态'"
                 @success="handleDeleteSuccess"
               />
-            </span>
+            </div>
           </template>
         </el-table-column>
-      </el-table>
-      <div style="margin-top: 20px; display: flex; justify-content: center">
-        <el-pagination
-          v-model:current-page="pagination.page"
-          v-model:page-size="pagination.size"
-          :total="pagination.total"
-          :page-sizes="[10, 20, 50]"
-          layout="total, prev, pager, next, jumper"
-          @size-change="getMoments"
-          @current-change="getMoments"
-        />
-      </div>
+      </CommonTable>
     </el-card>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
-import { ElMessage } from "element-plus";
+import { useRouter } from "vue-router";
+import { Plus } from "@element-plus/icons-vue";
 import { deleteMomentById, getMomentList } from "@/api/moment";
+import { useTable } from "@/composables/useTable";
+import { formatTime, parseImages } from "@/composables/useFormat";
+import SearchToolbar from "@/components/common/SearchToolbar.vue";
+import CommonTable from "@/components/common/CommonTable.vue";
+import StatusTag from "@/components/common/StatusTag.vue";
 import DeleteButton from "@/components/common/DeleteButton.vue";
-const moments = ref([]);
-const loading = ref(false);
-const error = ref(null);
-const BASE_URL = import.meta.env.VITE_APP_UPLOAD_URL;
 
-const pagination = ref({
-  page: 1,
-  size: 10,
-  total: 0,
-});
-const getMoments = async () => {
-  loading.value = true;
-  error.value = null;
+const router = useRouter();
 
-  try {
-    const params = {
-      page: pagination.value.page,
-      size: pagination.value.size,
-    };
-    const data = await getMomentList(params);
-    moments.value = data.list || [];
-
-    pagination.value.total = data.total || 0;
-  } catch (error) {
-    console.error("加载动态失败:", error);
-    ElMessage.error("加载动态失败");
-  }
-};
-
-const formatTime = (datetime) => {
-  if (!datetime) return "--";
-  const date = new Date(datetime);
-  return date.toLocaleDateString("zh-CN", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-};
-const handleDeleteSuccess = (deleteId) => {
-  moments.value = moments.value.filter((item) => item.id !== deleteId);
-};
-
-const parseImages = (imageStr) => {
-  if (!imageStr) return [];
-
-  const paths = imageStr.split(",");
-
-  return paths.map((path) => {
-    if (path.startsWith("http")) {
-      return path;
-    }
-    return BASE_URL + path;
-  });
-};
-onMounted(async () => {
-  getMoments();
-});
+const {
+  data,
+  loading,
+  pagination,
+  handleDeleteSuccess,
+  handlePageChange,
+  handleSizeChange,
+} = useTable(getMomentList);
 </script>
 
-<style scoped></style>
+<style scoped>
+.page-card {
+  border-radius: 8px;
+}
+.text-placeholder {
+  color: #c0c4cc;
+}
+</style>

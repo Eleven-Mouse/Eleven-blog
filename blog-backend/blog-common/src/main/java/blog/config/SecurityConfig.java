@@ -122,9 +122,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // 允许的前端域名 (上线时建议修改为具体的域名，开发环境可用 *)
-        // 如果 allowCredentials 为 true，这里不能写 "*"，必须写具体域名
-        configuration.setAllowedOrigins(List.of("http://localhost:8080", "http://localhost:3000" ));
+        // 允许的前端域名（使用通配符模式，支持 IP 和域名访问）
+        configuration.setAllowedOriginPatterns(List.of("*"));
 
         // 允许的方法
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));

@@ -223,29 +223,26 @@ const handleRating = (score, msg) => {
   min-height: 500px;
   max-height: 900px;
   margin: 30px auto;
-  /* 背景改为深灰色 */
-  background: rgba(249, 249, 249, 0.8);
-  backdrop-filter: blur(10px); /* 毛玻璃效果 */
-  border-radius: 15px;
-
+  background: var(--bg-tertiary);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  color: #fff;
+  color: var(--text-primary);
 }
 
-/* 顶部栏透明化 */
 .header {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(var(--accent-rgb), 0.1);
   border-bottom: none;
   padding: 15px;
 }
+
 .title {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-secondary);
 }
 
-/* 消息区域 */
 .messages-area {
   flex: 1;
   padding: 20px 30px;
@@ -261,6 +258,7 @@ const handleRating = (score, msg) => {
   margin-bottom: 15px;
   display: flex;
   align-items: flex-start;
+  animation: fadeInUp 0.3s ease-out;
 }
 
 .message-row.user {
@@ -269,25 +267,26 @@ const handleRating = (score, msg) => {
 
 .bubble {
   padding: 10px 18px;
-  border-radius: 25px;
+  border-radius: 20px;
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.6;
   max-width: 80%;
   position: relative;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
 .bot .bubble {
-  background: linear-gradient(135deg, #0eb595);
-  color: #fff;
-  border-bottom-left-radius: 5px;
+  background: var(--accent);
+  color: var(--text-inverse);
+  border-bottom-left-radius: 6px;
   margin-right: auto;
 }
 
 .user .bubble {
-  background: linear-gradient(135deg, #16816e);
-  color: #fff;
-  border-bottom-right-radius: 5px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-bottom-right-radius: 6px;
   margin-left: auto;
 }
 
@@ -299,22 +298,25 @@ const handleRating = (score, msg) => {
 }
 
 .action-btn {
-  background: linear-gradient(135deg, #16816e);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: #fff;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--accent);
   padding: 8px 18px;
   border-radius: 20px;
   cursor: pointer;
-  transition: all 0.3s;
-  backdrop-filter: blur(5px);
+  transition: all var(--transition-fast);
+  font-weight: 500;
+  font-size: 13px;
 }
 
 .action-btn:hover {
-  background: #1dccaa;
-  border-color: #1dccaa;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--text-inverse);
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(29, 204, 170, 0.4);
+  box-shadow: var(--shadow-glow);
 }
+
 .rating-container {
   display: flex;
   flex-direction: column;
@@ -326,16 +328,57 @@ const handleRating = (score, msg) => {
   font-size: 12px;
   opacity: 0.8;
   margin-bottom: 5px;
+  color: var(--text-secondary);
 }
 
 .stars {
   display: flex;
   gap: 8px;
-  font-size: 18px; /* 星星大小 */
+  font-size: 18px;
   cursor: pointer;
 }
 
 .star-icon {
   transition: transform 0.2s;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .bot-container {
+    max-width: 100%;
+    min-height: 400px;
+    max-height: 600px;
+    margin: 16px auto;
+    border-radius: var(--radius-md);
+  }
+
+  .messages-area {
+    padding: 16px 12px;
+  }
+
+  .bubble {
+    font-size: 14px;
+    max-width: 85%;
+  }
+
+  .action-area {
+    flex-wrap: wrap;
+    padding: 8px 0 20px;
+  }
+
+  .action-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
 }
 </style>

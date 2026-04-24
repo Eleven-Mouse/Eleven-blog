@@ -1,34 +1,52 @@
 <template>
-  <div class="home-container">
-    <el-row :gutter="20" class="main-content">
-      <el-col :xs="20" :sm="10" :md="18">
-        <div class="article-list">
-          <ArticleCard v-for="(article, index) in articles" :key="index" :article="article" />
-        </div>
-        <div v-if="loading" :data="getArticles" style="width: 100%" class="loading-tip">
-          正在加载文章...
-        </div>
-        <div v-if="error" class="error-tip">{{ error }}</div>
+  <div class="home">
+    <!-- Hero Section -->
 
-        <div class="pagination-container" v-if="!loading && !error && articles.length > 0">
-          <el-pagination
-            layout="prev, pager, next"
-            :total="pagination.total"
-            :page-size="pagination.size"
-            :current-page="pagination.currentPage"
-            @current-change="handlePageChange"
-          />
+    <!-- Main Content -->
+    <div class="page-container">
+      <div class="content-grid">
+        <!-- Articles -->
+        <div class="home__articles">
+          <div v-if="loading" class="loading-tip">正在加载文章...</div>
+          <div v-if="error" class="error-tip">{{ error }}</div>
+
+          <div v-if="!loading && articles.length" class="home__list">
+            <div v-if="searchKeyword" class="home__search-info">
+              搜索 "<strong>{{ searchKeyword }}</strong
+              >" 找到 {{ pagination.total }} 篇文章
+            </div>
+            <ArticleCard
+              v-for="(article, index) in articles"
+              :key="article.id"
+              :article="article"
+              :style="{ animationDelay: `${index * 0.08}s` }"
+            />
+          </div>
+
+          <div v-if="!loading && !error && articles.length === 0" class="empty-tip">
+            {{ searchKeyword ? `没有找到与 "${searchKeyword}" 相关的文章` : '暂无文章' }}
+          </div>
+
+          <!-- Pagination -->
+          <div class="pagination-wrap" v-if="!loading && articles.length > 0">
+            <el-pagination
+              layout="prev, pager, next"
+              :total="pagination.total"
+              :page-size="pagination.size"
+              :current-page="pagination.currentPage"
+              @current-change="handlePageChange"
+            />
+          </div>
         </div>
-      </el-col>
-      <!-- Sidebar -->
-      <el-col :xs="24" :sm="24" :md="6">
-        <div class="sidebar">
-          <InfoCard class="sidebar-card" />
-          <TagsCard class="sidebar-card" />
-          <CategoryCard class="sidebar-card" />
-        </div>
-      </el-col>
-    </el-row>
+
+        <!-- Sidebar -->
+        <aside class="home__sidebar sidebar-sticky">
+          <InfoCard class="home__sidebar-card" />
+          <TagsCard class="home__sidebar-card" />
+          <CategoryCard class="home__sidebar-card" />
+        </aside>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -42,25 +60,22 @@ import ArticleCard from '@/components/ArticleCard.vue'
 import { fetchArticles } from '@/api/article.js'
 
 const route = useRoute()
-// 文章列表
 const articles = ref([])
-// 分页信息
+const searchKeyword = ref('')
 const pagination = ref({
   currentPage: 1,
   total: 0,
-  size: 4,
+  size: 5,
 })
-
-// 加载和错误状态
 const loading = ref(true)
 const error = ref(null)
 
-// 获取文章列表
 const getArticles = async (page = 1) => {
   loading.value = true
   error.value = null
   try {
     const keyword = route.query.keyword || ''
+    searchKeyword.value = keyword
     const response = await fetchArticles({
       page,
       size: pagination.value.size,
@@ -77,94 +92,89 @@ const getArticles = async (page = 1) => {
   }
 }
 
-// 分页
 const handlePageChange = (page) => {
   getArticles(page)
-  // 手动滚动到页面顶部
-  const container = document.querySelector('.main-scroll-container')
-  container.scrollTo({ top: 0, behavior: 'smooth' })
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-// 组件挂载时获取第一页数据
 onMounted(() => {
   getArticles(1)
 })
 
-// 监听路由上的 keyword 变化，实时更新搜索结果
 watch(
   () => route.query.keyword,
   () => {
-    // 每次搜索关键字变化时，从第一页重新请求
     getArticles(1)
   },
 )
 </script>
 
 <style scoped>
-.home-container {
-  max-width: 1050px;
-  margin-top: 60px;
-  animation: fadeIn 0.5s ease-out 0.3s forwards;
-  opacity: 0; /* 初始状态为透明 */
+.home {
+  padding-top: 65px;
 }
 
-.hero-content h1 {
-  font-size: 4rem;
-  margin: 0;
-  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+/* ---------- Articles ---------- */
+.home__articles {
+  min-width: 0;
+  overflow: hidden;
 }
 
-.hero-content p {
-  font-size: 1.5rem;
-  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
-}
-
-.article-card {
-  margin-bottom: 20px;
-}
-
-.article-meta {
-  font-size: 0.9em;
-  color: #aaa;
-}
-
-.article-meta span {
-  margin-right: 15px;
-}
-
-.sidebar-card {
-  margin-bottom: 20px;
-}
-
-.pagination-container {
+.home__list {
   display: flex;
-  justify-content: center;
-  margin-top: 20px;
-}
-/* 修改分页组件选中页码数字颜色 */
-.pagination-container ::v-deep(.el-pager li.is-active) {
-  color: var(--pagination-active-color);
-  font-weight: bold;
+  flex-direction: column;
+  gap: 20px;
 }
 
-/* 鼠标悬停在选中页码上保持同样颜色 */
-.pagination-container ::v-deep(.el-pager li.is-active:hover) {
-  color: var(--pagination-active-color);
+.home__search-info {
+  font-size: 14px;
+  color: var(--text-secondary);
+  padding: 14px 18px;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-xs);
+}
+.home__search-info strong {
+  color: var(--accent);
 }
 
-/* 修改分页组件未选中页码的悬停颜色 */
-.pagination-container ::v-deep(.el-pager li:not(.is-active):hover) {
-  color: var(--pagination-hover-color) !important; /* 使用 !important 确保覆盖默认样式 */
+.home__sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+@media (max-width: 1024px) {
+  .home__sidebar {
+    order: 2;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  .home__sidebar-card {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero {
+    padding: 48px 0 36px;
+  }
+
+  .hero__title {
+    font-size: 1.75rem;
+  }
+
+  .hero__subtitle {
+    font-size: 0.95rem;
+  }
+
+  .hero__orbs {
+    display: none;
+  }
+
+  .home__sidebar {
+    display: none;
   }
 }
 </style>

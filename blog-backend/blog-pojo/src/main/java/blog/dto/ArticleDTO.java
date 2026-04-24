@@ -61,7 +61,7 @@ public class ArticleDTO implements Serializable {
     /**
      * 浏览量
      */
-    private Integer ViewCount;
+    private Integer viewCount;
 
     /**
      * 发布时间

@@ -1,0 +1,80 @@
+// ============================================
+// Mobile Overrides — Eleven-blog
+// Premium Blog Design System
+// ============================================
+
+@media (max-width: 768px) {
+  body {
+    font-size: 15px;
+    line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+    overflow-x: hidden;
+  }
+
+  h1 { font-size: 1.5rem !important; }
+  h2 { font-size: 1.3rem !important; }
+  h3 { font-size: 1.1rem !important; }
+
+  .page-container {
+    padding: 0 16px !important;
+  }
+
+  .content-grid {
+    gap: 20px !important;
+  }
+
+  // Touch targets — only for interactive elements
+  .el-button,
+  button:not(.navbar__hamburger):not(.mobile-toc-btn):not(.navbar__icon-btn):not(.immersive-toggle-btn):not(.immersive-exit-btn),
+  .comment-reply-btn,
+  .search-panel__close,
+  .code-copy-btn {
+    min-height: 44px;
+  }
+
+  // Prevent el-col from overflowing on mobile
+  .el-col {
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+  }
+
+  // Ensure el-row doesn't cause overflow
+  .el-row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  // Pagination mobile-friendly
+  .pagination-wrap {
+    padding: 20px 0;
+    overflow-x: auto;
+  }
+
+  // Hero responsive
+  .hero__title {
+    font-size: 1.75rem !important;
+  }
+
+  .hero__subtitle {
+    font-size: 0.95rem !important;
+  }
+
+  .hero {
+    padding: 48px 0 36px !important;
+  }
+
+  .hero__orbs {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-container {
+    padding: 0 12px !important;
+  }
+
+  .el-col {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+}

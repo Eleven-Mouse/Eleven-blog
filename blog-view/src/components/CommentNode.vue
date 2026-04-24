@@ -1,53 +1,50 @@
 <template>
   <div class="comment-node">
-    <!-- 评论主体 -->
+    <!-- Comment body -->
     <div class="comment-main">
       <div class="comment-avatar">
         <img :src="comment.avatar || defaultAvatar" alt="avatar" />
       </div>
-      <div class="comment-content-wrapper">
+      <div class="comment-body">
         <div class="comment-header">
-          <span class="nickname">{{ comment.nickname }}</span>
-          <span class="create-date">{{ formatDate(comment.createTime) }}</span>
+          <span class="comment-nickname">{{ comment.nickname }}</span>
+          <span class="comment-date">{{ formatDate(comment.createTime) }}</span>
         </div>
-        <div class="comment-body">
-          <p>
-            <span v-if="comment.parentCommentNickname" class="reply-to">@{{ comment.parentCommentNickname}}</span>
-            {{ comment.content }}
-          </p>
+        <div class="comment-text">
+          <span v-if="comment.parentCommentNickname" class="comment-reply-to">@{{ comment.parentCommentNickname }}</span>
+          {{ comment.content }}
         </div>
-        <div class="comment-footer">
-          <button @click="$emit('show-reply', comment)" class="reply-btn">回复</button>
+        <div class="comment-actions">
+          <button @click="$emit('show-reply', comment)" class="comment-reply-btn">回复</button>
         </div>
       </div>
     </div>
 
-    <!-- 回复表单 -->
-    <div v-if="replyingTo === comment.id" class="reply-form-wrapper">
-      <div class="user-info-inputs">
-        <el-row :gutter="20">
+    <!-- Reply form -->
+    <div v-if="replyingTo === comment.id" class="reply-form">
+      <div class="reply-form__fields">
+        <el-row :gutter="16">
           <el-col :span="12">
-            <el-input v-model="commentForm.nickname" type="text" placeholder="昵称 (必填)"
-          /></el-col>
+            <el-input v-model="commentForm.nickname" placeholder="昵称 (必填)" />
+          </el-col>
           <el-col :span="12">
-            <el-input v-model="commentForm.avatar" type="url" placeholder="头像URL (可选)" />
+            <el-input v-model="commentForm.avatar" placeholder="头像URL (可选)" />
           </el-col>
         </el-row>
         <el-input
           v-model="commentForm.content"
           :placeholder="`回复 @${comment.nickname}`"
           type="textarea"
-        ></el-input>
+        />
       </div>
-
-      <div class="form-footer">
-        <el-button @click="submitReply">提交回复</el-button>
-        <el-button @click="$emit('cancel-reply')">取消</el-button>
+      <div class="reply-form__actions">
+        <el-button size="small" @click="submitReply">提交</el-button>
+        <el-button size="small" @click="$emit('cancel-reply')">取消</el-button>
       </div>
     </div>
 
-    <!-- 子评论 -->
-    <div v-if="comment.children && comment.children.length > 0" class="replies-list">
+    <!-- Children -->
+    <div v-if="comment.children?.length" class="comment-replies">
       <CommentNode
         v-for="child in comment.children"
         :key="child.id"
@@ -56,7 +53,7 @@
         :commentForm="commentForm"
         :defaultAvatar="defaultAvatar"
         @show-reply="(c) => $emit('show-reply', c)"
-        @submit-reply="(parent) => $emit('submit-reply', parent)"
+        @submit-reply="(p) => $emit('submit-reply', p)"
         @cancel-reply="$emit('cancel-reply')"
       />
     </div>
@@ -65,6 +62,7 @@
 
 <script setup>
 import { defineProps, defineEmits } from 'vue'
+import { ElMessage } from 'element-plus'
 
 defineOptions({ name: 'CommentNode' })
 
@@ -79,7 +77,7 @@ const emit = defineEmits(['show-reply', 'submit-reply', 'cancel-reply'])
 
 const submitReply = () => {
   if (!props.commentForm.content.trim()) {
-    alert('回复内容不能为空！')
+    ElMessage.warning('回复内容不能为空')
     return
   }
   emit('submit-reply', props.comment)
@@ -87,130 +85,128 @@ const submitReply = () => {
 
 const formatDate = (dateString) => {
   if (!dateString) return ''
-  const date = new Date(dateString)
-  return date.toLocaleString()
+  return new Date(dateString).toLocaleString()
 }
 </script>
 
 <style scoped>
-/* 第一层 replies 继续缩进 55px 留立柱 */
-.replies-list {
-  margin-left: 55px;
-  border-left: 2px solid #f0f0f0;
-  padding-left: 15px;
-}
-
-/* 从第二层开始去掉额外缩进和立柱 */
-:deep(.replies-list .replies-list) {
-  margin-left: 0; /* 取消进一步缩进 */
-  border-left: none; /* 去掉立柱（竖线） */
-  padding-left: 0; /* 去掉额外内边距 */
-}
-.comment-node {
-  width: 100%;
-}
 .comment-main {
   display: flex;
-  padding: 15px 0;
-  border-bottom: 1px solid #eee;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border-light);
 }
-.comment-node:last-child .comment-main {
+
+.comment-node:last-child > .comment-main {
   border-bottom: none;
 }
 
 .comment-avatar img {
-  width: 40px;
-  height: 40px;
-  border-radius: 20%;
-  margin-right: 15px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
 }
-.comment-content-wrapper {
+
+.comment-body {
   flex: 1;
+  min-width: 0;
 }
+
 .comment-header {
   display: flex;
   align-items: center;
-  margin-bottom: 8px;
+  gap: 10px;
+  margin-bottom: 6px;
 }
-.nickname {
-  font-weight: 600;
-  color: #333;
-  margin-right: 10px;
-}
-.create-date {
-  font-size: 12px;
-  color: #999;
-}
-.comment-body {
+
+.comment-nickname {
   font-size: 14px;
-  color: #555;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.comment-date {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.comment-text {
+  font-size: 14px;
+  color: var(--text-secondary);
   line-height: 1.6;
 }
-.reply-to {
-  color: #252627;
+
+.comment-reply-to {
+  color: var(--accent);
   font-weight: 500;
-  margin-right: 5px;
+  margin-right: 4px;
 }
-.comment-footer {
-  margin-top: 10px;
+
+.comment-actions {
+  margin-top: 6px;
 }
-.reply-btn {
+
+.comment-reply-btn {
   background: none;
   border: none;
-  color: #888;
+  color: var(--text-muted);
   cursor: pointer;
   font-size: 13px;
+  padding: 0;
+  transition: color 0.15s;
 }
-.reply-form-wrapper {
-  margin-top: 15px;
-  margin-left: 55px; /* Indent reply form */
+
+.comment-reply-btn:hover {
+  color: var(--accent);
 }
-.user-info-inputs {
+
+/* Replies */
+.comment-replies {
+  margin-left: 48px;
+  padding-left: 14px;
+  border-left: 2px solid var(--border-light);
+}
+
+.comment-replies .comment-replies {
+  margin-left: 0;
+  border-left: none;
+  padding-left: 0;
+}
+
+/* Reply form */
+.reply-form {
+  margin-top: 12px;
+  margin-left: 48px;
+}
+
+.reply-form__fields {
   display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
+  flex-direction: column;
+  gap: 10px;
   margin-bottom: 10px;
 }
-.input-field {
-  flex: 1 1 200px;
-  padding: 8px 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-}
-.comment-textarea {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  box-sizing: border-box;
-  resize: vertical;
-}
-.form-footer {
+
+.reply-form__actions {
   display: flex;
   justify-content: flex-end;
+  gap: 8px;
 }
-.submit-btn,
-.cancel-btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-}
-.submit-btn {
-  background-color: #007bff;
-  color: white;
-}
-.cancel-btn {
-  background-color: #f1f1f1;
-  color: #333;
-  margin-left: 10px;
-}
-.replies-list {
-  margin-left: 55px; /* Indent replies */
-  border-left: 2px solid #f0f0f0;
-  padding-left: 15px;
+
+@media (max-width: 768px) {
+  .comment-replies {
+    margin-left: 24px;
+    padding-left: 10px;
+  }
+
+  .reply-form {
+    margin-left: 24px;
+  }
+
+  .comment-avatar img {
+    width: 30px;
+    height: 30px;
+  }
 }
 </style>

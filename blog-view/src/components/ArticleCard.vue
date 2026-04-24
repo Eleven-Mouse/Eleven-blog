@@ -1,137 +1,162 @@
 <template>
-  <div>
-    <el-card class="article-card">
-      <div class="card-content">
-        <h6 class="article-title">
-          <router-link :to="`/article/${article.id}`">{{ article.title }}</router-link>
-        </h6>
-        <p class="article-summary">{{ article.summary }}</p>
-        <div class="article-meta">
-          <span v-if="article.tags"
-            ><el-icon><PriceTag /></el-icon> {{ article.tags }}</span
-          >
-          <span v-if="formattedDate"
-            ><el-icon><Clock /></el-icon> {{ formattedDate }}</span
-          >
-          <span v-if="article.categoryName"
-            ><el-icon><FolderOpened /></el-icon> {{ article.categoryName }}</span
-          >
-          <span v-if="article.viewCount"
-          ><el-icon><View /></el-icon>{{ article.viewCount }}</span
-          >
-        </div>
+  <article class="article-card modern-card stagger-item" @click="goArticle">
+    <div class="article-card__body">
+      <h3 class="article-card__title">
+        <router-link :to="`/article/${article.id}`">{{ article.title }}</router-link>
+      </h3>
 
-        <div class="more">
-          <router-link :to="`/article/${article.id}`">more</router-link>
-        </div>
+      <p class="article-card__summary">{{ article.summary }}</p>
+
+      <div class="article-card__meta">
+        <span class="article-card__date">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4v4l2.5 1.5"/></svg>
+          {{ formattedDate }}
+        </span>
+        <span v-if="article.categoryName" class="article-card__cat">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v9H2z"/><path d="M6 4V2h4v2"/></svg>
+          {{ article.categoryName }}
+        </span>
+        <span v-if="article.viewCount" class="article-card__views">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>
+          {{ article.viewCount }}
+        </span>
+        <span class="article-card__meta-tags" v-if="tagList.length">
+          <span v-for="tag in tagList.slice(0, 3)" :key="tag" class="tag--sm">{{ tag }}</span>
+        </span>
       </div>
-    </el-card>
-  </div>
+    </div>
+  </article>
 </template>
 
 <script setup>
-import { Clock, FolderOpened, PriceTag,View  } from '@element-plus/icons-vue'
-import { defineProps, computed } from 'vue'
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 
 const props = defineProps({
-  article: {
-    type: Object,
-    required: true,
-  },
+  article: { type: Object, required: true },
 })
 
-// 格式化日期
+const router = useRouter()
+
 const formattedDate = computed(() => {
   if (!props.article.publishTime) return ''
-  const date = new Date(props.article.publishTime)
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+  return new Date(props.article.publishTime).toLocaleDateString('zh-CN', {
+    year: 'numeric', month: 'long', day: 'numeric',
   })
 })
+
+const tagList = computed(() => {
+  const tags = props.article.tags
+  if (!tags) return []
+  if (Array.isArray(tags)) return tags
+  if (typeof tags === 'string') return tags.split(',').map(t => t.trim()).filter(Boolean)
+  return []
+})
+
+const goArticle = () => {
+  router.push(`/article/${props.article.id}`)
+}
 </script>
 
 <style scoped>
 .article-card {
-  margin-bottom: 10px;
-  box-shadow: none;
-  border: 0;
-}
-
-.article-title a {
-  position: relative;
-  color: #5b5b5b;
-  text-decoration: none;
-  font-size: 1.4rem;
-  transition: color 0.3s;
-}
-
-/* 下划线动画 */
-.article-title a::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: -2px; /* 可以根据需求调整位置 */
-  width: 0%;
-  height: 2px;
-  background-color: currentColor; /* 使用当前文字颜色 */
-  transition: width 0.3s ease-in-out;
-}
-
-.article-title a:hover {
-  color: #333;
-}
-
-.article-title a:hover::after {
+  cursor: pointer;
+  border-radius: var(--radius-lg);
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal),
+    border-color var(--transition-normal);
 }
 
-.article-summary {
-  color: #7d7d7d;
-  line-height: 1.6;
+.article-card:hover {
+  transform: translateY(-4px) scale(1.005);
+  border-color: rgba(var(--accent-rgb), 0.18);
 }
 
-.article-meta {
+.article-card__body {
+  padding: 22px 26px;
+  display: flex;
+  flex-direction: column;
+}
+
+.article-card__title {
+  margin: 0 0 10px;
+  font-size: 1.15rem;
+  font-weight: 650;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+}
+
+.article-card__title a {
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.article-card:hover .article-card__title a {
+  color: var(--accent);
+}
+
+.article-card__summary {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.75;
+  margin: 0 0 16px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.article-card__meta {
   display: flex;
   align-items: center;
-  gap: 20px;
-  font-size: 0.9em;
-  color: #999999;
-  margin-top: 15px;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
-.article-meta span {
-  display: flex;
+.article-card__meta-tags {
+  margin-left: auto;
+  display: inline-flex;
   align-items: center;
-  gap: 5px;
-}
-.more a {
-  color: #7c7c7c;
-  transition: color 0.3s;
-  position: relative;
-  float: inline-end;
-  text-decoration: none;
-  font-size: 1rem;
+  gap: 4px;
 }
 
-.more a:hover {
-  color: #333;
+.tag--sm {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--tag-bg);
+  color: var(--accent);
+  white-space: nowrap;
+  font-weight: 500;
 }
 
-/* 下划线动画 */
-.more a::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: -2px;
-  width: 0%;
-  height: 2px;
-  background-color: currentColor;
-  transition: width 0.3s ease-in-out;
+.article-card__meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.more a:hover::after {
-  width: 100%;
+@media (max-width: 768px) {
+  .article-card__body {
+    padding: 16px;
+  }
+
+  .article-card__title {
+    font-size: 1.05rem;
+  }
+
+  .article-card__summary {
+    -webkit-line-clamp: 2;
+  }
+
+  .article-card__meta {
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 12px;
+  }
 }
 </style>

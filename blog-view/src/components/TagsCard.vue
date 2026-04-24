@@ -1,109 +1,62 @@
 <template>
-  <div>
-    <el-text class="mx-1">
-      <el-card class="tags-card">
-        <template #header>
-          <div class="card-header">
-            <span> 热门标签</span>
-          </div>
-        </template>
-        <div class="tagss">
-          <div v-if="loading">正在加载...</div>
-          <div v-if="error">{{ error }}</div>
-          <p v-if="tagsData.length" class="tag-list">
-            <el-tag v-for="tag in tagsData" :key="tag.id" class="tag-item" type="success">
-              <router-link :to="`/tag/${tag.id}`" class="tag-link parent-category">
-                {{ tag.name }}
-              </router-link>
-            </el-tag>
-          </p>
-        </div>
-      </el-card></el-text
-    >
+  <div class="sidebar-tags modern-card">
+    <div class="section-title">热门标签</div>
+    <div v-if="loading" class="sidebar-tags__loading">加载中...</div>
+    <div v-if="error" class="sidebar-tags__error">{{ error }}</div>
+    <div v-if="tagsData.length" class="sidebar-tags__list">
+      <router-link
+        v-for="tag in tagsData"
+        :key="tag.id"
+        :to="`/tag/${tag.id}`"
+        class="tag"
+      >
+        {{ tag.name }}
+      </router-link>
+    </div>
   </div>
 </template>
+
 <script setup>
-import { fetchTags } from '@/api/tags' // 假设你有一个 API 模块来获取标签数据
-import { onMounted } from 'vue'
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { fetchTags } from '@/api/tags'
 
 const loading = ref(false)
 const error = ref(null)
 const tagsData = ref([])
 
-// 获取 tagscard 数据
 const getTags = async () => {
   loading.value = true
   error.value = null
-  //获得标签数据
   try {
-    const response = await fetchTags() // 替换为你的 API 地址
+    const response = await fetchTags()
     tagsData.value = response || []
   } catch (err) {
-    error.value = '获取标签数据失败，请稍后再试。'
+    error.value = '获取标签失败'
     console.error(err)
   } finally {
     loading.value = false
   }
 }
 
-onMounted(() => {
-  getTags()
-})
+onMounted(() => { getTags() })
 </script>
 
 <style scoped>
-.card-header {
-  display: flex;
-  align-items: center;
-  font-weight: bold;
-  color: var(--app-text-color);
-  transition: color 0.3s;
+.sidebar-tags {
+  padding: 20px;
 }
-.tags-card {
 
-  border: 1px solid var(--card-border-color);
-  box-shadow: var(--card-box-shadow);
-  transition:
-    background-color 0.3s,
-    border-color 0.3s;
-  box-shadow: none;
-  border: 0;
-}
-.el-tag {
-
-  color: var(--tag-text-color);
-  border-color: var(--tag-border-color);
-  transition:
-    background-color 0.3s,
-    color 0.3s,
-    border-color 0.3s;
-}
-.card-header .el-icon {
-  margin-right: 8px;
-}
-.tag-link {
-  text-decoration: none;
-  display: flex;
-  color: var(--tag-text-color);
-  transition: color 0.3s;
-}
-.tag-list {
+.sidebar-tags__list {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
-.parent-category {
-  font-weight: bold;
+
+.sidebar-tags__loading,
+.sidebar-tags__error {
   font-size: 13px;
-}
-
-.tag-item {
-  display: flex;
-  transition: all 0.2s;
-}
-
-.tag-item:hover {
-  transform: scale(1.1);
+  color: var(--text-muted);
+  text-align: center;
+  padding: 8px 0;
 }
 </style>

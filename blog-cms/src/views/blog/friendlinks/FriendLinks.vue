@@ -1,126 +1,132 @@
 <template>
-  <el-card shadow="never" style="border-radius: 10px">
-    <el-button type="success" plain @click="handleAdd">新增友链</el-button>
-    <el-table
-      :data="friendlinks"
-      :cell-style="{ textAlign: 'center' }"
-      :header-cell-style="{ textAlign: 'center' }"
-      table-layout="fixed"
-    >
-      <el-table-column type="index" label="id" />
-      <el-table-column prop="logo" label="头像">
-        <template #default="{ row }">
-          <el-image
-            style="width: 80px; height: 80px; border-radius: 4px"
-            :src="parseImages(row.logo)[0]"
-            :preview-src-list="parseImages(row.logo)"
-            fit="cover"
-            preview-teleported
-          >
-            <template #error>
-              <div class="image-error-slot">
-                <el-icon :size="50" style="padding-top: 15px"
-                  ><Picture></Picture
-                ></el-icon>
-              </div>
-            </template>
-          </el-image>
+  <div class="page-container">
+    <el-card shadow="never" class="page-card">
+      <SearchToolbar>
+        <template #filters>
+          <el-input
+            v-model="keyword"
+            placeholder="搜索友链..."
+            :prefix-icon="Search"
+            clearable
+            style="width: 220px"
+          />
         </template>
-      </el-table-column>
-      <el-table-column prop="name" label="友链名称">
-        <template #default="{ row }">
-          <el-tag> {{ row.name }} </el-tag></template
-        >
-      </el-table-column>
-      <el-table-column prop="description" label="描述">
-        <template #default="{ row }"> {{ row.description }} </template>
-      </el-table-column>
-      <el-table-column prop="url" label="站点" />
+        <template #actions>
+          <el-button type="primary" :icon="Plus" @click="handleAdd">
+            新增友链
+          </el-button>
+        </template>
+      </SearchToolbar>
 
-      <el-table-column prop="createTime" label="创建时间">
-        <template #default="{ row }">
-          {{ formatTime(row.createTime) }}
-        </template>
-      </el-table-column>
-      <el-table-column prop="updateTime" label="更新时间">
-        <template #default="{ row }">
-          {{ formatTime(row.updateTime) }}
-        </template>
-      </el-table-column>
-      <el-table-column label="操作">
-        <template #default="{ row }">
-          <span>
-            <el-button
-              type="success"
-              plain
-              size="small"
-              :icon="Edit"
-              @click="handleEdit(row)"
-              >编辑</el-button
+      <CommonTable
+        :data="filteredList"
+        :loading="loading"
+        :show-pagination="false"
+      >
+        <el-table-column type="index" label="ID" width="70" />
+        <el-table-column label="Logo" width="90">
+          <template #default="{ row }">
+            <el-image
+              v-if="parseImages(row.logo).length > 0"
+              style="width: 48px; height: 48px; border-radius: 6px"
+              :src="parseImages(row.logo)[0]"
+              fit="cover"
             >
-            <DeleteButton
-              :id="row.id"
-              :api-func="deleteFriendLinkById"
-              @success="handleDeleteSuccess"
-            />
-          </span>
-        </template>
-      </el-table-column>
-    </el-table>
-    <FriendLinksDialog
-      ref="dialogRef"
-      :loading="submitLoading"
-      @success="getFriendLinksList"
-    />
-  </el-card>
+              <template #error>
+                <div class="image-fallback">
+                  <el-icon :size="20"><Picture /></el-icon>
+                </div>
+              </template>
+            </el-image>
+            <div v-else class="image-fallback">
+              <el-icon :size="20"><Picture /></el-icon>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="name" label="名称" width="140">
+          <template #default="{ row }">
+            <el-tag effect="plain">{{ row.name }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="description" label="描述" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="url" label="站点" width="200" show-overflow-tooltip>
+          <template #default="{ row }">
+            <a
+              v-if="row.url"
+              :href="row.url"
+              target="_blank"
+              class="link-text"
+            >
+              {{ row.url }}
+            </a>
+          </template>
+        </el-table-column>
+        <el-table-column label="创建时间" width="140">
+          <template #default="{ row }">
+            {{ formatTime(row.createTime) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="160">
+          <template #default="{ row }">
+            <div class="table-actions">
+              <el-button
+                type="primary"
+                :icon="Edit"
+                size="small"
+                plain
+                @click="handleEdit(row)"
+              >
+                编辑
+              </el-button>
+              <DeleteButton
+                :id="row.id"
+                :api-func="deleteFriendLinkById"
+                :item-type="'友链'"
+                @success="handleDeleteSuccess"
+              />
+            </div>
+          </template>
+        </el-table-column>
+      </CommonTable>
+
+      <FriendLinksDialog
+        ref="dialogRef"
+        @success="refresh"
+      />
+    </el-card>
+  </div>
 </template>
+
 <script setup>
-import { ref, onMounted } from "vue";
-import { Edit, Picture } from "@element-plus/icons-vue";
-import { ElMessage } from "element-plus";
+import { ref, computed } from "vue";
+import { Plus, Search, Edit, Picture } from "@element-plus/icons-vue";
 import {
   createFriendLink,
   updateFriendLink,
   getFriendLinks,
   deleteFriendLinkById,
 } from "@/api/friendLink";
+import { useSimpleList } from "@/composables/useTable";
+import { formatTime, parseImages } from "@/composables/useFormat";
+import SearchToolbar from "@/components/common/SearchToolbar.vue";
+import CommonTable from "@/components/common/CommonTable.vue";
 import DeleteButton from "@/components/common/DeleteButton.vue";
-import FriendLinksDialog from "@/components/FriendLinksDialog.vue";
-const friendlinks = ref([]);
-const dialogRef = ref(null);
-const loading = ref(false);
-const error = ref(null);
-const submitLoading = ref(false);
-const BASE_URL = import.meta.env.VITE_APP_UPLOAD_URL;
-const getFriendLinksList = async () => {
-  loading.value = true;
-  error.value = null;
-  try {
-    const res = await getFriendLinks();
-    friendlinks.value = res || [];
-  } catch (error) {
-    console.error("加载标签失败:", error);
-    ElMessage.error("加载标签失败");
-  } finally {
-    loading.value = false;
-  }
-};
-onMounted(async () => {
-  getFriendLinksList();
-});
-const formatTime = (datetime) => {
-  if (!datetime) return "--";
-  const date = new Date(datetime);
-  return date.toLocaleDateString("zh-CN", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-};
+import FriendLinksDialog from "@/components/business/FriendLinksDialog.vue";
 
-const handleDeleteSuccess = (deleteId) => {
-  friendlinks.value = friendlinks.value.filter((item) => item.id !== deleteId);
-};
+const { data: friendlinks, loading, refresh, handleDeleteSuccess } = useSimpleList(getFriendLinks);
+const dialogRef = ref(null);
+const keyword = ref("");
+
+const filteredList = computed(() => {
+  if (!keyword.value) return friendlinks.value;
+  const k = keyword.value.toLowerCase();
+  return friendlinks.value.filter(
+    (item) =>
+      item.name?.toLowerCase().includes(k) ||
+      item.description?.toLowerCase().includes(k) ||
+      item.url?.toLowerCase().includes(k)
+  );
+});
 
 const handleAdd = () => {
   dialogRef.value.open(null, {
@@ -137,17 +143,30 @@ const handleEdit = (row) => {
     updateApi: updateFriendLink,
   });
 };
-const parseImages = (imageStr) => {
-  if (!imageStr) return [];
-
-  const paths = imageStr.split(",");
-
-  return paths.map((path) => {
-    if (path.startsWith("http") || path.startsWith("https")) {
-      return path;
-    }
-    return BASE_URL + path;
-  });
-};
 </script>
-<style scoped></style>
+
+<style scoped>
+.page-card {
+  border-radius: 8px;
+}
+
+.image-fallback {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  background: #f5f7fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #c0c4cc;
+}
+
+.link-text {
+  color: #409eff;
+  font-size: 13px;
+}
+
+.link-text:hover {
+  text-decoration: underline;
+}
+</style>
