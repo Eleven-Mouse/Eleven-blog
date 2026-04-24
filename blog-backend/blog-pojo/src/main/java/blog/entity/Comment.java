@@ -92,6 +92,27 @@ public class Comment {
      * 博主回复
      */
     private Boolean adminComment;
+
+    /**
+     * 点赞数
+     */
+    private Integer likeCount;
+
+    /**
+     * IP归属地
+     */
+    private String location;
+
+    /**
+     * 是否博主: false-否 true-是
+     */
+    private Boolean isOwner;
+
+    /**
+     * 楼层号
+     */
+    private Integer floor;
+
     /**
      * 回复该评论的评论
      */

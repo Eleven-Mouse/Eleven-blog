@@ -17,10 +17,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 评论管理控制器
+ * 评论管理控制器（用户端）
  *
  * @author Eleven
- * @version 1.0
+ * @version 2.0
  */
 @RestController("userCommentsController")
 @RequestMapping("/api/comments")
@@ -95,11 +95,32 @@ public class CommentController {
             commentService.createComment(commentDTO);
 
 
+        } catch (RuntimeException e) {
+            // 特殊处理: 限流提示直接返回给前端
+            if (e.getMessage() != null && e.getMessage().contains("频繁")) {
+                return Result.error(e.getMessage());
+            }
+            log.error("提交评论失败，错误：{}", e.getMessage(), e);
+            return Result.error("评论提交失败，请稍后重试");
         } catch (Exception e) {
             log.error("提交评论失败，错误：{}", e.getMessage(), e);
             return Result.error("评论提交失败，请稍后重试");
         }
         return Result.success();
+    }
+
+    /**
+     * 评论点赞
+     */
+    @PostMapping("/like/{id}")
+    @ApiOperation("评论点赞")
+    public Result likeComment(@PathVariable Long id) {
+        try {
+            commentService.likeComment(id);
+            return Result.success();
+        } catch (IllegalArgumentException e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     /**
@@ -111,7 +132,6 @@ public class CommentController {
         String remoteAddr = request.getRemoteAddr();
 
         if (xForwardedFor != null && !xForwardedFor.isEmpty() && !"unknown".equalsIgnoreCase(xForwardedFor)) {
-            // X-Forwarded-For可能包含多个IP，取第一个
             return xForwardedFor.split(",")[0].trim();
         }
         if (xRealIP != null && !xRealIP.isEmpty() && !"unknown".equalsIgnoreCase(xRealIP)) {
@@ -120,4 +140,3 @@ public class CommentController {
         return remoteAddr != null ? remoteAddr : "unknown";
     }
 }
-

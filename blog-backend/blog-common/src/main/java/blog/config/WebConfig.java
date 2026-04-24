@@ -67,6 +67,10 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/upload/**")
                 .addResourceLocations("file:" + uploadDir + "/");
 
+        // 访客头像目录映射: /images/avatar/** -> uploadDir/avatar/
+        registry.addResourceHandler("/images/avatar/**")
+                .addResourceLocations("file:" + uploadDir + File.separator + "avatar" + File.separator);
+
     }
 
 

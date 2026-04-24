@@ -5,7 +5,6 @@ import request from '@/utils/request'
  * @param {string} page 页面
  * @param {Long} blogId，博客文章
  */
-// 查询评论列表，queryParams 支持 blogId、page(pageName) 或分页参数等
 export function fetchComments(queryParams) {
   return request({
     url: '/comments',
@@ -26,4 +25,23 @@ export function createComment(commentData) {
   })
 }
 
+/**
+ * 评论点赞
+ * @param {Long} id 评论ID
+ */
+export function likeComment(id) {
+  return request({
+    url: `/comments/like/${id}`,
+    method: 'post',
+  })
+}
 
+/**
+ * 获取 GitHub 登录跳转 URL
+ */
+export function getGitHubLoginUrl() {
+  return request({
+    url: '/oauth/github/url',
+    method: 'get',
+  })
+}

@@ -76,6 +76,9 @@ public class SecurityConfig {
                         // 放行登录接口、刷新 Token 接口
                         .requestMatchers("/admin/auth/**").permitAll()
 
+                        // 放行 GitHub OAuth 接口
+                        .requestMatchers("/api/oauth/**").permitAll()
+
                         // 3. 公共只读接口 (GET 请求) - 所有人(包括游客)可访问
                         .requestMatchers(HttpMethod.GET,
                                 "/api/articles/**",
@@ -86,9 +89,10 @@ public class SecurityConfig {
                                 "/api/archive/**",
                                 "/api/comments/**"
                         ).permitAll()
-                        // 评论接口 (post 请求)
+                        // 评论接口 + 访客头像上传 (post 请求)
                         .requestMatchers(HttpMethod.POST,
-                                "/api/comments/**"
+                                "/api/comments/**",
+                                "/api/upload/avatar"
                         ).permitAll()
 
                         // 4. 管理员写操作 (POST/PUT/DELETE) - 只有 ADMIN 角色可访问

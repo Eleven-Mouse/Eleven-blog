@@ -85,4 +85,9 @@ public class CommentDTO implements Serializable {
      * 所属文章id
      */
     private Long blogId;
+
+    /**
+     * GitHub 用户ID（用于博主身份验证）
+     */
+    private Long githubId;
 }

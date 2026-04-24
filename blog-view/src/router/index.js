@@ -50,6 +50,11 @@ const router = createRouter({
           name: 'categoryDetail',
           component: () => import('@/views/CategoryDetail.vue'),
         },
+        {
+          path: 'oauth/callback',
+          name: 'oauthCallback',
+          component: () => import('@/views/OauthCallback.vue'),
+        },
       ],
     },
   ],

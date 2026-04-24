@@ -79,4 +79,14 @@ public interface CommentMapper {
 
     @Delete("delete from comment where blog_Id = #{blog_Id}")
     void deleteByArticleId(Long id);
+
+    /**
+     * 点赞 +1
+     */
+    void incrementLikeCount(Long id);
+
+    /**
+     * 查询某篇文章/页面下的最大楼层号
+     */
+    Integer selectMaxFloor(@Param("blogId") Long blogId, @Param("page") String page);
 }

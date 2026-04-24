@@ -33,5 +33,9 @@ public interface CommentService {
 
     void updateStatus(Long id, Boolean status);
 
-}
+    /**
+     * 评论点赞
+     */
+    void likeComment(Long id);
 
+}

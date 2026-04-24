@@ -18,11 +18,17 @@
         <result property="notice" column="notice"/>
         <result property="createTime" column="create_time"/>
         <result property="parentCommentId" column="parentCommentId"/>
+        <result property="likeCount" column="like_count"/>
+        <result property="location" column="location"/>
+        <result property="isOwner" column="is_owner"/>
+        <result property="floor" column="floor"/>
     </resultMap>
 
     <insert id="insert" parameterType="blog.entity.Comment" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO comment (nickname, email, website, avatar, ip, content, page, status, notice, create_time, parentCommentId, blog_id)
-        VALUES (#{nickname}, #{email}, #{website}, #{avatar}, #{ip}, #{content}, #{page}, #{status}, #{notice}, NOW(), #{parentCommentId}, #{blogId})
+        INSERT INTO comment (nickname, email, website, avatar, ip, content, page, status, notice,
+                            create_time, parentCommentId, blog_id, like_count, location, is_owner, floor)
+        VALUES (#{nickname}, #{email}, #{website}, #{avatar}, #{ip}, #{content}, #{page}, #{status}, #{notice},
+                NOW(), #{parentCommentId}, #{blogId}, #{likeCount}, #{location}, #{isOwner}, #{floor})
     </insert>
 
     <update id="update" parameterType="blog.entity.Comment">
@@ -39,6 +45,10 @@
             <if test="notice != null">notice = #{notice},</if>
             <if test="parentCommentId != null">parentCommentId = #{parentCommentId},</if>
             <if test="blogId != null">blog_id = #{blogId},</if>
+            <if test="likeCount != null">like_count = #{likeCount},</if>
+            <if test="location != null">location = #{location},</if>
+            <if test="isOwner != null">is_owner = #{isOwner},</if>
+            <if test="floor != null">floor = #{floor},</if>
             update_time = NOW()
         </set>
         WHERE id = #{id}
@@ -48,7 +58,7 @@
         SELECT c.*, a.title as title
         FROM comment c
         LEFT JOIN article a ON c.blog_id = a.id
-        ORDER BY c.create_time DESCcomment
+        ORDER BY c.create_time DESC
     </select>
 
     <select id="selectByBlogId" resultMap="CommentVOMap">
@@ -95,11 +105,28 @@
         </where>
         ORDER BY c.create_time ASC
     </select>
-    <select id="selectByParentId" resultType="blog.vo.CommentVO">
-        select c.*, a.title
-        from comment as c left join article as a on c.blog_id=a.id
-        where c.parentCommentId=#{parentCommentId}
 
+    <select id="selectByParentId" resultMap="CommentVOMap">
+        SELECT c.*, a.title
+        FROM comment c
+        LEFT JOIN article a ON c.blog_id = a.id
+        WHERE c.parentCommentId = #{parentCommentId}
+        ORDER BY c.create_time ASC
+    </select>
+
+    <!-- 点赞: like_count + 1 -->
+    <update id="incrementLikeCount">
+        UPDATE comment SET like_count = like_count + 1 WHERE id = #{id}
+    </update>
+
+    <!-- 查询某篇文章/页面下的最大楼层号 -->
+    <select id="selectMaxFloor" resultType="java.lang.Integer">
+        SELECT MAX(floor) FROM comment
+        <where>
+            <if test="blogId != null">AND blog_id = #{blogId}</if>
+            <if test="page != null and page != ''">AND page = #{page}</if>
+            AND parentCommentId IS NULL
+        </where>
     </select>
 
 </mapper>

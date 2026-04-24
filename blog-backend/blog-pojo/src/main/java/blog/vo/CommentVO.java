@@ -86,6 +86,22 @@ public class CommentVO {
      */
     private Boolean adminComment;
     /**
+     * 点赞数
+     */
+    private Integer likeCount;
+    /**
+     * IP归属地
+     */
+    private String location;
+    /**
+     * 是否博主
+     */
+    private Boolean isOwner;
+    /**
+     * 楼层号
+     */
+    private Integer floor;
+    /**
      * 父评论id
      */
     private  Long  parentCommentId;

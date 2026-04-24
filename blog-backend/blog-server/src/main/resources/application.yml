@@ -3,7 +3,7 @@
 spring:
     # 数据源配置
     datasource:
-        url: jdbc:mysql://blog-mysql:3306/eleven_blog?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useOldAliasMetadataBehavior=true&zeroDateTimeBehavior=convertToNull&autoCommit=true&rewriteBatchedStatements=true
+        url: jdbc:mysql://localhost:3306/eleven_blog?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useOldAliasMetadataBehavior=true&zeroDateTimeBehavior=convertToNull&autoCommit=true&rewriteBatchedStatements=true
         # 数据库用户名
         username: root
         # 数据库密码（请修改为你的MySQL密码）
@@ -86,6 +86,25 @@ blog:
         # 你的博主邮箱
         email: 3331379576@qq.com
         # 你的博主昵称
-        nickname: 困醒
+        nickname: 鼠鼠
         # 你的博主头像URL
         avatar: static/images/Image_1761740285982.jpg
+        # 你的博主 GitHub 用户ID（用于识别博主身份）
+        github-id: 192314035
+
+
+github:
+    oauth:
+        client-id: Ov23liNWajET8KEhPIXL
+        client-secret: eb3db1e2caa84bf2e48707d43dfb482022e563ae
+        redirect-uri: http://localhost:3000/oauth/callback
+
+# 邮件发送配置 (用于评论通知)
+spring.mail:
+    host: smtp.qq.com
+    port: 587
+    username: 3331379576@qq.com
+    password: obhubwbfywpecjgi
+    properties:
+        mail.smtp.auth: true
+        mail.smtp.starttls.enable: true
