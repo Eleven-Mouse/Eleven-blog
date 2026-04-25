@@ -116,10 +116,21 @@ public class CommentServiceImpl implements CommentService {
 
             // --- 邮件通知: 回复时通知被回复者 ---
             notifyReply(commentDTO, parentComment);
+
+            // --- 通知博主: 非博主回复时也通知博主 ---
+            if (!isOwner) {
+                notifyOwnerNewComment(commentDTO, parentComment.getTitle());
+            }
         } else {
             // 5. 一级评论: 自动计算楼层号
             Integer maxFloor = commentMapper.selectMaxFloor(comment.getBlogId(), comment.getPage());
             comment.setFloor(maxFloor == null ? 1 : maxFloor + 1);
+
+            // --- 通知博主: 访客发表新评论 ---
+            if (!isOwner) {
+                String articleTitle = resolveArticleTitle(comment.getBlogId());
+                notifyOwnerNewComment(commentDTO, articleTitle);
+            }
         }
 
         // 6. 解析IP归属地
@@ -285,5 +296,37 @@ public class CommentServiceImpl implements CommentService {
             throw new IllegalArgumentException("评论不存在");
         }
         commentMapper.incrementLikeCount(id);
+    }
+
+    /**
+     * 通知博主有新评论（一级评论或回复）
+     */
+    private void notifyOwnerNewComment(CommentDTO commentDTO, String articleTitle) {
+        if (mailService == null) {
+            log.debug("MailService未配置，跳过博主通知");
+            return;
+        }
+        try {
+            String title = articleTitle != null ? articleTitle : "文章";
+            mailService.sendNewCommentNotification(
+                    commentDTO.getNickname(),
+                    commentDTO.getContent(),
+                    title
+            );
+            log.info("已发送新评论通知给博主");
+        } catch (Exception e) {
+            log.warn("发送博主通知失败: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 根据blogId解析文章标题
+     */
+    private String resolveArticleTitle(Long blogId) {
+        if (blogId == null) {
+            return "留言板";
+        }
+        ArticleDTO article = articleMapper.selectById(blogId);
+        return article != null ? article.getTitle() : "文章";
     }
 }

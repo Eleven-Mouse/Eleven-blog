@@ -17,4 +17,14 @@ public interface MailService {
     void sendReplyNotification(String toEmail, String toNickname,
                                String fromNickname, String replyContent,
                                String articleTitle);
+
+    /**
+     * 通知博主有新评论
+     *
+     * @param visitorNickname 评论者昵称
+     * @param commentContent  评论内容
+     * @param articleTitle    文章标题
+     */
+    void sendNewCommentNotification(String visitorNickname, String commentContent,
+                                    String articleTitle);
 }

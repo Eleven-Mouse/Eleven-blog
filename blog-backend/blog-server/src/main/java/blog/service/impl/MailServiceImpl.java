@@ -59,4 +59,35 @@ public class MailServiceImpl implements MailService {
             log.error("邮件发送失败: to={}, error={}", toEmail, e.getMessage());
         }
     }
+
+    @Override
+    @Async
+    public void sendNewCommentNotification(String visitorNickname, String commentContent,
+                                           String articleTitle) {
+        if (mailSender == null) {
+            log.warn("JavaMailSender 未配置，跳过新评论通知");
+            return;
+        }
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(fromEmail);
+        message.setSubject("【" + blogName + "的博客】您收到了一条新评论");
+
+        String text = String.format(
+                "%s，您好！\n\n" +
+                "在文章「%s」中，访客 %s 发表了一条新评论：\n\n" +
+                "%s\n\n" +
+                "—— 来自 %s 的博客",
+                blogName, articleTitle, visitorNickname, commentContent, blogName
+        );
+        message.setText(text);
+
+        try {
+            mailSender.send(message);
+            log.info("新评论通知邮件已发送至博主: {}", fromEmail);
+        } catch (Exception e) {
+            log.error("新评论通知邮件发送失败: error={}", e.getMessage());
+        }
+    }
 }
