@@ -1,4 +1,4 @@
-<div align="center">
+<img width="1920" height="869" alt="image" src="https://github.com/user-attachments/assets/36af42b5-4d1b-426f-8293-7ad66f977985" /><div align="center">
 
 # Eleven Blog
 
@@ -36,14 +36,16 @@
 
 ### 博客前台
 
-<img width="1920" height="869" alt="image" src="https://github.com/user-attachments/assets/2713d415-2be5-4cad-9e85-fce19dcca8e4" />
-<img width="1920" height="869" alt="image" src="https://github.com/user-attachments/assets/be9f10af-e10c-47e2-99b5-02f1e87116b4" />
+<img width="1920" height="869" alt="image" src="https://github.com/user-attachments/assets/100f169a-0a2c-40b1-bef0-7dfeb850387c" />
+<img width="1920" height="869" alt="image" src="https://github.com/user-attachments/assets/174200d1-e589-429a-a719-16675eb9b095" />
+<img width="1920" height="869" alt="image" src="https://github.com/user-attachments/assets/52956207-f557-437d-9106-c94a2267a0d7" />
 
-<img width="418" height="885" alt="image" src="https://github.com/user-attachments/assets/2d2abad2-6681-44c6-ab3f-cc9fb66a6c7a" /> <img width="413" height="778" alt="image" src="https://github.com/user-attachments/assets/a04a9936-5d82-470b-a902-8fbd729e7b73" />
 
 ### 后台管理
 
-<img width="1000" height="500" alt="写文章" src="https://github.com/user-attachments/assets/2904549a-f101-419c-b7a4-d3d60be38fff" />
+<img width="1920" height="869" alt="image" src="https://github.com/user-attachments/assets/98bfe970-2eeb-455d-8505-fa4894b7da26" />
+<img width="1920" height="869" alt="image" src="https://github.com/user-attachments/assets/1a0e2ef7-f2d5-422f-90a3-17e72c975875" />
+
 
 </div>
 
