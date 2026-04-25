@@ -1,14 +1,10 @@
 # Spring Boot应用配置文件
-# 配置数据库连接、模板引擎、服务器端口等信息
+# 敏感信息通过环境变量注入，开发环境使用下方默认值
 spring:
-    # 数据源配置
     datasource:
-        url: jdbc:mysql://blog-mysql:3306/eleven_blog?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useOldAliasMetadataBehavior=true&zeroDateTimeBehavior=convertToNull&autoCommit=true&rewriteBatchedStatements=true
-        # 数据库用户名
-        username: root
-        # 数据库密码（请修改为你的MySQL密码）
-        password: 123456
-        # MySQL驱动类名
+        url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/eleven_blog?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useOldAliasMetadataBehavior=true&zeroDateTimeBehavior=convertToNull&autoCommit=true&rewriteBatchedStatements=true}
+        username: ${SPRING_DATASOURCE_USERNAME:root}
+        password: ${SPRING_DATASOURCE_PASSWORD:123456}
         driver-class-name: com.mysql.cj.jdbc.Driver
     servlet:
         multipart:
@@ -16,59 +12,53 @@ spring:
             max-request-size: 50MB
     data:
         redis:
-            host: localhost
-            password: 123456
-            port: 6379
-            database: 1
+            host: ${SPRING_DATA_REDIS_HOST:localhost}
+            password: ${SPRING_DATA_REDIS_PASSWORD:123456}
+            port: ${SPRING_DATA_REDIS_PORT:6379}
+            database: ${SPRING_DATA_REDIS_DATABASE:1}
             connect-timeout: 10000ms
-    # 数据库初始化配置
     sql:
         init:
-            mode: never  # 由 Docker 初始化脚本处理
+            mode: never
             continue-on-error: false
+    mail:
+        host: ${SPRING_MAIL_HOST:smtp.qq.com}
+        port: ${SPRING_MAIL_PORT:587}
+        username: ${SPRING_MAIL_USERNAME:}
+        password: ${SPRING_MAIL_PASSWORD:}
+        properties:
+            mail.smtp.auth: true
+            mail.smtp.starttls.enable: true
+
 jwt:
-    secret: "MySuperSecretKeyForBlogProjectThatIsVeryLongAndSecure123"
+    secret: ${JWT_SECRET:dev-only-secret-key-please-replace-in-production-12345}
     access-token-expiration: 7200000
     refresh-token-expiration: 604800000
 
-# 服务器配置
 server:
-    # 应用启动端口
     port: 8081
-    # Docker环境中需要监听所有网络接口
     address: 0.0.0.0
 
-# MyBatis配置
 mybatis:
-    # mapper XML配置文件位置
     mapper-locations: classpath:mapper/*.xml
-    # 实体类包路径（用于类型别名）
     type-aliases-package: blog.pojo
     configuration:
-        # 开启驼峰命名转换（数据库字段名user_name转换为Java属性名userName）
         map-underscore-to-camel-case: true
-        # 打印SQL语句（开发环境）
         log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
-# 日志配置
 logging:
     level:
         blog:
-            # mapper层日志级别为debug，便于SQL调试
-            mapper: debug
-            # service层日志级别为info
-            service: info
-            # controller层日志级别为info
-            controller: info
-        org.springframework.security: debug
-        org.springframework.web: debug
+            mapper: ${LOGGING_LEVEL_BLOG_MAPPER:debug}
+            service: ${LOGGING_LEVEL_BLOG_SERVICE:info}
+            controller: ${LOGGING_LEVEL_BLOG_CONTROLLER:info}
+        org.springframework.security: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY:debug}
+        org.springframework.web: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB:debug}
 
-# 文件上传配置
 file:
-    upload-dir: E:/blog-writing
+    upload-dir: ${FILE_UPLOAD_DIR:E:/blog-writing}
     upload-path: /images/**
 
-# Spring Boot Actuator - 健康检查
 management:
     endpoints:
         web:
@@ -83,28 +73,13 @@ management:
 
 blog:
     owner:
-        # 你的博主邮箱
-        email: 3331379576@qq.com
-        # 你的博主昵称
-        nickname: 鼠鼠
-        # 你的博主头像URL
-        avatar: static/images/Image_1761740285982.jpg
-        # 你的博主 GitHub 用户ID（用于识别博主身份）
-        github-id: 192314035
-
+        email: ${BLOG_OWNER_EMAIL:}
+        nickname: ${BLOG_OWNER_NICKNAME:博主}
+        avatar: ${BLOG_OWNER_AVATAR:static/images/Image_1761740285982.jpg}
+        github-id: ${BLOG_OWNER_GITHUB_ID:0}
 
 github:
     oauth:
-        client-id: Ov23liNWajET8KEhPIXL
-        client-secret: eb3db1e2caa84bf2e48707d43dfb482022e563ae
-        redirect-uri: http://8.162.7.124:3000/oauth/callback
-
-# 邮件发送配置 (用于评论通知)
-spring.mail:
-    host: smtp.qq.com
-    port: 587
-    username: 3331379576@qq.com
-    password: obhubwbfywpecjgi
-    properties:
-        mail.smtp.auth: true
-        mail.smtp.starttls.enable: true
+        client-id: ${GITHUB_OAUTH_CLIENT_ID:}
+        client-secret: ${GITHUB_OAUTH_CLIENT_SECRET:}
+        redirect-uri: ${GITHUB_OAUTH_REDIRECT_URI:http://localhost:3000/oauth/callback}
