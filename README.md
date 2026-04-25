@@ -1,4 +1,3 @@
-<img width="1920" height="869" alt="image" src="https://github.com/user-attachments/assets/36af42b5-4d1b-426f-8293-7ad66f977985" /><div align="center">
 
 # Eleven Blog
 
