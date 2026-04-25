@@ -59,7 +59,7 @@
           </svg>
         </button>
         <a
-          href="https://github.com/Eleven-Mouse"
+          :href="blogConfig.config.blog_github_url"
           target="_blank"
           class="navbar__icon-btn"
           aria-label="GitHub"
@@ -168,9 +168,9 @@
     >
       <!-- Profile -->
       <div class="drawer-profile">
-        <img src="/avatar.png" alt="Avatar" class="drawer-profile__avatar" />
-        <div class="drawer-profile__name">Eleven-Mouse</div>
-        <div class="drawer-profile__bio">有 bug？那不叫 bug，那叫 feature。</div>
+        <img :src="blogConfig.config.blog_avatar" alt="Avatar" class="drawer-profile__avatar" />
+        <div class="drawer-profile__name">{{ blogConfig.config.blog_name }}</div>
+        <div class="drawer-profile__bio">{{ blogConfig.config.blog_bio }}</div>
         <div class="drawer-profile__social"></div>
       </div>
 
@@ -256,6 +256,9 @@ import { fetchCategories } from '@/api/categories'
 import { fetchTags } from '@/api/tags'
 import { fetchArticles } from '@/api/article.js'
 import ThemeToggle from './ThemeSwitcher.vue'
+import { useBlogConfigStore } from '@/stores/blogConfig'
+
+const blogConfig = useBlogConfigStore()
 
 const route = useRoute()
 const router = useRouter()

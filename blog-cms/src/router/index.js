@@ -95,6 +95,13 @@ const router = createRouter({
           meta: { title: "友链管理", icon: "Link", group: "system" },
         },
         {
+          path: "blogconfig",
+          name: "blogconfig",
+          component: () =>
+            import("../views/blog/config/BlogConfig.vue"),
+          meta: { title: "博客配置", icon: "Setting", group: "system" },
+        },
+        {
           path: "upload",
           name: "upload",
           component: () =>

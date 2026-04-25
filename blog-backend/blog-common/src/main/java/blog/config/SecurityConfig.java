@@ -87,7 +87,8 @@ public class SecurityConfig {
                                 "/api/moments/**",
                                 "/api/friendlinks/**",
                                 "/api/archive/**",
-                                "/api/comments/**"
+                                "/api/comments/**",
+                                "/api/blog/config"
                         ).permitAll()
                         // 评论接口 + 访客头像上传 (post 请求)
                         .requestMatchers(HttpMethod.POST,

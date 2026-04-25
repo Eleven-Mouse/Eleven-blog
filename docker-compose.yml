@@ -1,5 +1,4 @@
 services:
-  # --- 1. MySQL 服务 ---
   mysql_db:
     image: mysql:8.0
     container_name: blog-mysql
@@ -21,7 +20,6 @@ services:
     networks:
       - blog-net
 
-  # --- 2. Redis 服务 ---
   redis:
     image: redis:alpine
     container_name: blog-redis
@@ -38,9 +36,10 @@ services:
     networks:
       - blog-net
 
-  # --- 3. 后端服务 ---
   blog-backend:
-    build: ./blog-backend
+    build:
+      context: ./blog-backend
+      dockerfile: Dockerfile
     container_name: blog-backend
     restart: always
     ports:
@@ -61,39 +60,33 @@ services:
       - SPRING_DATA_REDIS_PASSWORD=123456
       - SPRING_DATA_REDIS_DATABASE=1
       - FILE_UPLOAD_DIR=/app/uploads
-      - SERVER_PORT=8081
-    healthcheck:
-      test: ["CMD-SHELL", "wget --timeout=2 -q -O /dev/null http://localhost:8081/ 2>&1 | grep -qi 'refused' && exit 1 || exit 0"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
+      - GITHUB_OAUTH_REDIRECT_URI=http://8.162.7.124/oauth/callback
     networks:
       - blog-net
 
-  # --- 4. 前端 (博客前台) ---
   blog-view:
-    build: ./blog-view
+    build:
+      context: ./blog-view
+      dockerfile: Dockerfile
     container_name: blog-view
     restart: always
     ports:
-      - "3000:3000"
+      - "80:80"
     depends_on:
-      blog-backend:
-        condition: service_healthy
+      - blog-backend
     networks:
       - blog-net
 
-  # --- 5. 前端 (后台管理) ---
   blog-cms:
-    build: ./blog-cms
+    build:
+      context: ./blog-cms
+      dockerfile: Dockerfile
     container_name: blog-cms
     restart: always
     ports:
       - "8080:8080"
     depends_on:
-      blog-backend:
-        condition: service_healthy
+      - blog-backend
     networks:
       - blog-net
 

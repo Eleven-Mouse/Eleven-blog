@@ -15,14 +15,17 @@
 <script setup>
 import { computed, onMounted } from 'vue'
 import { useThemeStore } from '@/stores/theme'
+import { useBlogConfigStore } from '@/stores/blogConfig'
 import AppNavbar from '@/components/common/Header.vue'
 import AppFooter from '@/components/common/Footer.vue'
 
 const themeStore = useThemeStore()
+const blogConfigStore = useBlogConfigStore()
 const isDark = computed(() => themeStore.theme === 'dark')
 
 onMounted(() => {
   themeStore.initTheme()
+  blogConfigStore.fetchConfig()
 })
 </script>
 

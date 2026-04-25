@@ -6,13 +6,13 @@
       <div class="site-footer__grid">
         <div class="site-footer__brand">
  
-          <p class="site-footer__desc">ERROR 404 — 社交生活未找到。正在用代码填补中...</p>
+          <p class="site-footer__desc">{{ blogConfig.config.blog_footer_desc }}</p>
         </div>
       </div>
       <div class="site-footer__divider" />
 
       <div class="site-footer__bottom">
-        <span>© {{ year }} Eleven-Mouse</span>
+        <span>© {{ year }} {{ blogConfig.config.blog_copyright_name }}</span>
         <span class="site-footer__sep">·</span>
         <span>All rights reserved.</span>
       </div>
@@ -21,6 +21,8 @@
 </template>
 
 <script setup>
+import { useBlogConfigStore } from '@/stores/blogConfig'
+const blogConfig = useBlogConfigStore()
 const year = new Date().getFullYear()
 </script>
 

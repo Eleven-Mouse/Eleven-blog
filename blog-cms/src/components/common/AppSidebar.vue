@@ -66,6 +66,10 @@
             <el-icon><Link /></el-icon>
             <template #title>友链管理</template>
           </el-menu-item>
+          <el-menu-item index="/blogconfig">
+            <el-icon><Setting /></el-icon>
+            <template #title>博客配置</template>
+          </el-menu-item>
         </el-sub-menu>
 
         <!-- 工具 -->
