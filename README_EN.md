@@ -4,34 +4,34 @@
 
 **A minimal, elegant personal blog system built with Spring Boot & Vue 3**
 
-**English** | [中文](README.md)
+**English** | [**中文**](README.md)
 
 </div>
 
+> **Note:** This file provides a standalone English version. For a single-page bilingual experience with real-time language switching, please see [README.md](README.md).
+
 ---
-
-## Overview
-
-Eleven Blog is a full-stack personal blog platform featuring a **public-facing blog**, an **admin CMS**, and a **RESTful API backend**. It supports article publishing with Markdown, comment management, moments (short posts), friend links, categories & tags, and a statistics dashboard with interactive charts.
 
 ## Screenshots
 
 <div align="center">
 
-### Public blog
+### Public Blog
 
 <img width="1920" height="869" alt="image" src="https://github.com/user-attachments/assets/2713d415-2be5-4cad-9e85-fce19dcca8e4" />
 <img width="1920" height="869" alt="image" src="https://github.com/user-attachments/assets/be9f10af-e10c-47e2-99b5-02f1e87116b4" />
 
 <img width="418" height="885" alt="image" src="https://github.com/user-attachments/assets/2d2abad2-6681-44c6-ab3f-cc9fb66a6c7a" /> <img width="413" height="778" alt="image" src="https://github.com/user-attachments/assets/a04a9936-5d82-470b-a902-8fbd729e7b73" />
 
-
-
-### Admin penl
+### Admin Panel
 
 <img width="1000" height="500" alt="写文章" src="https://github.com/user-attachments/assets/2904549a-f101-419c-b7a4-d3d60be38fff" />
 
 </div>
+
+## Overview
+
+Eleven Blog is a full-stack personal blog platform featuring a **public-facing blog**, an **admin CMS**, and a **RESTful API backend**. It supports article publishing with Markdown, comment management, moments (short posts), friend links, categories & tags, and a statistics dashboard with interactive charts.
 
 ## Features
 
@@ -55,7 +55,7 @@ Eleven Blog is a full-stack personal blog platform featuring a **public-facing b
 ```mermaid
 graph TB
     subgraph Client["Client Side"]
-        Visitor["Visitor Browser :3000"]
+        Visitor["Visitor Browser :80"]
         Admin["Admin Browser :8080"]
     end
 
@@ -155,7 +155,7 @@ docker compose up -d
 
 | Service | Port | Description |
 | :--- | :--- | :--- |
-| `blog-view` | `:3000` | Public blog |
+| `blog-view` | `:80` | Public blog |
 | `blog-cms` | `:8080` | Admin panel |
 | `blog-backend` | `:8081` | REST API |
 | `mysql_db` | Internal | Database |
@@ -187,7 +187,7 @@ java -jar blog-server/target/blog-server-1.0-SNAPSHOT.jar
 cd blog-view
 npm install
 # Edit .env to set VITE_APP_API_URL
-npm run dev     # Development at :3000
+npm run dev     # Development mode
 npm run build   # Production build
 ```
 
@@ -350,6 +350,6 @@ This project is licensed under the MIT License.
 
 <div align="center">
 
-**If you like this project, please consider giving it a star!**
+**If you like this project, please consider giving it a star! ⭐**
 
 </div>
