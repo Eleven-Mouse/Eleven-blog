@@ -1,4 +1,4 @@
-
+<div align="center">
 # Eleven Blog
 
 **一个以简约为主的个人主题博客系统**
