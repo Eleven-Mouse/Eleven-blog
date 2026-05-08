@@ -25,6 +25,12 @@ function onTokenRefreshed(newToken) {
   refreshSubscribers = [];
 }
 
+// Token 刷新失败，拒绝队列中所有等待的请求
+function onTokenRefreshFailed(err) {
+  refreshSubscribers.forEach((cb) => cb(null, err));
+  refreshSubscribers = [];
+}
+
 // 1. 请求拦截器：每次请求都在 Header 里带上 Token
 service.interceptors.request.use(
   (config) => {
@@ -69,26 +75,29 @@ service.interceptors.response.use(
       // 如果有 refreshToken，尝试刷新
       if (authStore.refreshToken) {
         originalRequest._retry = true;
+        // 捕获当前 refreshToken，防止并发请求时值被修改
+        const currentRefreshToken = authStore.refreshToken;
 
         if (!isRefreshing) {
           isRefreshing = true;
 
           return new Promise((resolve, reject) => {
             axios.post('/admin/auth/refresh', {
-              refreshToken: authStore.refreshToken
+              refreshToken: currentRefreshToken
             })
               .then((res) => {
                 const data = res.data;
                 if (data && data.accessToken) {
                   // 更新 token
-                  authStore.setTokens(data.accessToken, data.refreshToken || authStore.refreshToken);
+                  authStore.setTokens(data.accessToken, data.refreshToken || currentRefreshToken);
                   onTokenRefreshed(data.accessToken);
 
                   // 重试原请求
                   originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
                   resolve(service(originalRequest));
                 } else {
-                  // 刷新失败，跳转登录
+                  // 刷新失败，拒绝队列中所有等待的请求
+                  onTokenRefreshFailed(error);
                   authStore.logout();
                   router.push("/login");
                   ElMessage.error("登录已过期，请重新登录");
@@ -96,7 +105,8 @@ service.interceptors.response.use(
                 }
               })
               .catch((refreshError) => {
-                // refreshToken 也过期了，跳转登录
+                // refreshToken 也过期了，拒绝队列中所有等待的请求
+                onTokenRefreshFailed(refreshError);
                 authStore.logout();
                 router.push("/login");
                 ElMessage.error("登录已过期，请重新登录");
@@ -109,10 +119,15 @@ service.interceptors.response.use(
         }
 
         // 如果正在刷新中，将请求加入队列等待
-        return new Promise((resolve) => {
-          subscribeTokenRefresh((newToken) => {
-            originalRequest.headers.Authorization = `Bearer ${newToken}`;
-            resolve(service(originalRequest));
+        return new Promise((resolve, reject) => {
+          subscribeTokenRefresh((newToken, err) => {
+            if (err) {
+              // 刷新失败，直接拒绝
+              reject(err);
+            } else {
+              originalRequest.headers.Authorization = `Bearer ${newToken}`;
+              resolve(service(originalRequest));
+            }
           });
         });
       }
