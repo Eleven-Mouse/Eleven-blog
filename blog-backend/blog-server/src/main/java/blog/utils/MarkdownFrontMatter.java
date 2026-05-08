@@ -89,9 +89,9 @@ public class MarkdownFrontMatter {
     }
 
     /**
-     * 从文件路径中提取上级文件夹名作为分类
-     * 如 "Part1-Java基础/Spring Boot入门.md" → "Java基础"
-     * 如 "Java/Spring Boot入门.md" → "Java"
+     * 从文件路径中提取第一级目录名作为分类（跳过子目录层级）
+     * 如 "java-knowledge-graph/01-Java基础.md" → "java-knowledge-graph"
+     * 如 "java-knowledge-graph-v3/Stage2-核心深度/M2-JVM进阶.md" → "java-knowledge-graph-v3"
      * 如 "Spring Boot入门.md" → null
      * 自动去除 "Part1-"、"01-"、"1." 等编号前缀
      */
@@ -99,16 +99,11 @@ public class MarkdownFrontMatter {
         if (path == null || path.isEmpty()) {
             return null;
         }
-        int lastSlash = path.lastIndexOf('/');
-        if (lastSlash <= 0) {
+        int firstSlash = path.indexOf('/');
+        if (firstSlash <= 0) {
             return null;
         }
-        String parent = path.substring(0, lastSlash);
-        int prevSlash = parent.lastIndexOf('/');
-        String folderName = prevSlash >= 0 ? parent.substring(prevSlash + 1) : parent;
-        if (folderName.isEmpty()) {
-            return null;
-        }
+        String folderName = path.substring(0, firstSlash);
         // 去除常见编号前缀：Part1-、Part01-、01-、1.、1- 等
         folderName = folderName.replaceFirst("^(?i)Part\\d+[-_\\s]*", "");
         folderName = folderName.replaceFirst("^\\d+[-_.\\s]+", "");

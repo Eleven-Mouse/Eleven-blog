@@ -8,6 +8,7 @@ import blog.mapper.ArticleMapper;
 import blog.mapper.CommentMapper;
 import blog.service.CommentService;
 import blog.service.MailService;
+import blog.utils.IpRegionUtil;
 import blog.vo.CommentVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -57,9 +58,19 @@ public class CommentServiceImpl implements CommentService {
     @Value("${blog.owner.github-id:0}")
     private Long ownerGithubId;
 
-    /** 防 spam: 同一IP 60秒内最多10条评论 */
+    /** 防 spam: 同一IP 60秒内最多3条评论 */
     private static final long SPAM_WINDOW_SECONDS = 60;
-    private static final int SPAM_MAX_COUNT = 10;
+    private static final int SPAM_MAX_COUNT = 3;
+
+    /** 防 spam: 同一IP 每天最多20条评论 */
+    private static final long DAILY_WINDOW_SECONDS = 86400;
+    private static final int DAILY_MAX_COUNT = 20;
+
+    /** 评论内容最少字数 */
+    private static final int MIN_CONTENT_LENGTH = 2;
+
+    /** 评论内容最多字数 */
+    private static final int MAX_CONTENT_LENGTH = 2000;
 
     @Override
     @Transactional
@@ -135,7 +146,7 @@ public class CommentServiceImpl implements CommentService {
 
         // 6. 解析IP归属地
         if (comment.getIp() != null) {
-            comment.setLocation(resolveIpLocation(comment.getIp()));
+            comment.setLocation(IpRegionUtil.resolve(comment.getIp()));
         }
 
         commentMapper.insert(comment);
@@ -143,17 +154,49 @@ public class CommentServiceImpl implements CommentService {
     }
 
     /**
-     * 防 spam: 同一IP 60秒内最多10条
+     * 防 spam:
+     * 1. 内容长度校验
+     * 2. 内容重复检测
+     * 3. 60秒内最多3条
+     * 4. 每天最多20条
      */
     private void checkSpamFilter(CommentDTO commentDTO) {
-        String redisKey = "comment:spam:ip_" + commentDTO.getIp();
+        String ip = commentDTO.getIp();
+        String content = commentDTO.getContent();
 
-        Long count = redisTemplate.opsForValue().increment(redisKey);
-        if (count != null && count == 1) {
-            redisTemplate.expire(redisKey, SPAM_WINDOW_SECONDS, TimeUnit.SECONDS);
+        // 1. 内容长度校验
+        if (content == null || content.trim().length() < MIN_CONTENT_LENGTH) {
+            throw new RuntimeException("评论内容太短");
         }
-        if (count != null && count > SPAM_MAX_COUNT) {
+        if (content.length() > MAX_CONTENT_LENGTH) {
+            throw new RuntimeException("评论内容太长");
+        }
+
+        // 2. 内容重复检测：同一IP 5分钟内不允许发相同内容
+        String contentKey = "comment:spam:content_" + ip + "_" + content.trim().hashCode();
+        Boolean isNew = redisTemplate.opsForValue().setIfAbsent(contentKey, "1", 5, TimeUnit.MINUTES);
+        if (isNew == null || !isNew) {
+            throw new RuntimeException("请勿重复发送相同评论");
+        }
+
+        // 3. 60秒内最多3条
+        String shortKey = "comment:spam:short_" + ip;
+        Long shortCount = redisTemplate.opsForValue().increment(shortKey);
+        if (shortCount != null && shortCount == 1) {
+            redisTemplate.expire(shortKey, SPAM_WINDOW_SECONDS, TimeUnit.SECONDS);
+        }
+        if (shortCount != null && shortCount > SPAM_MAX_COUNT) {
             throw new RuntimeException("评论太频繁，请稍后再试");
+        }
+
+        // 4. 每天最多20条
+        String dailyKey = "comment:spam:daily_" + ip;
+        Long dailyCount = redisTemplate.opsForValue().increment(dailyKey);
+        if (dailyCount != null && dailyCount == 1) {
+            redisTemplate.expire(dailyKey, DAILY_WINDOW_SECONDS, TimeUnit.SECONDS);
+        }
+        if (dailyCount != null && dailyCount > DAILY_MAX_COUNT) {
+            throw new RuntimeException("今日评论次数已达上限");
         }
     }
 
@@ -187,35 +230,6 @@ public class CommentServiceImpl implements CommentService {
         } catch (Exception e) {
             log.warn("发送邮件通知失败: {}", e.getMessage());
         }
-    }
-
-    /**
-     * 解析IP归属地
-     * 使用 ip-api.com 免费API (仅限生产环境有公网IP时生效)
-     */
-    private String resolveIpLocation(String ip) {
-        if (ip == null || ip.isEmpty() || "unknown".equals(ip)
-                || ip.startsWith("127.") || ip.startsWith("192.168.")
-                || ip.startsWith("10.") || ip.equals("0:0:0:0:0:0:0:1")) {
-            return "本地";
-        }
-        try {
-            String url = "http://ip-api.com/json/" + ip + "?lang=zh-CN&fields=status,regionName,city";
-            String response = new org.springframework.web.client.RestTemplate()
-                    .getForObject(url, String.class);
-            if (response != null) {
-                com.fasterxml.jackson.databind.JsonNode node =
-                        new com.fasterxml.jackson.databind.ObjectMapper().readTree(response);
-                if ("success".equals(node.get("status").asText())) {
-                    String region = node.has("regionName") ? node.get("regionName").asText() : "";
-                    String city = node.has("city") ? node.get("city").asText() : "";
-                    return region.equals(city) ? city : region + " " + city;
-                }
-            }
-        } catch (Exception e) {
-            log.warn("IP归属地解析失败: ip={}, error={}", ip, e.getMessage());
-        }
-        return null;
     }
 
     @Override

@@ -4,10 +4,12 @@ import blog.result.Result;
 import blog.service.ArticleSyncService;
 import blog.service.GithubRepoScanner;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * 文章同步控制器（外挂模块，不修改原 ArticleController）
@@ -39,25 +41,39 @@ public class ArticleSyncController {
     }
 
     /**
-     * 手动同步所有文章
+     * 手动同步所有文章（异步）
      * POST /admin/articles/sync/all
      */
     @PostMapping("/all")
     public Result<String> syncAllArticles() {
         log.info("手动触发全量同步");
-        int count = articleSyncService.syncAllArticles();
-        return Result.success("同步完成，成功更新" + count + "篇文章");
+        CompletableFuture.runAsync(() -> {
+            try {
+                int count = articleSyncService.syncAllArticles();
+                log.info("全量同步完成，成功更新 {} 篇文章", count);
+            } catch (Exception e) {
+                log.error("全量同步失败", e);
+            }
+        });
+        return Result.success("同步已在后台启动，请稍后查看日志");
     }
 
     /**
-     * 自动发现：扫描 GitHub 仓库 → 匹配已有文章 + 创建新文章
+     * 自动发现：扫描 GitHub 仓库 → 匹配已有文章 + 创建新文章（异步）
      * POST /admin/articles/sync/discover
      */
     @PostMapping("/discover")
-    public Result<Map<String, Integer>> autoDiscover() {
+    public Result<String> autoDiscover() {
         log.info("手动触发自动发现");
-        Map<String, Integer> result = articleSyncService.autoDiscover();
-        return Result.success(result);
+        CompletableFuture.runAsync(() -> {
+            try {
+                Map<String, Integer> result = articleSyncService.autoDiscover();
+                log.info("自动发现完成：匹配={}, 创建={}, 失败={}", result.get("matched"), result.get("created"), result.get("failed"));
+            } catch (Exception e) {
+                log.error("自动发现失败", e);
+            }
+        });
+        return Result.success("同步已在后台启动，请稍后查看文章列表或后端日志");
     }
 
     /**
