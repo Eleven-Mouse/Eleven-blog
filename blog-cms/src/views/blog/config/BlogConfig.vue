@@ -199,11 +199,8 @@ const handleSave = async () => {
 const handleDiscover = async () => {
   discovering.value = true;
   try {
-    const result = await discoverGithub();
-    const matched = result.matched || 0;
-    const created = result.created || 0;
-    const failed = result.failed || 0;
-    ElMessage.success(`扫描完成：匹配${matched}篇，新建${created}篇${failed > 0 ? "，失败" + failed + "篇" : ""}`);
+    await discoverGithub();
+    ElMessage.success("同步已在后台启动，请稍后刷新文章列表查看结果");
   } catch (err) {
     ElMessage.error("扫描失败：" + (err.message || "请先保存仓库配置"));
     console.error(err);
