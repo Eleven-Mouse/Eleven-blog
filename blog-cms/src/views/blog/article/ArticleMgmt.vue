@@ -254,7 +254,8 @@ const openTagDialog = async (row) => {
   tagDialog.articleTitle = row.title;
   tagDialog.saving = false;
   try {
-    const [detail, tagsRes] = await Promise.all([getArticleById(row.id), getAllTags()]);
+    const detail = await getArticleById(row.id);
+    const tagsRes = await getAllTags();
     const tagStr = detail.data?.tags || detail.tags || "";
     tagDialog.selectedIds = tagStr
       ? String(tagStr).split(",").map(Number).filter((n) => !isNaN(n))
@@ -271,8 +272,15 @@ const saveTags = async () => {
   try {
     await updateArticle(tagDialog.articleId, { tags: tagDialog.selectedIds.join(",") });
     ElMessage.success("标签更新成功");
+    const article = articles.value.find((a) => a.id === tagDialog.articleId);
+    if (article) {
+      const tagNames = tagDialog.selectedIds
+        .map((id) => tagDialog.allTags.find((t) => t.id === id))
+        .filter(Boolean)
+        .map((t) => t.name);
+      article.tags = tagNames.join(",");
+    }
     tagDialog.visible = false;
-    fetchData();
   } catch {
     ElMessage.error("标签更新失败");
   } finally {

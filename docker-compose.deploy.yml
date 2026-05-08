@@ -1,4 +1,28 @@
 services:
+  mysql_db:
+    image: mysql:8.0
+    container_name: blog-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 20469960
+      MYSQL_DATABASE: eleven_blog
+      TZ: Asia/Shanghai
+    volumes:
+      - db_data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p20469960"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    networks:
+      - blog-net
+
   blog-backend:
     image: kunxingll/blog-backend:latest
     container_name: blog-backend
@@ -48,6 +72,9 @@ services:
       resources:
         limits:
           memory: 768M
+    depends_on:
+      mysql_db:
+        condition: service_healthy
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
@@ -96,6 +123,9 @@ services:
         max-file: "3"
     networks:
       - blog-net
+
+volumes:
+  db_data:
 
 networks:
   blog-net:
