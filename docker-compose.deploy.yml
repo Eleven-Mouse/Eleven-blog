@@ -1,54 +1,10 @@
 services:
-  mysql_db:
-    image: mysql:8.0
-    container_name: blog-mysql
-    restart: always
-    env_file:
-      - .env
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      TZ: Asia/Shanghai
-    volumes:
-      - /root/blog/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - db_data:/var/lib/mysql
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
-    networks:
-      - blog-net
-
-  redis:
-    image: redis:alpine
-    container_name: blog-redis
-    restart: always
-    command: redis-server --requirepass "${REDIS_PASSWORD}"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-    networks:
-      - blog-net
-
   blog-backend:
     image: kunxingll/blog-backend:latest
     container_name: blog-backend
     restart: always
     env_file:
       - .env
-    depends_on:
-      mysql_db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     volumes:
       - /root/blog/upload_data:/app/uploads
     environment:
@@ -71,15 +27,31 @@ services:
       - SPRING_MAIL_PORT=${MAIL_PORT}
       - SPRING_MAIL_USERNAME=${MAIL_USERNAME}
       - SPRING_MAIL_PASSWORD=${MAIL_PASSWORD}
-      # 生产环境关闭调试日志
+      # 生产环境日志级别
       - LOGGING_LEVEL_BLOG_MAPPER=warn
       - LOGGING_LEVEL_BLOG_SERVICE=info
       - LOGGING_LEVEL_BLOG_CONTROLLER=info
       - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY=warn
       - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB=warn
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - blog-net
-    # 生产环境不对外暴露端口，通过 nginx 代理访问
 
   blog-view:
     image: kunxingll/blog-view:latest
@@ -88,7 +60,18 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - blog-backend
+      blog-backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - blog-net
 
@@ -97,15 +80,22 @@ services:
     container_name: blog-cms
     restart: always
     ports:
-      - "8080:8080"
+      - "8082:8080"
     depends_on:
-      - blog-backend
+      blog-backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - blog-net
-
-volumes:
-  db_data:
-  redis_data:
 
 networks:
   blog-net:

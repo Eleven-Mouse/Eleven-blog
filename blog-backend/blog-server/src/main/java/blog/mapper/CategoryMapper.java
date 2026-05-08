@@ -17,10 +17,16 @@ public interface CategoryMapper
     void delete(Long id);
 
     void update(Category category);
-    
+
     /**
      * 查询所有分类（带文章数统计）
      */
     List<CategoryVO> selectAll();
+
+    /**
+     * 根据名称查询分类
+     */
+    @Select("SELECT * FROM category WHERE name = #{name} LIMIT 1")
+    Category selectByName(String name);
 
 }

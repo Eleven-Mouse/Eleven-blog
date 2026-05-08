@@ -88,6 +88,19 @@
           />
         </el-form-item>
 
+        <el-form-item label="GitHub 同步地址">
+          <el-input
+            v-model="articleForm.githubUrl"
+            placeholder="如 https://raw.githubusercontent.com/owner/repo/main/docs/article.md"
+            clearable
+          />
+          <div class="form-tip" v-if="articleForm.githubUrl">
+            <span v-if="articleForm.syncStatus === 1" class="sync-success">已同步 {{ formatSyncTime(articleForm.lastSyncTime) }}</span>
+            <span v-else-if="articleForm.syncStatus === 2" class="sync-fail">同步失败</span>
+            <span v-else class="sync-pending">等待同步</span>
+          </div>
+        </el-form-item>
+
         <el-form-item>
           <el-button @click="saveDraft" :loading="loading">保存草稿</el-button>
           <el-button type="primary" @click="publishArticle" :loading="loading"
@@ -127,6 +140,9 @@ const articleForm = ref({
   isComment: 1,
   status: 0,
   publishTime: null,
+  githubUrl: "",
+  syncStatus: 0,
+  lastSyncTime: null,
 });
 
 const categories = ref([]);
@@ -231,6 +247,9 @@ const loadArticleDetail = async (id) => {
       tags: data.tags
         ? data.tags.split(",").map(Number).filter((n) => !isNaN(n))
         : [],
+      githubUrl: data.githubUrl || "",
+      syncStatus: data.syncStatus || 0,
+      lastSyncTime: data.lastSyncTime || null,
     };
   } catch (error) {
     console.error("获取详情失败", error);
@@ -294,6 +313,12 @@ const handleUploadImage = async (files, callback) => {
     console.error("图片上传过程中出现错误:", error);
   }
 };
+
+const formatSyncTime = (time) => {
+  if (!time) return "";
+  const d = new Date(time);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+};
 </script>
 
 <style scoped>
@@ -304,5 +329,22 @@ const handleUploadImage = async (files, callback) => {
 
 .md-editor {
   z-index: 999 !important;
+}
+
+.form-tip {
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.sync-success {
+  color: #67c23a;
+}
+
+.sync-fail {
+  color: #f56c6c;
+}
+
+.sync-pending {
+  color: #e6a23c;
 }
 </style>

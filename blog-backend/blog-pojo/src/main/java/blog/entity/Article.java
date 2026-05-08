@@ -59,6 +59,26 @@ public class Article implements Serializable {
     private String tags;
 
     /**
+     * GitHub Markdown 文件地址（为null则不参与同步）
+     */
+    private String githubUrl;
+
+    /**
+     * 同步状态：0-未配置，1-成功，2-失败
+     */
+    private Integer syncStatus;
+
+    /**
+     * 最后同步时间
+     */
+    private LocalDateTime lastSyncTime;
+
+    /**
+     * GitHub 文件 SHA，用于增量更新比对
+     */
+    private String githubSha;
+
+    /**
      * 是否允许评论（0-否，1-是）
      */
     private Integer isComment;

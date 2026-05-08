@@ -23,6 +23,18 @@
             <if test="tags != null">
                 tags = #{tags},
             </if>
+            <if test="githubUrl != null">
+                github_url = #{githubUrl},
+            </if>
+            <if test="syncStatus != null">
+                sync_status = #{syncStatus},
+            </if>
+            <if test="lastSyncTime != null">
+                last_sync_time = #{lastSyncTime},
+            </if>
+            <if test="githubSha != null">
+                github_sha = #{githubSha},
+            </if>
             <if test="authorId != null">
                 author_id = #{authorId},
             </if>
@@ -48,7 +60,10 @@
             a.id, a.title, a.summary, a.content, a.cover_image as coverImage,
             a.category_id as categoryId, a.tags, a.view_count as viewCount,
             a.is_comment as isComment, a.status, a.publish_time as publishTime,
-            a.create_time as createTime, a.update_time as updateTime, c.name as categoryName
+            a.create_time as createTime, a.update_time as updateTime,
+            a.github_url as githubUrl, a.sync_status as syncStatus, a.last_sync_time as lastSyncTime,
+            a.github_sha as githubSha,
+            c.name as categoryName
         FROM
             article a
 
@@ -66,7 +81,10 @@
             a.id, a.title, a.summary, a.content, a.cover_image as coverImage,
             a.category_id as categoryId, a.tags, a.view_count as viewCount,
             a.is_comment as isComment, a.status, a.publish_time as publishTime,
-            a.create_time as createTime, a.update_time as updateTime, c.name as categoryName
+            a.create_time as createTime, a.update_time as updateTime,
+            a.github_url as githubUrl, a.sync_status as syncStatus, a.last_sync_time as lastSyncTime,
+            a.github_sha as githubSha,
+            c.name as categoryName
         FROM
             article a
         LEFT JOIN
@@ -84,7 +102,10 @@
             a.id, a.title, a.summary, a.cover_image as coverImage,
             a.category_id as categoryId, a.tags, a.view_count as viewCount,
             a.is_comment as isComment, a.status, a.publish_time as publishTime,
-            a.create_time as createTime, a.update_time as updateTime, c.name as categoryName
+            a.create_time as createTime, a.update_time as updateTime,
+            a.github_url as githubUrl, a.sync_status as syncStatus, a.last_sync_time as lastSyncTime,
+            a.github_sha as githubSha,
+            c.name as categoryName
 
         FROM
             article a

@@ -94,10 +94,20 @@
             {{ formatTime(row.createTime) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="160">
+        <el-table-column label="操作" width="200">
           <template #default="{ row }">
             <div class="table-actions">
               <EditButton :id="row.id" target-path="/article/edit" />
+              <el-button
+                v-if="row.githubUrl"
+                size="small"
+                type="warning"
+                plain
+                :loading="row.syncLoading"
+                @click="handleSync(row)"
+              >
+                同步
+              </el-button>
               <DeleteButton
                 :id="row.id"
                 :api-func="deleteArticleById"
@@ -117,7 +127,7 @@ import { reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { Plus, Search, Delete } from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { deleteArticleById, getArticlesList, updateArticle } from "@/api/article";
+import { deleteArticleById, getArticlesList, updateArticle, syncArticleById } from "@/api/article";
 import { useTable } from "@/composables/useTable";
 import { formatTime, formatTags } from "@/composables/useFormat";
 import SearchToolbar from "@/components/common/SearchToolbar.vue";
@@ -191,6 +201,19 @@ const handleStatusChange = async (row) => {
     ElMessage.error("状态更新失败");
   } finally {
     row.statusLoading = false;
+  }
+};
+
+const handleSync = async (row) => {
+  row.syncLoading = true;
+  try {
+    await syncArticleById(row.id);
+    ElMessage.success("同步成功");
+    fetchData();
+  } catch (err) {
+    ElMessage.error("同步失败，请检查 GitHub 地址或网络");
+  } finally {
+    row.syncLoading = false;
   }
 };
 </script>

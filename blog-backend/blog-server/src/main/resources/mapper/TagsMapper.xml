@@ -54,4 +54,11 @@
         value DESC
         LIMIT 20
     </select>
+
+    <select id="selectByNames" resultType="blog.entity.Tags">
+        SELECT id, name FROM tags WHERE name IN
+        <foreach item="name" collection="names" open="(" separator="," close=")">
+            #{name}
+        </foreach>
+    </select>
 </mapper>

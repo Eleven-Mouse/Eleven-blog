@@ -16,6 +16,11 @@ import java.time.LocalDateTime;
 public class ArticleDTO implements Serializable {
 
     /**
+     * 文章ID
+     */
+    private Long id;
+
+    /**
      * 文章标题
      */
 
@@ -47,6 +52,25 @@ public class ArticleDTO implements Serializable {
      */
     private String tags;
 
+    /**
+     * GitHub Markdown 文件地址
+     */
+    private String githubUrl;
+
+    /**
+     * 同步状态：0-未配置，1-成功，2-失败
+     */
+    private Integer syncStatus;
+
+    /**
+     * 最后同步时间
+     */
+    private LocalDateTime lastSyncTime;
+
+    /**
+     * GitHub 文件 SHA
+     */
+    private String githubSha;
 
     /**
      * 是否允许评论（0-否，1-是）

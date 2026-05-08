@@ -61,6 +61,20 @@ public class ArticleVO implements Serializable {
      */
     private String tags;
 
+    /**
+     * GitHub Markdown 文件地址
+     */
+    private String githubUrl;
+
+    /**
+     * 同步状态：0-未配置，1-成功，2-失败
+     */
+    private Integer syncStatus;
+
+    /**
+     * 最后同步时间
+     */
+    private LocalDateTime lastSyncTime;
 
     /**
      * 是否允许评论（0-否，1-是）

@@ -79,6 +79,9 @@ public class SecurityConfig {
                         // 放行 GitHub OAuth 接口
                         .requestMatchers("/api/oauth/**").permitAll()
 
+                        // 放行 GitHub Webhook 回调（通过 HMAC 签名校验保证安全性）
+                        .requestMatchers("/webhook/**").permitAll()
+
                         // 3. 公共只读接口 (GET 请求) - 所有人(包括游客)可访问
                         .requestMatchers(HttpMethod.GET,
                                 "/api/articles/**",

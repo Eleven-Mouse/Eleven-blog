@@ -78,3 +78,48 @@ export function deleteArticleById(id) {
     method: "delete",
   });
 }
+
+/**
+ * @description: 手动同步单篇文章（从 GitHub 拉取内容）
+ * @param {number | string} id 文章ID
+ * @returns {Promise}
+ */
+export function syncArticleById(id) {
+  return request({
+    url: `/articles/sync/${id}`,
+    method: "post",
+  });
+}
+
+/**
+ * @description: 手动同步所有文章
+ * @returns {Promise}
+ */
+export function syncAllArticles() {
+  return request({
+    url: "/articles/sync/all",
+    method: "post",
+  });
+}
+
+/**
+ * @description: 自动发现 GitHub 仓库中的 Markdown 文件并同步
+ * @returns {Promise<{matched: number, created: number, failed: number}>}
+ */
+export function discoverGithub() {
+  return request({
+    url: "/articles/sync/discover",
+    method: "post",
+  });
+}
+
+/**
+ * @description: 预览 GitHub 仓库中的 Markdown 文件列表（不写入）
+ * @returns {Promise}
+ */
+export function previewDiscover() {
+  return request({
+    url: "/articles/sync/discover/preview",
+    method: "get",
+  });
+}
