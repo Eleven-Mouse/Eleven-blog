@@ -264,14 +264,20 @@ public class ArticleSyncServiceImpl implements ArticleSyncService {
             if (id != null) {
                 tagIds.add(id);
             } else {
-                // 自动创建不存在的标签
                 Tags newTag = new Tags();
                 newTag.setName(name);
                 newTag.setCreateTime(LocalDateTime.now());
                 newTag.setUpdateTime(LocalDateTime.now());
-                tagsMapper.insert(newTag);
-                tagIds.add(newTag.getId());
-                log.info("自动创建标签：'{}' → ID={}", name, newTag.getId());
+                try {
+                    tagsMapper.insert(newTag);
+                    tagIds.add(newTag.getId());
+                    log.info("自动创建标签：'{}' → ID={}", name, newTag.getId());
+                } catch (org.springframework.dao.DuplicateKeyException e) {
+                    // 并发场景下另一个线程已插入，回查获取ID
+                    Tags existing = tagsMapper.selectByName(name);
+                    tagIds.add(existing.getId());
+                    log.info("标签'{}'已存在（并发创建），使用已有ID={}", name, existing.getId());
+                }
             }
         }
 

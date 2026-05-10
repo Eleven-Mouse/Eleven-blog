@@ -1,0 +1,1349 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI时代下，互联网行业岗位的变革与大学生的应对</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css"
+    />
+    <style>
+      :root {
+        --r-heading-font:
+          "PingFang SC", "Microsoft YaHei", -apple-system, sans-serif;
+        --r-main-font:
+          "PingFang SC", "Microsoft YaHei", -apple-system, sans-serif;
+        --r-heading-color: #111827;
+        --r-main-color: #374151;
+        --r-accent: #1d4ed8;
+        --blue: #1d4ed8;
+        --red: #dc2626;
+        --orange: #f97316;
+        --gray: #6b7280;
+        --light-gray: #9ca3af;
+        --bg: #ffffff;
+        --card-bg: #f8fafc;
+        --border: #e5e7eb;
+      }
+
+      .reveal {
+        font-size: 36px;
+        font-weight: 400;
+        background: var(--bg);
+      }
+
+      .reveal h1,
+      .reveal h2,
+      .reveal h3 {
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        text-transform: none;
+      }
+      .reveal h1 {
+        font-size: 2.8em;
+      }
+      .reveal h2 {
+        font-size: 2em;
+      }
+      .reveal h3 {
+        font-size: 1.5em;
+        font-weight: 500;
+      }
+
+      .reveal strong {
+        color: #111827;
+        font-weight: 600;
+      }
+      .reveal em {
+        color: var(--blue);
+        font-style: normal;
+        font-weight: 600;
+      }
+      .reveal a {
+        color: var(--blue);
+      }
+
+      .reveal code {
+        font-family: "JetBrains Mono", "SF Mono", "Consolas", monospace;
+        background: #f1f5f9;
+        color: #334155;
+        padding: 3px 10px;
+        border-radius: 4px;
+        font-size: 0.85em;
+      }
+      .reveal pre {
+        background: #f8fafc;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        box-shadow: none;
+        font-size: 0.78em;
+        padding: 24px;
+      }
+      .reveal pre code {
+        background: none;
+        padding: 0;
+      }
+
+      .reveal blockquote {
+        border-left: 4px solid var(--blue);
+        padding-left: 24px;
+        color: var(--gray);
+        font-style: normal;
+        font-size: 1em;
+      }
+
+      .reveal table {
+        font-size: 0.9em;
+        margin: 24px auto;
+      }
+      .reveal th {
+        background: #111827;
+        color: white;
+        font-weight: 500;
+      }
+      .reveal td {
+        border-bottom: 1px solid var(--border);
+        color: #374151;
+      }
+
+      /* === 页面类型 === */
+
+      /* 居中页 */
+      .center-section {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        height: 100%;
+      }
+      .center-section h2 {
+        margin-bottom: 0.1em;
+      }
+
+      /* 超大数字 */
+      .big-number {
+        font-size: 5em;
+        font-weight: 800;
+        line-height: 1;
+        color: #111827;
+      }
+      .big-number.red {
+        color: var(--red);
+      }
+      .big-number.orange {
+        color: var(--orange);
+      }
+
+      /* 标签 */
+      .tag {
+        display: inline-block;
+        background: #f1f5f9;
+        color: #475569;
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 0.8em;
+        font-family: "JetBrains Mono", monospace;
+        border: 1px solid var(--border);
+      }
+
+      /* 编号卡片 */
+      .num-card {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: var(--blue);
+        color: white;
+        font-weight: 700;
+        font-size: 1em;
+        flex-shrink: 0;
+      }
+
+      /* 两栏布局 */
+      .two-col {
+        display: flex;
+        gap: 50px;
+        text-align: left;
+      }
+      .two-col > div {
+        flex: 1;
+      }
+
+      /* 对比布局 */
+      .vs-left {
+        color: var(--light-gray);
+      }
+      .vs-right {
+        color: #111827;
+      }
+
+      /* 要点卡片 */
+      .point-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        text-align: left;
+      }
+      .point-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 24px;
+      }
+      .point-card h4 {
+        margin: 0 0 8px 0;
+        font-size: 1em;
+        color: #111827;
+        font-weight: 600;
+      }
+      .point-card p {
+        margin: 0;
+        font-size: 0.85em;
+        color: var(--gray);
+        line-height: 1.5;
+      }
+
+      /* 分隔线 */
+      .divider {
+        width: 40px;
+        height: 3px;
+        background: var(--blue);
+        margin: 20px auto;
+        border-radius: 2px;
+      }
+
+      /* 小字注释 */
+      .note {
+        font-size: 0.5em;
+        color: var(--light-gray);
+        margin-top: 40px;
+      }
+
+      /* 进度条 */
+      .reveal .progress {
+        color: var(--blue);
+        height: 3px;
+      }
+
+      /* 控制按钮 */
+      .reveal .controls {
+        color: var(--blue);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <!-- ========== 封面 ========== -->
+        <section data-transition="fade">
+          <div class="center-section">
+            <h1>AI时代下</h1>
+            <h3 style="font-weight: 400; color: #6b7280; margin-top: 0.2em">
+              互联网行业岗位的变革与大学生的应对
+            </h3>
+            <div class="divider"></div>
+            <p style="font-size: 0.9em; color: #9ca3af">XXX · 2026.05.12</p>
+          </div>
+        </section>
+
+        <!-- ========== 开场 ========== -->
+        <section data-transition="fade">
+          <div class="center-section">
+            <p class="fragment fade-up">不贩卖焦虑</p>
+            <p class="fragment fade-up">也不无脑吹AI</p>
+            <p class="fragment fade-up" style="margin-top: 0.5em">
+              只讲我看到的 <strong>真实变化</strong>
+            </p>
+          </div>
+        </section>
+
+        <section data-transition="fade">
+          <div class="center-section">
+            <p class="fragment fade-up">这个行业正在发生一次</p>
+            <p class="fragment fade-up"><strong>结构性的变化</strong></p>
+            <p class="fragment fade-up" style="margin-top: 0.3em">
+              而且这个变化<br />比大多数人感知到的要深
+            </p>
+          </div>
+        </section>
+
+        <!-- ========== AI冲击 ========== -->
+        <section data-transition="fade">
+          <div class="center-section">
+            <h2>AI到底改变了什么？</h2>
+          </div>
+        </section>
+
+        <section data-transition="slide">
+          <div class="center-section">
+            <p class="fragment fade-up" style="font-size: 0.95em">
+              开发者已在日常工作中使用AI工具
+            </p>
+            <p class="big-number fragment fade-up">84%</p>
+
+            <p
+              class="fragment fade-up"
+              style="font-size: 0.95em; margin-top: 0.3em"
+            >
+              <strong>51%</strong> 的专业开发者——每天在用
+            </p>
+            <p class="note">Stack Overflow 2025 全球开发者调查</p>
+          </div>
+        </section>
+
+        <section data-transition="slide">
+          <h3 style="text-align: center; margin-bottom: 0.5em">过去 vs 现在</h3>
+          <div class="two-col">
+            <div class="fragment fade-right vs-left">
+              <p
+                style="
+                  font-size: 1em;
+                  color: #9ca3af;
+                  text-transform: uppercase;
+                  letter-spacing: 0.1em;
+                "
+              >
+                过去
+              </p>
+              <p><strong>70%</strong> 时间写代码</p>
+              <p><strong>30%</strong> 时间想业务</p>
+              <p>工具：手写 + Stack Overflow</p>
+            </div>
+            <div class="fragment fade-left vs-right">
+              <p
+                style="
+                  font-size: 1em;
+                  color: var(--blue);
+                  text-transform: uppercase;
+                  letter-spacing: 0.1em;
+                "
+              >
+                现在
+              </p>
+              <p><strong>30%</strong> 时间写代码</p>
+              <p><strong>70%</strong> 时间理解业务</p>
+              <p>工具：Cursor / Copilot / Claude Code</p>
+            </div>
+          </div>
+          <p
+            class="fragment fade-up"
+            style="text-align: center; margin-top: 1em; font-size: 1em"
+          >
+            编码的门槛在下降 · <em>"知道该写什么代码"的门槛在上升</em>
+          </p>
+        </section>
+
+        <section data-transition="slide">
+          <div class="center-section">
+            <p class="fragment fade-up">
+              AI代码重大缺陷概率
+              <span class="big-number orange" style="font-size: 2em">×1.7</span>
+            </p>
+            <p class="fragment fade-up" style="margin-top: 0.3em">
+              安全漏洞
+              <span class="big-number orange" style="font-size: 2em"
+                >×2.74</span
+              >
+            </p>
+            <p
+              class="fragment fade-up"
+              style="margin-top: 1em; font-size: 0.95em"
+            >
+              66% 的开发者认为："看起来对，但总觉得哪里不对"
+            </p>
+            <p
+              class="fragment fade-up"
+              style="font-size: 1em; margin-top: 0.5em"
+            >
+              你写得快了，但你需要 <em>更强的判断力</em>
+            </p>
+          </div>
+        </section>
+
+        <section data-transition="slide">
+          <h3 style="text-align: center; margin-bottom: 0.3em">
+            裁掉的是什么人？
+          </h3>
+          <div class="two-col" style="max-width: 700px; margin: 0 auto">
+            <div class="fragment fade-right" style="text-align: center">
+              <p
+                style="
+                  font-size: 1em;
+                  color: #dc2626;
+                  text-transform: uppercase;
+                  letter-spacing: 0.1em;
+                "
+              >
+                被淘汰的
+              </p>
+              <p>只会写代码</p>
+              <p>不理解业务</p>
+              <p>只会执行需求</p>
+            </div>
+            <div class="fragment fade-left" style="text-align: center">
+              <p
+                style="
+                  font-size: 1em;
+                  color: var(--blue);
+                  text-transform: uppercase;
+                  letter-spacing: 0.1em;
+                "
+              >
+                更值钱的
+              </p>
+              <p><strong>理解业务</strong></p>
+              <p><strong>能做架构决策</strong></p>
+              <p><strong>能独立解决问题</strong></p>
+            </div>
+          </div>
+          <p
+            class="fragment fade-up"
+            style="text-align: center; margin-top: 1em; font-size: 0.95em"
+          >
+            AI相关岗位招聘量快速增长 · 腾讯实习生日薪提高近
+            <em>50%</em> 抢AI人才
+          </p>
+        </section>
+
+        <section data-transition="convex">
+          <div class="center-section">
+            <p class="fragment fade-up">AI取代的是</p>
+            <h2 class="fragment fade-up" style="margin: 0.2em 0">
+              "只会写代码的程序员"
+            </h2>
+            <p class="fragment fade-up" style="margin-top: 0.5em">
+              能理解业务、能设计方案、能用AI提升效率的工程师
+            </p>
+            <p class="fragment fade-up">
+              <em style="font-size: 1.2em">反而更值钱了</em>
+            </p>
+          </div>
+        </section>
+
+        <!-- ========== 工作重心 ========== -->
+        <section data-transition="fade">
+          <div class="center-section">
+            <h2>程序员的工作重心<br />发生了什么变化？</h2>
+          </div>
+        </section>
+
+        <section data-transition="slide">
+          <div class="center-section">
+            <p class="fragment fade-up">程序员这个岗位没有消失</p>
+            <p class="fragment fade-up" style="margin-top: 0.3em">
+              但它的 <em>重心</em> 发生了巨大偏移
+            </p>
+            <div class="divider"></div>
+            <p class="fragment fade-up" style="font-size: 1em">
+              过去：70% 写代码 → 30% 想业务
+            </p>
+            <p class="fragment fade-up" style="font-size: 1em">
+              <strong>现在：30% 写代码 → 70% 理解业务</strong>
+            </p>
+          </div>
+        </section>
+
+        <section data-transition="slide">
+          <h3>AI不能回答的问题</h3>
+          <ul
+            style="
+              list-style: none;
+              padding: 0;
+              max-width: 600px;
+              margin: 0 auto;
+            "
+          >
+            <li class="fragment fade-up" style="margin-bottom: 14px">
+              这个业务场景的 <em>边界条件</em> 是什么？
+            </li>
+            <li class="fragment fade-up" style="margin-bottom: 14px">
+              高并发下这个设计 <em>会不会崩</em>？
+            </li>
+            <li class="fragment fade-up" style="margin-bottom: 14px">
+              用户实际使用时，这个交互 <em>合理吗</em>？
+            </li>
+            <li class="fragment fade-up" style="margin-bottom: 14px">
+              <em>数据一致性</em> 怎么保证？
+            </li>
+            <li class="fragment fade-up" style="margin-bottom: 14px">
+              微服务怎么拆才不会变成 <em>分布式大泥球</em>？
+            </li>
+          </ul>
+          <blockquote class="fragment fade-up" style="margin-top: 1em">
+            只有理解业务、理解系统、理解用户的人才知道
+          </blockquote>
+        </section>
+
+        <section data-transition="slide">
+          <h3 style="text-align: center; margin-bottom: 0.5em">
+            未来程序员最重要的 6 大能力
+          </h3>
+          <div class="point-grid">
+            <div class="point-card fragment fade-up">
+              <h4>业务理解力</h4>
+              <p>快速理解业务场景，给出合适技术方案</p>
+            </div>
+            <div class="point-card fragment fade-up">
+              <h4>产品思维</h4>
+              <p>站在用户角度思考问题</p>
+            </div>
+            <div class="point-card fragment fade-up">
+              <h4>系统设计能力</h4>
+              <p>设计可扩展、可维护的架构</p>
+            </div>
+            <div class="point-card fragment fade-up">
+              <h4>AI协同开发</h4>
+              <p>高效和AI协作，不被牵着走</p>
+            </div>
+            <div class="point-card fragment fade-up">
+              <h4>全栈能力</h4>
+              <p>一个人跑通前端→后端→部署</p>
+            </div>
+            <div class="point-card fragment fade-up">
+              <h4>Agent能力</h4>
+              <p>构建AI工作流，而非只调API</p>
+            </div>
+          </div>
+          <p
+            class="fragment fade-up"
+            style="
+              text-align: center;
+              margin-top: 0.8em;
+              font-size: 0.95em;
+              color: var(--red);
+            "
+          >
+            学校不会教你，但企业需要你会
+          </p>
+        </section>
+
+        <!-- ========== 全栈化 ========== -->
+        <section data-transition="fade">
+          <div class="center-section">
+            <h2>为什么岗位在走向全栈化？</h2>
+          </div>
+        </section>
+
+        <section data-transition="slide">
+          <h3 style="text-align: center; margin-bottom: 0.5em">
+            传统分工正在被打破
+          </h3>
+          <div class="two-col" style="max-width: 750px; margin: 0 auto">
+            <div class="fragment fade-right" style="text-align: center">
+              <p
+                style="
+                  font-size: 1em;
+                  color: #dc2626;
+                  text-transform: uppercase;
+                  letter-spacing: 0.1em;
+                  margin-bottom: 0.3em;
+                "
+              >
+                过去
+              </p>
+              <p
+                style="
+                  color: #9ca3af;
+                  text-decoration: line-through;
+                  text-decoration-color: #d1d5db;
+                "
+              >
+                前端 → 只管页面
+              </p>
+              <p
+                style="
+                  color: #9ca3af;
+                  text-decoration: line-through;
+                  text-decoration-color: #d1d5db;
+                "
+              >
+                后端 → 只管接口
+              </p>
+              <p
+                style="
+                  color: #9ca3af;
+                  text-decoration: line-through;
+                  text-decoration-color: #d1d5db;
+                "
+              >
+                DBA → 只管数据库
+              </p>
+              <p
+                style="
+                  color: #9ca3af;
+                  text-decoration: line-through;
+                  text-decoration-color: #d1d5db;
+                "
+              >
+                运维 → 只管部署
+              </p>
+            </div>
+            <div class="fragment fade-left" style="text-align: center">
+              <p
+                style="
+                  font-size: 1em;
+                  color: var(--blue);
+                  text-transform: uppercase;
+                  letter-spacing: 0.1em;
+                  margin-bottom: 0.3em;
+                "
+              >
+                现在
+              </p>
+              <p><strong>前端也要懂后端、数据库</strong></p>
+              <p><strong>后端也要懂前端、部署</strong></p>
+              <p><strong>每个人都要懂数据基础</strong></p>
+              <p><strong>容器化人人都要会</strong></p>
+            </div>
+          </div>
+        </section>
+
+        <section data-transition="slide">
+          <h3 style="text-align: center; margin-bottom: 0.5em">
+            全栈化的三大原因
+          </h3>
+          <div style="max-width: 600px; margin: 0 auto">
+            <div
+              class="fragment fade-up"
+              style="
+                display: flex;
+                align-items: flex-start;
+                gap: 16px;
+                margin-bottom: 24px;
+              "
+            >
+              <span class="num-card">1</span>
+              <div>
+                <p style="margin: 0; font-weight: 600">
+                  AI降低了跨领域学习成本
+                </p>
+                <p
+                  style="margin: 4px 0 0; font-size: 0.9em; color: var(--gray)"
+                >
+                  后端用AI写Vue页面已不难
+                </p>
+              </div>
+            </div>
+            <div
+              class="fragment fade-up"
+              style="
+                display: flex;
+                align-items: flex-start;
+                gap: 16px;
+                margin-bottom: 24px;
+              "
+            >
+              <span class="num-card">2</span>
+              <div>
+                <p style="margin: 0; font-weight: 600">
+                  企业需要能独立完成完整业务链路的人
+                </p>
+                <p
+                  style="margin: 4px 0 0; font-size: 0.9em; color: var(--gray)"
+                >
+                  沟通成本最低，不需要反复联调
+                </p>
+              </div>
+            </div>
+            <div
+              class="fragment fade-up"
+              style="display: flex; align-items: flex-start; gap: 16px"
+            >
+              <span class="num-card">3</span>
+              <div>
+                <p style="margin: 0; font-weight: 600">
+                  岗位HC在减少，一人多能成趋势
+                </p>
+                <p
+                  style="margin: 4px 0 0; font-size: 0.9em; color: var(--gray)"
+                >
+                  3前端 + 5后端 + 1运维 → 2全栈 + 1后端 + AI
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section data-transition="convex">
+          <div class="center-section">
+            <p class="fragment fade-up">你不需要每个都是专家</p>
+            <p class="fragment fade-up" style="margin-top: 0.5em">
+              <strong style="font-size: 1.3em">但你不能有明显短板</strong>
+            </p>
+          </div>
+        </section>
+
+        <!-- ========== 技术路线 ========== -->
+        <section data-transition="fade">
+          <div class="center-section">
+            <h2>具体学什么？</h2>
+          </div>
+        </section>
+
+        <section data-transition="slide">
+          <div class="two-col" style="align-items: flex-start">
+            <div style="flex: 1.2">
+              <h3 style="margin-top: 0">Java后端技术栈</h3>
+              <pre><code>Java
+├── Spring / Spring Boot 3 / Spring AI / Maven
+├── JDBC / MyBatis
+├── MySQL / PostgreSQL / Redis
+├── RocketMQ / RabbitMQ / Kafka
+├── DDD / 微服务
+├── Vue / React（基础）
+├── LangChain / LangGraph
+└── Nginx / Docker / Linux</code></pre>
+            </div>
+            <div style="flex: 0.8; padding-top: 2em">
+              <div
+                class="fragment fade-up"
+                style="
+                  margin-bottom: 16px;
+                  padding: 12px 16px;
+                  background: #f8fafc;
+                  border-radius: 8px;
+                  border-left: 3px solid var(--blue);
+                "
+              >
+                <p style="font-size: 0.9em; margin: 0">
+                  <strong>Redis</strong> 是基本技能，不是加分项
+                </p>
+              </div>
+              <div
+                class="fragment fade-up"
+                style="
+                  margin-bottom: 16px;
+                  padding: 12px 16px;
+                  background: #f8fafc;
+                  border-radius: 8px;
+                  border-left: 3px solid var(--blue);
+                "
+              >
+                <p style="font-size: 0.9em; margin: 0">
+                  <strong>DDD</strong> 至少懂聚合根、限界上下文、四层架构
+                </p>
+              </div>
+              <div
+                class="fragment fade-up"
+                style="
+                  padding: 12px 16px;
+                  background: #f8fafc;
+                  border-radius: 8px;
+                  border-left: 3px solid var(--blue);
+                "
+              >
+                <p style="font-size: 0.9em; margin: 0">
+                  面试官看的是能不能 <strong>串起来做完整项目</strong>
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section data-transition="slide">
+          <div class="two-col" style="align-items: flex-start">
+            <div style="flex: 1.2">
+              <h3 style="margin-top: 0">前端技术栈</h3>
+              <pre><code>HTML / CSS / JS / TypeScript
+├── Vue / React / Next.js
+├── Webpack / Vite / Rollup / Rolldown / Bun.js
+├── Node.js / Express / Hono
+├── MongoDB / MySQL / PostgreSQL / Prisma
+├── ECharts / D3.js / Three.js
+├── Flutter / Electron
+└── LangChain / LangGraph</code></pre>
+            </div>
+            <div style="flex: 0.8; padding-top: 2em">
+              <div
+                class="fragment fade-up"
+                style="
+                  margin-bottom: 16px;
+                  padding: 12px 16px;
+                  background: #f8fafc;
+                  border-radius: 8px;
+                  border-left: 3px solid var(--blue);
+                "
+              >
+                <p style="font-size: 0.9em; margin: 0">
+                  <strong>TypeScript</strong> 大厂90%+在用，不学进不了门
+                </p>
+              </div>
+              <div
+                class="fragment fade-up"
+                style="
+                  margin-bottom: 16px;
+                  padding: 12px 16px;
+                  background: #f8fafc;
+                  border-radius: 8px;
+                  border-left: 3px solid var(--blue);
+                "
+              >
+                <p style="font-size: 0.9em; margin: 0">
+                  前端越来越 <strong>工程化、全栈化、AI化</strong>
+                </p>
+              </div>
+              <div
+                class="fragment fade-up"
+                style="
+                  padding: 12px 16px;
+                  background: #f8fafc;
+                  border-radius: 8px;
+                  border-left: 3px solid var(--blue);
+                "
+              >
+                <p style="font-size: 0.9em; margin: 0">
+                  能做前端 + 写接口 + AI应用 → <strong>企业抢着要</strong>
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========== 基础能力 ========== -->
+        <section data-transition="fade">
+          <div class="center-section">
+            <h2>容易被忽视的</h2>
+            <p style="color: var(--gray)">基础设施能力</p>
+          </div>
+        </section>
+
+        <section data-transition="slide">
+          <h3 style="text-align: center; margin-bottom: 0.3em">
+            不是加分项，是基础设施
+          </h3>
+          <div class="point-grid" style="max-width: 700px; margin: 0 auto">
+            <div class="point-card fragment fade-up">
+              <h4><code>Docker</code></h4>
+              <p>开发/测试/线上几乎全用Docker</p>
+            </div>
+            <div class="point-card fragment fade-up">
+              <h4><code>Linux</code></h4>
+              <p>服务器基本操作是底线</p>
+            </div>
+            <div class="point-card fragment fade-up">
+              <h4><code>HTTP</code></h4>
+              <p>搞Web不懂HTTP？职业生涯会很短</p>
+            </div>
+            <div class="point-card fragment fade-up">
+              <h4><code>TCP / UDP / QUIC</code></h4>
+              <p>网络编程、性能优化必备</p>
+            </div>
+          </div>
+          <blockquote class="fragment fade-up" style="margin-top: 1em">
+            框架是工具，底层原理才是护城河
+          </blockquote>
+        </section>
+
+        <!-- ========== Agent ========== -->
+        <section data-transition="fade">
+          <div class="center-section">
+            <h2>AI / Agent</h2>
+            <p style="color: var(--gray)">未来开发最重要的能力之一</p>
+          </div>
+        </section>
+
+        <section data-transition="slide">
+          <div class="center-section">
+            <p style="font-size: 1em; color: var(--gray)">
+              大多数人理解的AI开发
+            </p>
+            <p class="fragment fade-up">
+              <code>调API → 传Prompt → 拿结果</code>
+            </p>
+            <div class="divider"></div>
+            <p class="fragment fade-up">这只是最基础的使用</p>
+            <p class="fragment fade-up" style="margin-top: 0.5em">
+              真正的AI开发——构建一个 <strong>Agent 系统</strong>
+            </p>
+          </div>
+        </section>
+
+        <section data-transition="slide">
+          <h3 style="text-align: center; margin-bottom: 0.5em">
+            Agent 四大核心
+          </h3>
+          <div class="point-grid">
+            <div class="point-card fragment fade-up" style="text-align: center">
+              <h4 style="font-size: 1.1em">LLM</h4>
+              <p>理解和生成语言</p>
+              <p style="color: var(--blue); font-weight: 600; margin-top: 8px">
+                🧠 大脑
+              </p>
+            </div>
+            <div class="point-card fragment fade-up" style="text-align: center">
+              <h4 style="font-size: 1.1em">Tools</h4>
+              <p>调用外部API/数据库/代码</p>
+              <p style="color: var(--blue); font-weight: 600; margin-top: 8px">
+                ✋ 手
+              </p>
+            </div>
+            <div class="point-card fragment fade-up" style="text-align: center">
+              <h4 style="font-size: 1.1em">Memory</h4>
+              <p>短期+长期上下文记忆</p>
+              <p style="color: var(--blue); font-weight: 600; margin-top: 8px">
+                💾 记忆
+              </p>
+            </div>
+            <div class="point-card fragment fade-up" style="text-align: center">
+              <h4 style="font-size: 1.1em">ReAct</h4>
+              <p>思考→执行→再决策</p>
+              <p style="color: var(--blue); font-weight: 600; margin-top: 8px">
+                ⚡ 决策
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section data-transition="slide">
+          <div class="two-col" style="align-items: flex-start">
+            <div>
+              <h3 style="margin-top: 0; font-size: 1em">核心框架</h3>
+              <div class="fragment fade-up" style="margin-bottom: 16px">
+                <p style="font-weight: 600; margin: 0">
+                  <code>LangChain</code>
+                </p>
+                <p
+                  style="font-size: 0.9em; color: var(--gray); margin: 4px 0 0"
+                >
+                  AI应用开发事实标准
+                </p>
+              </div>
+              <div class="fragment fade-up">
+                <p style="font-weight: 600; margin: 0">
+                  <code>LangGraph</code>
+                </p>
+                <p
+                  style="font-size: 0.9em; color: var(--gray); margin: 4px 0 0"
+                >
+                  Agent编排，多Agent协作工作流<br />Klarna、Replit在用
+                </p>
+              </div>
+            </div>
+            <div>
+              <h3 style="margin-top: 0; font-size: 1em">核心技术</h3>
+              <div class="fragment fade-up" style="margin-bottom: 12px">
+                <p style="font-weight: 600; margin: 0">
+                  <code>RAG</code>
+                  <span style="font-weight: 400">检索增强生成</span>
+                </p>
+              </div>
+              <div class="fragment fade-up" style="margin-bottom: 12px">
+                <p style="font-weight: 600; margin: 0">
+                  <code>Chroma</code>
+                  <span style="font-weight: 400">向量数据库</span>
+                </p>
+              </div>
+              <div class="fragment fade-up" style="margin-bottom: 12px">
+                <p style="font-weight: 600; margin: 0">
+                  <code>MCP</code>
+                  <span style="font-weight: 400">模型上下文协议</span>
+                </p>
+              </div>
+              <div class="fragment fade-up">
+                <p style="font-weight: 600; margin: 0">
+                  <code>OCR</code>
+                  <span style="font-weight: 400">文档智能处理</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section data-transition="slide">
+          <h3 style="text-align: center; margin-bottom: 0.3em">
+            Agent 示例：智能客服
+          </h3>
+          <p
+            style="
+              text-align: center;
+              font-size: 0.95em;
+              color: var(--gray);
+              margin-bottom: 0.5em;
+            "
+          >
+            以前 → 写前端 + 后端 + 数据库 + 规则引擎 + 工单系统
+          </p>
+          <p style="text-align: center; font-size: 0.9em">
+            <strong>现在构建一个Agent</strong>
+          </p>
+          <div style="max-width: 550px; margin: 0.5em auto 0">
+            <div
+              class="fragment fade-up"
+              style="
+                display: flex;
+                justify-content: space-between;
+                padding: 8px 0;
+                border-bottom: 1px solid #f1f5f9;
+              "
+            >
+              <span>理解用户问题</span><span class="tag">LLM</span>
+            </div>
+            <div
+              class="fragment fade-up"
+              style="
+                display: flex;
+                justify-content: space-between;
+                padding: 8px 0;
+                border-bottom: 1px solid #f1f5f9;
+              "
+            >
+              <span>查知识库找答案</span><span class="tag">RAG</span>
+            </div>
+            <div
+              class="fragment fade-up"
+              style="
+                display: flex;
+                justify-content: space-between;
+                padding: 8px 0;
+                border-bottom: 1px solid #f1f5f9;
+              "
+            >
+              <span>调用订单查物流</span><span class="tag">Tools</span>
+            </div>
+            <div
+              class="fragment fade-up"
+              style="
+                display: flex;
+                justify-content: space-between;
+                padding: 8px 0;
+                border-bottom: 1px solid #f1f5f9;
+              "
+            >
+              <span>记住之前聊了什么</span><span class="tag">Memory</span>
+            </div>
+            <div
+              class="fragment fade-up"
+              style="
+                display: flex;
+                justify-content: space-between;
+                padding: 8px 0;
+                border-bottom: 1px solid #f1f5f9;
+              "
+            >
+              <span>自己拆解复杂问题</span><span class="tag">ReAct</span>
+            </div>
+            <div
+              class="fragment fade-up"
+              style="
+                display: flex;
+                justify-content: space-between;
+                padding: 8px 0;
+              "
+            >
+              <span>处理不了转人工</span><span class="tag">流程编排</span>
+            </div>
+          </div>
+        </section>
+
+        <section data-transition="convex">
+          <div class="center-section">
+            <p class="fragment fade-up">未来两年</p>
+            <p class="fragment fade-up">
+              <em>"能构建AI应用"</em> 会像 <em>"能写SQL"</em> 一样
+            </p>
+            <p class="fragment fade-up">成为开发者的基本技能</p>
+            <div class="divider"></div>
+            <p class="fragment fade-up">
+              <strong>LangChain 和 LangGraph</strong>
+            </p>
+            <p class="fragment fade-up">不是"选学"，是 <em>必学</em></p>
+          </div>
+        </section>
+
+        <!-- ========== 现实问题 ========== -->
+        <section data-transition="fade">
+          <div class="center-section">
+            <h2 style="color: var(--red)">学完这些</h2>
+            <h2 style="color: var(--red)">就一定能找到好实习吗？</h2>
+          </div>
+        </section>
+
+        <section data-transition="slide">
+          <div class="center-section">
+            <p class="big-number red fragment fade-up">不够</p>
+            <p
+              class="fragment fade-up"
+              style="margin-top: 0.5em; font-size: 0.95em"
+            >
+              一个大厂实习岗位，投递量几百到上千份简历
+            </p>
+            <p class="fragment fade-up" style="font-size: 0.95em">
+              你以为你学了很多，但在HR眼里
+            </p>
+            <p class="fragment fade-up" style="font-size: 0.95em">
+              你可能只是几百份差不多的简历中的一份
+            </p>
+            <p
+              class="fragment fade-up"
+              style="margin-top: 0.5em; color: var(--gray)"
+            >
+              很残酷，但这是事实
+            </p>
+          </div>
+        </section>
+
+        <section data-transition="slide">
+          <h3 style="text-align: center; margin-bottom: 0.5em">
+            技术是敲门砖，<em>差异化</em>才是让你进门的东西
+          </h3>
+          <div class="point-grid">
+            <div class="point-card fragment fade-up">
+              <h4>真实项目经验</h4>
+              <p>从0到1做出来的，不是教程Todo List</p>
+            </div>
+            <div class="point-card fragment fade-up">
+              <h4>GitHub 开源</h4>
+              <p>哪怕小项目，证明你在真实地做事</p>
+            </div>
+            <div class="point-card fragment fade-up">
+              <h4>技术博客</h4>
+              <p>能把东西讲清楚，本身就是能力</p>
+            </div>
+            <div class="point-card fragment fade-up">
+              <h4>AI Agent 项目</h4>
+              <p>拿出一个像样的Agent项目，面试官眼前一亮</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========== 投递时间 ========== -->
+        <section data-transition="fade">
+          <div class="center-section">
+            <h2>实习投递的黄金时间</h2>
+          </div>
+        </section>
+
+        <section data-transition="slide">
+          <h3 style="text-align: center; margin-bottom: 0.5em">
+            暑期实习时间线在提前
+          </h3>
+          <div class="two-col" style="max-width: 600px; margin: 0 auto">
+            <div class="fragment fade-right" style="text-align: center">
+              <p
+                style="
+                  font-size: 1em;
+                  color: #9ca3af;
+                  text-transform: uppercase;
+                  letter-spacing: 0.1em;
+                "
+              >
+                过去
+              </p>
+              <p>6月集中招聘</p>
+            </div>
+            <div class="fragment fade-left" style="text-align: center">
+              <p
+                style="
+                  font-size: 1em;
+                  color: var(--blue);
+                  text-transform: uppercase;
+                  letter-spacing: 0.1em;
+                "
+              >
+                现在
+              </p>
+              <p><strong>3-4月就开始</strong></p>
+              <p style="font-size: 0.95em">春招2月陆续开始</p>
+            </div>
+          </div>
+          <div class="fragment fade-up" style="margin-top: 1.5em">
+            <p style="text-align: center; font-size: 1em">
+              <strong>6-8月才开始准备？</strong>
+            </p>
+            <p
+              style="text-align: center; font-size: 0.95em; color: var(--gray)"
+            >
+              好岗位招满了 · HC用完了 · HR看不过来了 ·
+              <span style="color: var(--red)">非常被动</span>
+            </p>
+          </div>
+          <blockquote class="fragment fade-up" style="margin-top: 1em">
+            不要等"准备好了再投"——你永远不会觉得自己"准备好了"
+          </blockquote>
+        </section>
+
+        <!-- ========== 实习经验 ========== -->
+        <section data-transition="fade">
+          <div class="center-section">
+            <h2>实习经验分享</h2>
+          </div>
+        </section>
+
+        <section data-transition="slide">
+          <h3>Vibe Coding</h3>
+          <p style="color: var(--gray); font-size: 0.95em">
+            用自然语言描述需求，让AI生成代码
+          </p>
+          <p class="fragment fade-up" style="margin-top: 0.5em">
+            2025年Y Combinator冬季batch：**25%** 创业公司代码库
+            <strong>95%+</strong> AI生成
+          </p>
+          <ul style="list-style: none; padding: 0; margin-top: 0.5em">
+            <li class="fragment fade-up" style="margin-bottom: 8px">
+              写接口 → AI生成初版 → 你审查修改
+            </li>
+            <li class="fragment fade-up" style="margin-bottom: 8px">
+              写测试 → AI生成用例
+            </li>
+            <li class="fragment fade-up" style="margin-bottom: 8px">
+              Debug → 错误信息丢给AI
+            </li>
+            <li class="fragment fade-up" style="margin-bottom: 8px">
+              写文档 → AI生成框架
+            </li>
+          </ul>
+          <blockquote class="fragment fade-up" style="margin-top: 0.8em">
+            AI是工具，不是拐杖<br />离开AI什么都不会 → 问题不在AI，在你自己
+          </blockquote>
+        </section>
+
+        <section data-transition="slide">
+          <div class="two-col" style="align-items: flex-start">
+            <div>
+              <h3 style="margin-top: 0; font-size: 1em">学校不教的东西</h3>
+              <div class="fragment fade-up" style="margin-bottom: 12px">
+                <p style="font-weight: 600; margin: 0">DDD四层架构</p>
+                <p style="font-size: 1em; color: var(--gray); margin: 2px 0 0">
+                  Controller-Service-Dao三层 vs 企业四层
+                </p>
+              </div>
+              <div class="fragment fade-up" style="margin-bottom: 12px">
+                <p style="font-weight: 600; margin: 0">企业级工程化</p>
+                <p style="font-size: 1em; color: var(--gray); margin: 2px 0 0">
+                  Git工作流 / CI-CD / 灰度发布 / 监控告警
+                </p>
+              </div>
+              <div class="fragment fade-up" style="margin-bottom: 12px">
+                <p style="font-weight: 600; margin: 0">微服务治理</p>
+                <p style="font-size: 1em; color: var(--gray); margin: 2px 0 0">
+                  服务发现 / 负载均衡 / 熔断降级 / 分布式事务
+                </p>
+              </div>
+              <div class="fragment fade-up">
+                <p style="font-weight: 600; margin: 0">大规模系统设计</p>
+                <p style="font-size: 1em; color: var(--gray); margin: 2px 0 0">
+                  百万QPS / 数据一致性 / 缓存击穿
+                </p>
+              </div>
+            </div>
+            <div>
+              <h3 style="margin-top: 0; font-size: 1em">生活建议</h3>
+              <div
+                class="fragment fade-up"
+                style="
+                  margin-bottom: 16px;
+                  padding: 16px;
+                  background: #f8fafc;
+                  border-radius: 10px;
+                "
+              >
+                <p style="font-size: 0.95em; margin: 0">
+                  租房不要离公司太远<br /><span
+                    style="color: var(--gray); font-size: 1em"
+                    >通勤 > 30min 会非常痛苦</span
+                  >
+                </p>
+              </div>
+              <div
+                class="fragment fade-up"
+                style="
+                  margin-bottom: 16px;
+                  padding: 16px;
+                  background: #f8fafc;
+                  border-radius: 10px;
+                "
+              >
+                <p style="font-size: 0.95em; margin: 0">
+                  规律作息<br /><span style="color: var(--gray); font-size: 1em"
+                    >身体是最核心的生产力工具</span
+                  >
+                </p>
+              </div>
+              <div
+                class="fragment fade-up"
+                style="padding: 16px; background: #f8fafc; border-radius: 10px"
+              >
+                <p style="font-size: 0.95em; margin: 0">
+                  每天问自己<br /><span
+                    style="color: var(--gray); font-size: 1em"
+                    >今天学到了什么昨天不会的东西？</span
+                  >
+                </p>
+              </div>
+            </div>
+          </div>
+          <p
+            class="fragment fade-up"
+            style="
+              text-align: center;
+              margin-top: 0.1em;
+              font-size: 1em;
+              color: #ffffff;
+              background: #1d4ed8;
+              padding: 14px 28px;
+              border-radius: 8px;
+              display: inline-block;
+              font-weight: 600;
+            "
+          >
+            实习才是真正学习的开始
+          </p>
+        </section>
+
+        <!-- ========== 结尾1：核心能力 ========== -->
+        <section data-transition="convex">
+          <div class="center-section">
+            <p class="fragment fade-up" style="color: var(--gray)">
+              你今天学的框架，三年后可能就被替代了
+            </p>
+            <p class="fragment fade-up" style="margin-top: 0.3em">
+              但有的东西 <strong>不会被替代</strong>
+            </p>
+            <div class="divider"></div>
+            <p class="fragment fade-up" style="font-size: 1.1em;"><strong>解决实际问题的能力</strong></p>
+            <p class="fragment fade-up" style="font-size: 1.1em;"><strong>快速学习新东西的能力</strong></p>
+            <p class="fragment fade-up" style="font-size: 1.1em;"><strong>理解业务、理解用户、理解系统的能力</strong></p>
+          </div>
+        </section>
+
+        <!-- ========== 结尾2：行动号召 ========== -->
+        <section data-transition="convex">
+          <div class="center-section">
+            <p class="fragment fade-up">不要焦虑，但要清醒</p>
+            <p class="fragment fade-up">不要盲从，但要行动</p>
+            <div class="divider"></div>
+            <p class="fragment fade-up" style="margin-top: 0.3em">
+              <em style="font-size: 1.3em">你可以比我们做得更好</em>
+            </p>
+            <p class="fragment fade-up note" style="margin-top: 1em">
+              最后放了我的简历和学长的简历，供大家参考
+            </p>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+    <script>
+      Reveal.initialize({
+        hash: true,
+        transition: "slide",
+        transitionSpeed: "default",
+        backgroundTransition: "fade",
+        width: 1100,
+        height: 700,
+        margin: 0.06,
+        plugins: [RevealNotes],
+      });
+    </script>
+  </body>
+</html>

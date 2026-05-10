@@ -131,12 +131,19 @@ public class CommentController {
         String xRealIP = request.getHeader("X-Real-IP");
         String remoteAddr = request.getRemoteAddr();
 
+        log.info("IP获取 - X-Forwarded-For: {}, X-Real-IP: {}, remoteAddr: {}", xForwardedFor, xRealIP, remoteAddr);
+
         if (xForwardedFor != null && !xForwardedFor.isEmpty() && !"unknown".equalsIgnoreCase(xForwardedFor)) {
-            return xForwardedFor.split(",")[0].trim();
+            String ip = xForwardedFor.split(",")[0].trim();
+            log.info("使用X-Forwarded-For中的IP: {}", ip);
+            return ip;
         }
         if (xRealIP != null && !xRealIP.isEmpty() && !"unknown".equalsIgnoreCase(xRealIP)) {
+            log.info("使用X-Real-IP: {}", xRealIP);
             return xRealIP;
         }
-        return remoteAddr != null ? remoteAddr : "unknown";
+        String ip = remoteAddr != null ? remoteAddr : "unknown";
+        log.info("使用remoteAddr: {}", ip);
+        return ip;
     }
 }

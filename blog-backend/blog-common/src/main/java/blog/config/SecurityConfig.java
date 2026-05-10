@@ -71,7 +71,7 @@ public class SecurityConfig {
                 // 配置路径拦截规则
                 .authorizeHttpRequests(auth -> auth
                         // 允许静态资源 (如果有 swagger 或 静态图片)
-                        .requestMatchers("/images/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/images/**", "/upload/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
                         // 放行健康检查端点（Docker HEALTHCHECK 需要）
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
