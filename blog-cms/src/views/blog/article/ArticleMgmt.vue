@@ -101,16 +101,6 @@
               <el-button size="small" type="primary" plain :icon="PriceTag" @click="openTagDialog(row)">
                 打标签
               </el-button>
-              <el-button
-                v-if="row.githubUrl"
-                size="small"
-                type="warning"
-                plain
-                :loading="row.syncLoading"
-                @click="handleSync(row)"
-              >
-                同步
-              </el-button>
               <DeleteButton
                 :id="row.id"
                 :api-func="deleteArticleById"
@@ -149,7 +139,7 @@ import { reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { Plus, Search, Delete, PriceTag } from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { deleteArticleById, getArticlesList, updateArticle, syncArticleById, getArticleById } from "@/api/article";
+import { deleteArticleById, getArticlesList, updateArticle, getArticleById } from "@/api/article";
 import { getAllTags } from "@/api/tags";
 import { useTable } from "@/composables/useTable";
 import { formatTime, formatTags } from "@/composables/useFormat";
@@ -224,19 +214,6 @@ const handleStatusChange = async (row) => {
     ElMessage.error("状态更新失败");
   } finally {
     row.statusLoading = false;
-  }
-};
-
-const handleSync = async (row) => {
-  row.syncLoading = true;
-  try {
-    await syncArticleById(row.id);
-    ElMessage.success("同步成功");
-    fetchData();
-  } catch (err) {
-    ElMessage.error("同步失败，请检查 GitHub 地址或网络");
-  } finally {
-    row.syncLoading = false;
   }
 };
 

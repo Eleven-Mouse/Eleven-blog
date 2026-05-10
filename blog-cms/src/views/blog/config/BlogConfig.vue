@@ -101,9 +101,6 @@
         <el-form-item>
           <el-button type="primary" @click="handleSave" :loading="saving">保存配置</el-button>
           <el-button @click="loadConfig">重置</el-button>
-          <el-button type="success" @click="handleDiscover" :loading="discovering">
-            扫描仓库
-          </el-button>
         </el-form-item>
       </el-form>
 
@@ -139,13 +136,10 @@ summary: 文章摘要（可选）
 import { ref, reactive, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import { getBlogConfig, updateBlogConfig } from "@/api/systemConfig";
-import { discoverGithub } from "@/api/article";
 
 const formRef = ref(null);
 const loading = ref(false);
 const saving = ref(false);
-const discovering = ref(false);
-
 const form = reactive({
   blog_avatar: "",
   blog_name: "",
@@ -193,19 +187,6 @@ const handleSave = async () => {
     console.error(err);
   } finally {
     saving.value = false;
-  }
-};
-
-const handleDiscover = async () => {
-  discovering.value = true;
-  try {
-    await discoverGithub();
-    ElMessage.success("同步已在后台启动，请稍后刷新文章列表查看结果");
-  } catch (err) {
-    ElMessage.error("扫描失败：" + (err.message || "请先保存仓库配置"));
-    console.error(err);
-  } finally {
-    discovering.value = false;
   }
 };
 

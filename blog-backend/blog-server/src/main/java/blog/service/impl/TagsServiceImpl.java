@@ -11,10 +11,10 @@ import blog.vo.TagsVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.awt.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,24 +32,17 @@ public class TagsServiceImpl implements TagsService
     @Transactional
     public void insertTags(TagsDTO tagsDTO)
     {
-        // 1. 先检查标签名是否已存在
-        int count = tagsMapper.countByName(tagsDTO.getName());
-        if (count > 0)
-        {
-            throw new RuntimeException("标签名 '" + tagsDTO.getName() + "' 已存在");
-        }
-
-        // 2. 创建新标签
         Tags tags = new Tags();
         BeanUtils.copyProperties(tagsDTO, tags);
-
         tags.setCreateTime(LocalDateTime.now());
         tags.setUpdateTime(LocalDateTime.now());
 
-
-        tagsMapper.insert(tags);
-
-        log.info("标签创建成功：{}", tags.getName());
+        try {
+            tagsMapper.insert(tags);
+            log.info("标签创建成功：{}", tags.getName());
+        } catch (DuplicateKeyException e) {
+            throw new RuntimeException("标签名 '" + tagsDTO.getName() + "' 已存在");
+        }
     }
 
     @Override
