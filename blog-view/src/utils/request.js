@@ -3,8 +3,8 @@ import { ElMessage } from 'element-plus'
 
 // 创建 axios 实例
 const service = axios.create({
-  baseURL: '/api',
-  timeout: 10000, // 请求超时时间
+  baseURL: import.meta.env.VITE_APP_API_URL,
+  timeout: 10000,
 })
 
 // 响应拦截器
