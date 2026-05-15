@@ -4,7 +4,7 @@ import { ElMessage } from 'element-plus'
 // 创建 axios 实例
 const service = axios.create({
   baseURL: import.meta.env.VITE_APP_API_URL,
-  timeout: 10000,
+  timeout: 20000,
 })
 
 // 响应拦截器
@@ -32,7 +32,13 @@ service.interceptors.response.use(
     }
   },
   (error) => {
-    console.error('Network Error:', error) // for debug
+    const config = error.config
+    // 超时自动重试一次
+    if (error.code === 'ECONNABORTED' && config && !config._retry) {
+      config._retry = true
+      return service(config)
+    }
+    console.error('Network Error:', error)
     ElMessage({
       message: error.message || '网络错误，请检查您的连接',
       type: 'error',

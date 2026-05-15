@@ -3,6 +3,8 @@
   "outputDirectory": "dist",
   "rewrites": [
     { "source": "/api/:match*", "destination": "http://8.130.123.195:8081/api/:match*" },
+    { "source": "/images/:match*", "destination": "http://8.130.123.195:8081/images/:match*" },
+    { "source": "/upload/:match*", "destination": "http://8.130.123.195:8081/upload/:match*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
