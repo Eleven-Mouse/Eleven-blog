@@ -94,19 +94,12 @@
             {{ formatTime(row.createTime) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200">
+        <el-table-column label="操作" width="260">
           <template #default="{ row }">
             <div class="table-actions">
               <EditButton :id="row.id" target-path="/article/edit" />
-              <el-button
-                v-if="row.githubUrl"
-                size="small"
-                type="warning"
-                plain
-                :loading="row.syncLoading"
-                @click="handleSync(row)"
-              >
-                同步
+              <el-button size="small" type="primary" plain :icon="PriceTag" @click="openTagDialog(row)">
+                打标签
               </el-button>
               <DeleteButton
                 :id="row.id"
@@ -119,15 +112,35 @@
         </el-table-column>
       </CommonTable>
     </el-card>
+
+    <el-dialog v-model="tagDialog.visible" :title="`打标签 - ${tagDialog.articleTitle}`" width="500px">
+      <el-checkbox-group v-model="tagDialog.selectedIds">
+        <el-checkbox
+          v-for="tag in tagDialog.allTags"
+          :key="tag.id"
+          :value="tag.id"
+          :label="tag.id"
+          border
+          style="margin: 4px 8px"
+        >
+          {{ tag.name }}
+        </el-checkbox>
+      </el-checkbox-group>
+      <template #footer>
+        <el-button @click="tagDialog.visible = false">取消</el-button>
+        <el-button type="primary" :loading="tagDialog.saving" @click="saveTags">确认</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { Plus, Search, Delete } from "@element-plus/icons-vue";
+import { Plus, Search, Delete, PriceTag } from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { deleteArticleById, getArticlesList, updateArticle, syncArticleById } from "@/api/article";
+import { deleteArticleById, getArticlesList, updateArticle, getArticleById } from "@/api/article";
+import { getAllTags } from "@/api/tags";
 import { useTable } from "@/composables/useTable";
 import { formatTime, formatTags } from "@/composables/useFormat";
 import SearchToolbar from "@/components/common/SearchToolbar.vue";
@@ -204,16 +217,51 @@ const handleStatusChange = async (row) => {
   }
 };
 
-const handleSync = async (row) => {
-  row.syncLoading = true;
+const tagDialog = reactive({
+  visible: false,
+  articleId: null,
+  articleTitle: "",
+  allTags: [],
+  selectedIds: [],
+  saving: false,
+});
+
+const openTagDialog = async (row) => {
+  tagDialog.articleId = row.id;
+  tagDialog.articleTitle = row.title;
+  tagDialog.saving = false;
   try {
-    await syncArticleById(row.id);
-    ElMessage.success("同步成功");
-    fetchData();
-  } catch (err) {
-    ElMessage.error("同步失败，请检查 GitHub 地址或网络");
+    const detail = await getArticleById(row.id);
+    const tagsRes = await getAllTags();
+    const tagStr = detail.data?.tags || detail.tags || "";
+    tagDialog.selectedIds = tagStr
+      ? String(tagStr).split(",").map(Number).filter((n) => !isNaN(n))
+      : [];
+    tagDialog.allTags = tagsRes.data || tagsRes || [];
+    tagDialog.visible = true;
+  } catch {
+    ElMessage.error("加载标签数据失败");
+  }
+};
+
+const saveTags = async () => {
+  tagDialog.saving = true;
+  try {
+    await updateArticle(tagDialog.articleId, { tags: tagDialog.selectedIds.join(",") });
+    ElMessage.success("标签更新成功");
+    const article = articles.value.find((a) => a.id === tagDialog.articleId);
+    if (article) {
+      const tagNames = tagDialog.selectedIds
+        .map((id) => tagDialog.allTags.find((t) => t.id === id))
+        .filter(Boolean)
+        .map((t) => t.name);
+      article.tags = tagNames.join(",");
+    }
+    tagDialog.visible = false;
+  } catch {
+    ElMessage.error("标签更新失败");
   } finally {
-    row.syncLoading = false;
+    tagDialog.saving = false;
   }
 };
 </script>

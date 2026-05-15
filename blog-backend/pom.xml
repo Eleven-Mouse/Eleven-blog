@@ -135,6 +135,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- ip2region: 离线IP归属地查询 -->
+        <dependency>
+            <groupId>org.lionsoul</groupId>
+            <artifactId>ip2region</artifactId>
+            <version>2.7.0</version>
+        </dependency>
+
         <!-- JWT -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>

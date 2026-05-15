@@ -4,7 +4,7 @@
     <div v-if="loading" class="loading-tip">正在加载文章...</div>
     <div v-if="error" class="error-tip">{{ error }}</div>
 
-    <div v-if="articlesList.length" class="directory-list">
+    <div v-if="articlesList.length" ref="listRef" class="directory-list">
       <router-link
         v-for="article in articlesList"
         :key="article.id"
@@ -16,43 +16,86 @@
       </router-link>
     </div>
     <div v-else-if="!loading" class="empty-tip">该分类下暂无文章。</div>
+
+    <div v-if="loadingMore" class="loading-tip">加载更多...</div>
+    <div ref="sentinelRef" class="scroll-sentinel" />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { fetchArticlesByCategoryId } from '@/api/categories'
 
 const route = useRoute()
 const articlesList = ref([])
 const loading = ref(false)
+const loadingMore = ref(false)
 const error = ref(null)
+const total = ref(0)
+const currentPage = ref(0)
+const pageSize = 10
+const hasMore = ref(false)
+const sentinelRef = ref(null)
+let observer = null
 
-const getArticles = async (id) => {
-  loading.value = true
+const getArticles = async (id, isLoadMore = false) => {
+  if (isLoadMore) {
+    loadingMore.value = true
+  } else {
+    loading.value = true
+    currentPage.value = 0
+    articlesList.value = []
+  }
   error.value = null
   try {
-    const response = await fetchArticlesByCategoryId(id)
-    articlesList.value = response.data || []
+    currentPage.value++
+    const response = await fetchArticlesByCategoryId(id, { page: currentPage.value, size: pageSize })
+    const newArticles = response.data || []
+    const pagination = response.pagination || {}
+
+    articlesList.value = [...articlesList.value, ...newArticles]
+
+    total.value = pagination.total || 0
+    hasMore.value = articlesList.value.length < total.value
   } catch (err) {
     error.value = '获取分类列表失败'
     console.error(err)
   } finally {
     loading.value = false
+    loadingMore.value = false
   }
 }
 
+const setupObserver = () => {
+  if (observer) observer.disconnect()
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting && hasMore.value && !loadingMore.value && !loading.value) {
+        getArticles(route.params.id, true)
+      }
+    },
+    { rootMargin: '200px' },
+  )
+  if (sentinelRef.value) observer.observe(sentinelRef.value)
+}
+
 onMounted(() => {
-  getArticles(route.params.id)
+  getArticles(route.params.id).then(setupObserver)
 })
 
 watch(
   () => route.params.id,
   (newId) => {
-    if (newId) getArticles(newId)
+    if (newId) {
+      getArticles(newId).then(setupObserver)
+    }
   },
 )
+
+onUnmounted(() => {
+  if (observer) observer.disconnect()
+})
 </script>
 
 <style scoped>
@@ -97,5 +140,16 @@ watch(
 
 .directory-item:hover .directory-item__title {
   color: var(--accent);
+}
+
+.scroll-sentinel {
+  height: 1px;
+}
+
+.loading-tip {
+  text-align: center;
+  padding: 16px;
+  color: var(--text-tertiary, #999);
+  font-size: 14px;
 }
 </style>

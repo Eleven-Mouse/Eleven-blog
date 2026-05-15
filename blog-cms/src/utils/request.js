@@ -5,8 +5,8 @@ import router from "../router";
 
 // 创建 axios 实例
 const service = axios.create({
-  baseURL:  '/admin',
-  timeout: 30000, // 请求超时时间（文章内容较大，需要足够时间）
+  baseURL: import.meta.env.VITE_APP_API_URL,
+  timeout: 30000,
 });
 
 // 是否正在刷新 Token 的标志
@@ -22,6 +22,12 @@ function subscribeTokenRefresh(cb) {
 // Token 刷新成功后，重新执行队列中的请求
 function onTokenRefreshed(newToken) {
   refreshSubscribers.forEach((cb) => cb(newToken));
+  refreshSubscribers = [];
+}
+
+// Token 刷新失败，拒绝队列中所有等待的请求
+function onTokenRefreshFailed(err) {
+  refreshSubscribers.forEach((cb) => cb(null, err));
   refreshSubscribers = [];
 }
 
@@ -69,26 +75,29 @@ service.interceptors.response.use(
       // 如果有 refreshToken，尝试刷新
       if (authStore.refreshToken) {
         originalRequest._retry = true;
+        // 捕获当前 refreshToken，防止并发请求时值被修改
+        const currentRefreshToken = authStore.refreshToken;
 
         if (!isRefreshing) {
           isRefreshing = true;
 
           return new Promise((resolve, reject) => {
-            axios.post('/admin/auth/refresh', {
-              refreshToken: authStore.refreshToken
+            axios.post(import.meta.env.VITE_APP_API_URL + '/auth/refresh', {
+              refreshToken: currentRefreshToken
             })
               .then((res) => {
                 const data = res.data;
                 if (data && data.accessToken) {
                   // 更新 token
-                  authStore.setTokens(data.accessToken, data.refreshToken || authStore.refreshToken);
+                  authStore.setTokens(data.accessToken, data.refreshToken || currentRefreshToken);
                   onTokenRefreshed(data.accessToken);
 
                   // 重试原请求
                   originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
                   resolve(service(originalRequest));
                 } else {
-                  // 刷新失败，跳转登录
+                  // 刷新失败，拒绝队列中所有等待的请求
+                  onTokenRefreshFailed(error);
                   authStore.logout();
                   router.push("/login");
                   ElMessage.error("登录已过期，请重新登录");
@@ -96,7 +105,8 @@ service.interceptors.response.use(
                 }
               })
               .catch((refreshError) => {
-                // refreshToken 也过期了，跳转登录
+                // refreshToken 也过期了，拒绝队列中所有等待的请求
+                onTokenRefreshFailed(refreshError);
                 authStore.logout();
                 router.push("/login");
                 ElMessage.error("登录已过期，请重新登录");
@@ -109,10 +119,15 @@ service.interceptors.response.use(
         }
 
         // 如果正在刷新中，将请求加入队列等待
-        return new Promise((resolve) => {
-          subscribeTokenRefresh((newToken) => {
-            originalRequest.headers.Authorization = `Bearer ${newToken}`;
-            resolve(service(originalRequest));
+        return new Promise((resolve, reject) => {
+          subscribeTokenRefresh((newToken, err) => {
+            if (err) {
+              // 刷新失败，直接拒绝
+              reject(err);
+            } else {
+              originalRequest.headers.Authorization = `Bearer ${newToken}`;
+              resolve(service(originalRequest));
+            }
           });
         });
       }
