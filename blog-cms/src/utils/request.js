@@ -5,8 +5,8 @@ import router from "../router";
 
 // 创建 axios 实例
 const service = axios.create({
-  baseURL:  '/admin',
-  timeout: 30000, // 请求超时时间（文章内容较大，需要足够时间）
+  baseURL: import.meta.env.VITE_APP_API_URL,
+  timeout: 30000,
 });
 
 // 是否正在刷新 Token 的标志
@@ -82,7 +82,7 @@ service.interceptors.response.use(
           isRefreshing = true;
 
           return new Promise((resolve, reject) => {
-            axios.post('/admin/auth/refresh', {
+            axios.post(import.meta.env.VITE_APP_API_URL + '/auth/refresh', {
               refreshToken: currentRefreshToken
             })
               .then((res) => {
