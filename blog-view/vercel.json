@@ -1,0 +1,8 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/api/:match*", "destination": "http://8.130.123.195:8081/api/:match*" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
