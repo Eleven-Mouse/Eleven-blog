@@ -44,7 +44,10 @@ services:
       - blog-net
 
   blog-backend:
-    image: kunxingll/blog-backend:latest
+    build:
+      context: ./blog-backend
+      dockerfile: Dockerfile
+    image: kunxing-blog-backend:latest
     container_name: blog-backend
     restart: always
     env_file:

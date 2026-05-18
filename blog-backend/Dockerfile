@@ -1,8 +1,19 @@
+FROM maven:3.9.9-eclipse-temurin-21 AS builder
+
+WORKDIR /workspace
+
+COPY pom.xml ./
+COPY blog-common ./blog-common
+COPY blog-pojo ./blog-pojo
+COPY blog-server ./blog-server
+
+RUN mvn -pl blog-server -am -DskipTests package
+
 FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-COPY blog-server-1.0-SNAPSHOT.jar app.jar
+COPY --from=builder /workspace/blog-server/target/blog-server-1.0-SNAPSHOT.jar app.jar
 
 RUN mkdir -p /app/uploads
 
@@ -13,7 +24,7 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
 
 ENTRYPOINT ["java", \
     "-Xms256m", \
-    "-Xmx512m", \
+    "-Xmx768m", \
     "-XX:+UseG1GC", \
     "-XX:+HeapDumpOnOutOfMemoryError", \
     "-XX:HeapDumpPath=/app/heapdump.hprof", \
