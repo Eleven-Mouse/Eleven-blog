@@ -4,12 +4,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -52,6 +54,12 @@ public class SecurityConfig {
      * 3. 核心安全过滤链配置
      */
     @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        // 彻底绕过 Spring Security 过滤链，避免静态资源被误判为未登录
+        return web -> web.ignoring().requestMatchers("/images/**", "/upload/**");
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 // 禁用 CSRF (因为我们使用 Token，不需要 Cookie/Session，所以不需要防 CSRF)
@@ -85,16 +93,16 @@ public class SecurityConfig {
                         // 放行 GitHub Webhook 回调（通过 HMAC 签名校验保证安全性）
                         .requestMatchers("/webhook/**").permitAll()
 
+                        // 评论接口全放行（知识站访客评论）
+                        .requestMatchers("/api/comments/**", "/comments/**").permitAll()
+
                         // 3. 公共只读接口 (GET 请求) - 所有人(包括游客)可访问
-                        .requestMatchers(HttpMethod.GET,
-                                "/api/articles/**",
-                                "/api/categories/**",
-                                "/api/tags/**",
-                                "/api/moments/**",
-                                "/api/friendlinks/**",
-                                "/api/archive/**",
-                                "/api/comments/**",
-                                "/api/blog/config"
+                        .requestMatchers(
+                                new AntPathRequestMatcher("/api/articles/**", "GET"),
+                                new AntPathRequestMatcher("/api/categories/**", "GET"),
+                                new AntPathRequestMatcher("/api/tags/**", "GET"),
+                                new AntPathRequestMatcher("/api/archive/**", "GET"),
+                                new AntPathRequestMatcher("/api/blog/**", "GET")
                         ).permitAll()
                         // 评论接口 + 访客头像上传 (post 请求)
                         .requestMatchers(HttpMethod.POST,
@@ -104,9 +112,9 @@ public class SecurityConfig {
 
                         // 4. 管理员写操作 (POST/PUT/DELETE) - 只有 ADMIN 角色可访问
                         // 包含了新增(POST)、修改(PUT)、删除(DELETE)、上传(POST)
-                        .requestMatchers(HttpMethod.POST, "/articles/**", "/moment/**", "/friendlinks/**", "/upload/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/articles/**", "/moment/**", "/friendlinks/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/articles/**", "/moment/**", "/friendlinks/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/articles/**", "/api/upload/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/articles/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/articles/**").hasRole("ADMIN")
 
                         // 5. 后台管理页面通用拦截 (兜底策略)
                         // 只要是 /admin 开头的其他路径，都必须是管理员

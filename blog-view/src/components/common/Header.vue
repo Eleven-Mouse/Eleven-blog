@@ -1,50 +1,45 @@
 <template>
-  <header class="navbar" :class="{ 'navbar--hidden': isNavHidden }">
+  <header class="navbar">
     <div class="navbar__inner page-container">
       <router-link to="/home" class="navbar__logo">
-        <span class="navbar__logo-text">Eleven</span>
+        <span class="navbar__logo-text">Kunxing</span>
         <span class="navbar__logo-dot">.</span>
       </router-link>
 
       <nav class="navbar__nav">
-        <router-link
-          v-for="item in navItems"
-          :key="item.path"
-          :to="item.path"
-          class="navbar__nav-item"
-          :class="{ 'is-active': isActive(item) }"
-        >
-          {{ item.label }}
+        <router-link to="/home" class="navbar__nav-item" :class="{ 'is-active': isHomeActive }">
+          首页
         </router-link>
-
-        <div
-          class="navbar__dropdown"
-          @mouseenter="showCatDropdown = true"
-          @mouseleave="showCatDropdown = false"
+        <router-link
+          v-for="topic in topics"
+          :key="`topic-nav-${topic.id}`"
+          :to="`/topic/${topic.id}`"
+          class="navbar__nav-item"
+          :class="{ 'is-active': isTopicItemActive(topic) }"
         >
-          <span class="navbar__nav-item" :class="{ 'is-active': isCategoryActive }">
-            Categories
-            <svg class="navbar__arrow" viewBox="0 0 12 12" width="12" height="12">
-              <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" />
-            </svg>
-          </span>
-          <transition name="dropdown">
-            <div v-if="showCatDropdown && categories.length" class="navbar__dropdown-menu">
-              <router-link
-                v-for="cat in categories"
-                :key="cat.id"
-                :to="`/category/${cat.id}`"
-                class="navbar__dropdown-item"
-                @click="showCatDropdown = false"
-              >
-                {{ cat.name }}
-              </router-link>
-            </div>
-          </transition>
-        </div>
+          {{ topic.name }}
+        </router-link>
       </nav>
 
       <div class="navbar__actions">
+        <button
+          v-if="isArticleRoute"
+          class="navbar__icon-btn topic-tree-toggle-btn"
+          :class="{ 'is-active': uiStore.topicTreeOpen }"
+          @click="toggleTopicTree"
+          aria-label="目录树"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M4 6h16M4 12h16M4 18h10" />
+          </svg>
+        </button>
         <button class="navbar__icon-btn" @click="toggleSearch" aria-label="Search">
           <svg
             viewBox="0 0 24 24"
@@ -178,13 +173,12 @@
 
       <nav class="drawer-nav">
         <router-link
-          v-for="item in navItems"
-          :key="item.path"
-          :to="item.path"
+          to="/home"
           class="drawer-nav__item"
+          :class="{ 'router-link-active': isHomeActive }"
           @click="drawerOpen = false"
         >
-          {{ item.label }}
+          首页
         </router-link>
       </nav>
 
@@ -193,7 +187,7 @@
       <!-- Categories accordion -->
       <div class="drawer-accordion">
         <button class="drawer-accordion__trigger" @click="catExpanded = !catExpanded">
-          <span>Categories</span>
+          <span>专题目录</span>
           <svg
             class="drawer-accordion__arrow"
             :class="{ 'is-open': catExpanded }"
@@ -206,43 +200,14 @@
         </button>
         <div class="drawer-accordion__body" :class="{ 'is-open': catExpanded }">
           <router-link
-            v-for="cat in categories"
-            :key="cat.id"
-            :to="`/category/${cat.id}`"
+            v-for="topic in topics"
+            :key="topic.id"
+            :to="`/topic/${topic.id}`"
             class="drawer-nav__item drawer-nav__item--sub"
             @click="drawerOpen = false"
           >
-            {{ cat.name }}
+            {{ topic.name }}
           </router-link>
-        </div>
-      </div>
-
-      <!-- Tags accordion -->
-      <div class="drawer-accordion">
-        <button class="drawer-accordion__trigger" @click="tagExpanded = !tagExpanded">
-          <span>Tags</span>
-          <svg
-            class="drawer-accordion__arrow"
-            :class="{ 'is-open': tagExpanded }"
-            viewBox="0 0 12 12"
-            width="12"
-            height="12"
-          >
-            <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" />
-          </svg>
-        </button>
-        <div class="drawer-accordion__body" :class="{ 'is-open': tagExpanded }">
-          <div class="drawer-tags__list">
-            <router-link
-              v-for="tag in tags"
-              :key="tag.id || tag.name"
-              :to="`/tag/${tag.id}`"
-              class="tag"
-              @click="drawerOpen = false"
-            >
-              {{ tag.name }}
-            </router-link>
-          </div>
         </div>
       </div>
     </el-drawer>
@@ -252,28 +217,19 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { fetchCategories } from '@/api/categories'
-import { fetchTags } from '@/api/tags'
 import { fetchArticles } from '@/api/article.js'
+import { fetchCategories } from '@/api/categories'
 import ThemeToggle from './ThemeSwitcher.vue'
 import { useBlogConfigStore } from '@/stores/blogConfig'
+import { useUiStore } from '@/stores/ui'
 
 const blogConfig = useBlogConfigStore()
+const uiStore = useUiStore()
 
 const route = useRoute()
 const router = useRouter()
 
-const navItems = [
-  { path: '/home', label: 'Home' },
-  { path: '/moment', label: 'Moment' },
-  { path: '/archive', label: 'Archive' },
-  { path: '/about', label: 'About' },
-  { path: '/friendlinks', label: 'Links' },
-]
-
-const categories = ref([])
-const tags = ref([])
-const showCatDropdown = ref(false)
+const topics = ref([])
 const drawerOpen = ref(false)
 const searchOpen = ref(false)
 const searchQuery = ref('')
@@ -283,18 +239,15 @@ const searchLoading = ref(false)
 const searchFetched = ref(false)
 const highlightedIndex = ref(-1)
 const scrollProgress = ref(0)
-const isNavHidden = ref(false)
 const catExpanded = ref(false)
-const tagExpanded = ref(false)
 
-let lastScrollY = 0
 let debounceTimer = null
+const isHomeActive = computed(() => route.path === '/home' || route.path === '/')
+const isArticleRoute = computed(() => route.path.startsWith('/article/'))
 
-const isCategoryActive = computed(() => route.path.startsWith('/category'))
-
-const isActive = (item) => {
-  if (item.path === '/home') return route.path === '/home' || route.path === '/'
-  return route.path === item.path
+const isTopicItemActive = (topic) => {
+  if (!route.path.startsWith('/topic/')) return false
+  return Number(route.params.id) === Number(topic?.id)
 }
 
 const toggleSearch = () => {
@@ -371,6 +324,10 @@ const handleSelectArticle = (item) => {
   resetSearch()
 }
 
+const toggleTopicTree = () => {
+  uiStore.toggleTopicTree()
+}
+
 const highlightText = (text) => {
   if (!text || !searchQuery.value.trim()) return text
   const keyword = searchQuery.value.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -390,8 +347,6 @@ const onScroll = () => {
   const y = window.scrollY
   const docH = document.documentElement.scrollHeight - window.innerHeight
   scrollProgress.value = docH > 0 ? Math.min((y / docH) * 100, 100) : 0
-  isNavHidden.value = y > 200 && y > lastScrollY
-  lastScrollY = y
 }
 
 const onKeydown = (e) => {
@@ -402,21 +357,25 @@ const onKeydown = (e) => {
   }
 }
 
-const loadCategories = async () => {
+const loadTopics = async () => {
   try {
-    categories.value = await fetchCategories()
-  } catch {}
-}
-
-const loadTags = async () => {
-  try {
-    tags.value = await fetchTags()
+    const categories = (await fetchCategories()) || []
+    topics.value = categories
+      .filter((item) => {
+        const name = String(item?.name || '').trim()
+        return item?.id && name && name !== '首页'
+      })
+      .sort((a, b) => {
+        const orderDiff = (a.sortOrder || 0) - (b.sortOrder || 0)
+        if (orderDiff !== 0) return orderDiff
+        return String(a.name || '').localeCompare(String(b.name || ''), 'zh-CN')
+      })
+      .map((item) => ({ id: item.id, name: item.name }))
   } catch {}
 }
 
 onMounted(() => {
-  loadCategories()
-  loadTags()
+  loadTopics()
   window.addEventListener('scroll', onScroll, { passive: true })
   window.addEventListener('keydown', onKeydown)
 })
@@ -429,7 +388,7 @@ onUnmounted(() => {
 watch(
   () => route.path,
   () => {
-    showCatDropdown.value = false
+    drawerOpen.value = false
   },
 )
 </script>
@@ -467,10 +426,6 @@ watch(
 
 .navbar:hover::after {
   opacity: 1;
-}
-
-.navbar--hidden {
-  transform: translateY(-100%);
 }
 
 .navbar__inner {
@@ -527,50 +482,6 @@ watch(
   color: var(--accent);
   font-weight: 600;
 }
-.navbar__arrow {
-  transition: transform 0.2s;
-}
-
-.navbar__dropdown {
-  position: relative;
-}
-.navbar__dropdown-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  min-width: 160px;
-  padding: 6px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  z-index: 100;
-}
-.navbar__dropdown-item {
-  display: block;
-  padding: 8px 14px;
-  font-size: 14px;
-  color: var(--text-secondary);
-  text-decoration: none;
-  border-radius: var(--radius-sm);
-  transition: all 0.15s;
-}
-.navbar__dropdown-item:hover {
-  color: var(--accent);
-  background: var(--accent-light);
-}
-
-.dropdown-enter-active,
-.dropdown-leave-active {
-  transition:
-    opacity 0.15s,
-    transform 0.15s;
-}
-.dropdown-enter-from,
-.dropdown-leave-to {
-  opacity: 0;
-  transform: translateY(-6px);
-}
 
 .navbar__actions {
   display: flex;
@@ -597,6 +508,10 @@ watch(
 .navbar__icon-btn:hover {
   color: var(--text-primary);
   background: var(--bg-secondary);
+}
+.navbar__icon-btn.is-active {
+  color: var(--accent);
+  background: var(--accent-light);
 }
 
 .navbar__hamburger {
@@ -920,24 +835,6 @@ watch(
   max-height: 600px;
 }
 
-:global(.drawer-tags__list) {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 4px 16px 12px;
-}
-:global(.drawer-tags__list .tag) {
-  font-size: 12px;
-  background: none;
-  color: var(--text-secondary);
-  border: 1px solid var(--border-color);
-}
-:global(.drawer-tags__list .tag):hover {
-  background: none;
-  color: var(--text-primary);
-  border-color: var(--text-muted);
-}
-
 @keyframes scaleIn {
   from {
     opacity: 0;
@@ -955,8 +852,10 @@ watch(
 }
 
 @media (max-width: 768px) {
-  .navbar__nav,
-  .navbar__dropdown {
+  .topic-tree-toggle-btn {
+    display: none !important;
+  }
+  .navbar__nav {
     display: none !important;
   }
   .navbar__hamburger {
@@ -970,6 +869,12 @@ watch(
   }
   :global(.search-panel__header) {
     padding: 12px 16px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .topic-tree-toggle-btn {
+    display: none !important;
   }
 }
 </style>

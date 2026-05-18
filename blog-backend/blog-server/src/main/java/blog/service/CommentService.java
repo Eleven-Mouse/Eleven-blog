@@ -38,4 +38,9 @@ public interface CommentService {
      */
     void likeComment(Long id);
 
+    /**
+     * 评论置顶/取消置顶
+     */
+    void pinComment(Long id, Boolean pinned);
+
 }

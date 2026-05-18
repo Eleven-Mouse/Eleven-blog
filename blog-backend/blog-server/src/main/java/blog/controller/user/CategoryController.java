@@ -1,7 +1,6 @@
 package blog.controller.user;
 
 import blog.dto.ArticleQueryDTO;
-import blog.dto.CategoryDTO;
 import blog.result.Result;
 import blog.service.ArticleService;
 import blog.service.CategoryService;
@@ -45,6 +44,17 @@ public class CategoryController{
         }
     }
 
+    @GetMapping("/{id}")
+    @ApiOperation("获取分类详情")
+    public Result<CategoryVO> getCategoryById(@PathVariable("id") Long id) {
+        log.info("获取分类详情，id: {}", id);
+        CategoryVO category = categoryService.selectById(id);
+        if (category == null) {
+            return Result.error("分类不存在");
+        }
+        return Result.success(category);
+    }
+
 
     /**
      * 根据分类ID获取文章列表
@@ -59,7 +69,6 @@ public class CategoryController{
         log.info("根据分类ID获取文章列表, categoryId: {}, page: {}, size: {}", categoryId, page, size);
         ArticleQueryDTO queryDTO = new ArticleQueryDTO();
         queryDTO.setCategoryId(categoryId);
-        queryDTO.setStatus(1);
 
         List<ArticleVO> allArticles = articleService.listArticles(queryDTO);
 

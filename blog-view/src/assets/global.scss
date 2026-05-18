@@ -352,13 +352,41 @@ h3 { font-size: 1.25rem; }
 .error-tip,
 .empty-tip {
   text-align: center;
-  padding: 48px 20px;
+  padding: 32px 20px;
   color: var(--text-muted);
-  font-size: 14px;
+  font-size: 18px;
+}
+
+.loading-tip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 120px;
+}
+
+.loading-tip::before {
+  content: '';
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 3px solid rgba(var(--accent-rgb), 0.25);
+  border-top-color: var(--accent);
+  animation: app-loading-spin 0.72s linear infinite;
 }
 
 .error-tip {
   color: #EF4444;
+}
+
+@keyframes app-loading-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 // ---------- Pagination Override ----------
@@ -657,4 +685,19 @@ html[data-theme="dark"] {
     font-size: 15px;
     line-height: 1.7;
   }
+}
+
+// ---------- Article Detail (Light Theme) ----------
+html:not([data-theme='dark']) .article-page .article-page__content {
+  background: var(--bg-primary) !important;
+}
+
+html:not([data-theme='dark']) .article-page .article-page__content .md-editor,
+html:not([data-theme='dark']) .article-page .article-page__content .md-editor-previewOnly,
+html:not([data-theme='dark']) .article-page .article-page__content .md-editor-content,
+html:not([data-theme='dark']) .article-page .article-page__content .md-editor-preview-wrapper,
+html:not([data-theme='dark']) .article-page .article-page__content .md-editor-preview {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }

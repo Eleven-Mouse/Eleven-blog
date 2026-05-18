@@ -3,7 +3,12 @@
     <AppNavbar />
     <main class="app-main">
       <router-view v-slot="{ Component, route }">
-        <transition name="page-fade" mode="out-in">
+        <component
+          v-if="route.name === 'articleDetail'"
+          :is="Component"
+          :key="route.path"
+        />
+        <transition v-else name="page-fade" mode="out-in">
           <component :is="Component" :key="route.path" />
         </transition>
       </router-view>

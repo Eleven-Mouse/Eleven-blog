@@ -90,4 +90,14 @@ public class CommentDTO implements Serializable {
      * GitHub 用户ID（用于博主身份验证）
      */
     private Long githubId;
+
+    /**
+     * 是否置顶（管理端使用）
+     */
+    private Boolean isPinned;
+
+    /**
+     * 置顶时间（管理端使用）
+     */
+    private LocalDateTime pinTime;
 }

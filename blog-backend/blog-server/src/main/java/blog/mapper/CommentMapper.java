@@ -4,6 +4,7 @@ import blog.entity.Comment;
 import blog.vo.CommentVO;
 import org.apache.ibatis.annotations.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -89,4 +90,11 @@ public interface CommentMapper {
      * 查询某篇文章/页面下的最大楼层号
      */
     Integer selectMaxFloor(@Param("blogId") Long blogId, @Param("page") String page);
+
+    /**
+     * 设置评论置顶状态
+     */
+    void setPinned(@Param("id") Long id,
+                   @Param("isPinned") Boolean isPinned,
+                   @Param("pinTime") LocalDateTime pinTime);
 }

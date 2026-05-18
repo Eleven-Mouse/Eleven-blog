@@ -1,5 +1,7 @@
 package blog.config;
 
+import blog.interceptor.CacheControlInterceptor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.*;
@@ -17,6 +19,15 @@ import java.io.File;
 public class WebConfig implements WebMvcConfigurer {
     @Value("${file.upload-dir}")
     private String uploadDir;
+
+    @Autowired
+    private CacheControlInterceptor cacheControlInterceptor;
+
+    @Override
+    public void addInterceptors(@org.springframework.lang.NonNull InterceptorRegistry registry) {
+        registry.addInterceptor(cacheControlInterceptor)
+                .addPathPatterns("/api/**");
+    }
 
     /**
      * 配置CORS跨域支持
@@ -65,7 +76,10 @@ public class WebConfig implements WebMvcConfigurer {
 
         // 让所有以 /upload/ 开头的请求，去你设置的硬盘目录下找文件
         registry.addResourceHandler("/upload/**")
-                .addResourceLocations("file:" + uploadDir + "/");
+                // 兼容两种落盘方式：
+                // 1) uploadDir 根目录（E:/blog-writing/xxx.pdf）
+                // 2) uploadDir/upload 子目录（E:/blog-writing/upload/xxx.pdf）
+                .addResourceLocations("file:" + path, "file:" + path + "upload/");
 
         // 访客头像目录映射: /images/avatar/** -> uploadDir/avatar/
         registry.addResourceHandler("/images/avatar/**")

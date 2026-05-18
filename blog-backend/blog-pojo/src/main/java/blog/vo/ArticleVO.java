@@ -26,11 +26,6 @@ public class ArticleVO implements Serializable {
     private String title;
 
     /**
-     * 文章摘要
-     */
-    private String summary;
-
-    /**
      * 文章内容（Markdown格式）
      */
     private String content;
@@ -46,6 +41,21 @@ public class ArticleVO implements Serializable {
     private Long categoryId;
 
     /**
+     * 章节顺序（专题内）
+     */
+    private Integer chapterOrder;
+
+    /**
+     * 预计阅读分钟数
+     */
+    private Integer readingMinutes;
+
+    /**
+     * 是否核心文章（0-否，1-是）
+     */
+    private Integer isCore;
+
+    /**
      * 分类名称
      */
     private String categoryName;
@@ -55,11 +65,6 @@ public class ArticleVO implements Serializable {
      */
     private Integer viewCount;
 
-
-    /**
-     * 标签（逗号分隔的字符串）
-     */
-    private String tags;
 
     /**
      * GitHub Markdown 文件地址
@@ -80,16 +85,6 @@ public class ArticleVO implements Serializable {
      * 是否允许评论（0-否，1-是）
      */
     private Integer isComment;
-
-    /**
-     * 状态（0-草稿，1-已发布）
-     */
-    private Integer status;
-
-    /**
-     * 状态文本（草稿、已发布）
-     */
-    private String statusText;
 
     /**
      * 发布时间

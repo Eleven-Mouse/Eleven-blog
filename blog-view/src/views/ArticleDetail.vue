@@ -4,73 +4,86 @@
     <div v-if="error" class="error-tip">{{ error }}</div>
 
     <template v-if="article">
-      <div class="article-page__layout page-container">
-        <!-- Main Column: header + content + comments -->
-        <div class="article-page__main">
-          <!-- Article Header -->
-          <header class="article-page__header">
-            <h1 class="article-page__title">{{ article.title }}</h1>
-            <div class="article-page__meta">
-              <span>
-                <svg
-                  viewBox="0 0 16 16"
-                  width="14"
-                  height="14"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                >
-                  <circle cx="8" cy="8" r="6" />
-                  <path d="M8 4v4l2.5 1.5" />
-                </svg>
-                {{ formatTime(article.publishTime) }}
-              </span>
-              <span v-if="article.categoryName">
-                <svg
-                  viewBox="0 0 16 16"
-                  width="14"
-                  height="14"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                >
-                  <path d="M2 4h12v9H2z" />
-                  <path d="M6 4V2h4v2" />
-                </svg>
-                {{ article.categoryName }}
-              </span>
-              <span v-if="article.viewCount">
-                <svg
-                  viewBox="0 0 16 16"
-                  width="14"
-                  height="14"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                >
-                  <path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z" />
-                  <circle cx="8" cy="8" r="2" />
-                </svg>
-                {{ article.viewCount }} 阅读
-              </span>
+      <div
+        class="article-page__workspace"
+        :class="{
+          'is-topic-open': uiStore.topicTreeOpen && showTopicTreePanel,
+          'is-panel-ready': panelTransitionReady,
+        }"
+      >
+        <aside v-if="showTopicTreePanel" class="article-page__topic-panel">
+          <div class="topic-panel-shell">
+            <div class="topic-panel-shell__body">
+              <TopicTreeSidebar
+                :active-topic-id="article.categoryId"
+                :active-article-id="article.id"
+              />
             </div>
-          </header>
+          </div>
+        </aside>
 
-          <!-- Article Content -->
-          <article class="article-page__content animate-fade-in-up">
-            <MdPreview
-              editorId="preview-only"
-              :modelValue="article.content"
-              @onGetCatalog="onGetCatalog"
-              :headingId="(index) => `heading-${index}`"
-              :markedHeadingId="(index) => `heading-${index}`"
-            />
-          </article>
+        <div class="article-page__layout page-container">
+          <!-- Main Column: header + content + comments -->
+          <div class="article-page__main">
+            <!-- Article Header -->
+            <header class="article-page__header">
+              <h1 class="article-page__title">{{ article.title }}</h1>
+              <div class="article-page__meta">
+                <span>
+                  <svg
+                    viewBox="0 0 16 16"
+                    width="14"
+                    height="14"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <circle cx="8" cy="8" r="6" />
+                    <path d="M8 4v4l2.5 1.5" />
+                  </svg>
+                  {{ formatTime(article.publishTime) }}
+                </span>
+                <span v-if="article.categoryName">
+                  <svg
+                    viewBox="0 0 16 16"
+                    width="14"
+                    height="14"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <path d="M2 4h12v9H2z" />
+                    <path d="M6 4V2h4v2" />
+                  </svg>
+                  {{ article.categoryName }}
+                </span>
+                <span v-if="article.viewCount">
+                  <svg
+                    viewBox="0 0 16 16"
+                    width="14"
+                    height="14"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z" />
+                    <circle cx="8" cy="8" r="2" />
+                  </svg>
+                  {{ article.viewCount }} 阅读
+                </span>
+              </div>
+            </header>
 
-          <!-- Comments -->
-          <div class="article-page__comments">
-            <el-divider />
-            <CommentsCard v-if="article.id" :blog-id="article.id" />
+            <!-- Article Content -->
+            <article class="article-page__content animate-fade-in-up">
+              <MdPreview
+                editorId="preview-only"
+                :modelValue="article.content"
+                @onGetCatalog="onGetCatalog"
+                :headingId="(index) => `heading-${index}`"
+                :markedHeadingId="(index) => `heading-${index}`"
+              />
+            </article>
           </div>
         </div>
       </div>
@@ -118,14 +131,16 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, onUnmounted } from 'vue'
+import { computed, ref, onMounted, nextTick, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { fetchArticleById } from '@/api/article.js'
-import CommentsCard from '@/components/CommentsCard.vue'
+import TopicTreeSidebar from '@/components/TopicTreeSidebar.vue'
+import { useUiStore } from '@/stores/ui'
 import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/preview.css'
 
 const route = useRoute()
+const uiStore = useUiStore()
 const article = ref(null)
 const loading = ref(false)
 const error = ref(null)
@@ -133,6 +148,8 @@ const catalogList = ref([])
 const showMobileToc = ref(false)
 const lightboxSrc = ref('')
 const activeHeading = ref('')
+const showTopicTreePanel = computed(() => article.value && article.value.title !== '首页')
+const panelTransitionReady = ref(false)
 
 const onGetCatalog = (list) => {
   catalogList.value = list.map((item, index) => ({
@@ -215,6 +232,7 @@ const updateActiveHeading = () => {
 }
 
 onMounted(async () => {
+  uiStore.setTopicTreeOpen(true)
   const articleId = route.params.id
   if (!articleId) {
     error.value = '未找到文章ID'
@@ -235,6 +253,23 @@ onMounted(async () => {
   window.addEventListener('scroll', updateActiveHeading, { passive: true })
 })
 
+watch(
+  () => showTopicTreePanel.value,
+  (show) => {
+    if (!show) {
+      panelTransitionReady.value = false
+      return
+    }
+    panelTransitionReady.value = false
+    nextTick(() => {
+      requestAnimationFrame(() => {
+        panelTransitionReady.value = true
+      })
+    })
+  },
+  { immediate: true },
+)
+
 const onKeydown = (e) => {
   if (e.key === 'Escape' && lightboxSrc.value) lightboxSrc.value = ''
 }
@@ -251,9 +286,82 @@ onUnmounted(() => {
   padding-top: 65px;
 }
 /* ---------- Layout ---------- */
-.article-page__main {
-  max-width: 760px;
+.article-page__workspace {
+  position: relative;
+}
+
+.article-page__topic-panel {
+  position: fixed;
+  top: 56px;
+  left: 0;
+  height: calc(100vh - 56px);
+  width: 300px;
+  opacity: 0;
+  transform: translate3d(-100%, 0, 0);
+  pointer-events: none;
+  z-index: 900;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  contain: layout paint;
+  transition: none;
+}
+
+.article-page__workspace.is-panel-ready .article-page__topic-panel {
+  transition:
+    opacity 0.24s ease,
+    transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.article-page__workspace.is-topic-open .article-page__topic-panel {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  pointer-events: auto;
+}
+
+.article-page__layout {
+  width: 100%;
+  min-width: 0;
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 0 0px;
+}
+
+.article-page__main {
+  min-width: 0;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: block;
+}
+
+.topic-panel-shell {
+  height: calc(100vh - 74px);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.topic-panel-shell__body {
+  flex: 1;
+  min-height: 0;
+}
+
+:deep(.article-page__topic-panel .topic-drawer) {
+  position: static;
+  top: auto;
+  max-height: none;
+  height: 100%;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 10px;
+}
+
+:deep(.article-page__topic-panel .topic-drawer__title) {
+  display: none;
 }
 
 /* ---------- Header ---------- */
@@ -509,17 +617,21 @@ onUnmounted(() => {
   padding: 8px 0;
 }
 
-/* ---------- Comments ---------- */
-.article-page__comments {
-  margin-top: 56px;
-}
-
-.article-page__comments :deep(.el-divider) {
-  border-color: var(--border-light);
-}
-
 /* ---------- Responsive ---------- */
 @media (max-width: 768px) {
+  .article-page__workspace {
+    display: block;
+  }
+  .article-page__layout {
+    padding: 0 16px;
+  }
+  .article-page__topic-panel {
+    display: none;
+  }
+  .article-page__main {
+    max-width: 100%;
+  }
+
   .article-page__header {
     padding-bottom: 24px;
     margin-bottom: 28px;
@@ -544,6 +656,26 @@ onUnmounted(() => {
     right: 16px;
     width: 44px;
     height: 44px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .article-page__workspace {
+    display: block;
+  }
+  .article-page__layout {
+    padding: 0 24px;
+    transform: none !important;
+    width: 100% !important;
+  }
+  .article-page__topic-panel {
+    display: none;
+  }
+  .article-page__workspace.is-topic-open .article-page__main {
+    max-width: 100%;
+  }
+  .article-page__main {
+    max-width: 100%;
   }
 }
 </style>

@@ -1,180 +1,110 @@
 <template>
-  <div class="home">
-    <!-- Hero Section -->
+  <div class="home page-container">
+    <section class="home-content">
+      <div v-if="loading" class="loading-tip">正在加载首页文章...</div>
+      <div v-else-if="error" class="error-tip">{{ error }}</div>
 
-    <!-- Main Content -->
-    <div class="page-container">
-      <div class="content-grid">
-        <!-- Articles -->
-        <div class="home__articles">
-          <div v-if="loading" class="loading-tip">正在加载文章...</div>
-          <div v-if="error" class="error-tip">{{ error }}</div>
-
-          <div v-if="!loading && articles.length" class="home__list">
-            <div v-if="searchKeyword" class="home__search-info">
-              搜索 "<strong>{{ searchKeyword }}</strong
-              >" 找到 {{ pagination.total }} 篇文章
-            </div>
-            <ArticleCard
-              v-for="(article, index) in articles"
-              :key="article.id"
-              :article="article"
-              :style="{ animationDelay: `${index * 0.08}s` }"
-            />
-          </div>
-
-          <div v-if="!loading && !error && articles.length === 0" class="empty-tip">
-            {{ searchKeyword ? `没有找到与 "${searchKeyword}" 相关的文章` : '暂无文章' }}
-          </div>
-
-          <!-- Pagination -->
-          <div class="pagination-wrap" v-if="!loading && articles.length > 0">
-            <el-pagination
-              layout="prev, pager, next"
-              :total="pagination.total"
-              :page-size="pagination.size"
-              :current-page="pagination.currentPage"
-              @current-change="handlePageChange"
-            />
-          </div>
-        </div>
-
-        <!-- Sidebar -->
-        <aside class="home__sidebar sidebar-sticky">
-          <InfoCard class="home__sidebar-card" />
-          <TagsCard class="home__sidebar-card" />
-          <CategoryCard class="home__sidebar-card" />
-        </aside>
-      </div>
-    </div>
+      <template v-else-if="article">
+        <article class="article-body">
+          <MdPreview editorId="home-featured-preview" :modelValue="article.content || ''" />
+        </article>
+        <section class="home-comments">
+          <el-divider />
+          <CommentsCard :blog-id="article.id" />
+        </section>
+      </template>
+      <div v-else class="empty-tip">首页文章未找到，请确认标题为“首页”的文章存在。</div>
+    </section>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
-import InfoCard from '@/components/InfoCard.vue'
-import TagsCard from '@/components/TagsCard.vue'
-import CategoryCard from '@/components/CategoryCard.vue'
-import ArticleCard from '@/components/ArticleCard.vue'
-import { fetchArticles } from '@/api/article.js'
+import { computed, ref, watch } from 'vue'
+import { MdPreview } from 'md-editor-v3'
+import 'md-editor-v3/lib/preview.css'
+import { fetchArticleById, fetchArticles } from '@/api/article'
+import { useBlogConfigStore } from '@/stores/blogConfig'
+import CommentsCard from '@/components/CommentsCard.vue'
 
-const route = useRoute()
-const articles = ref([])
-const searchKeyword = ref('')
-const pagination = ref({
-  currentPage: 1,
-  total: 0,
-  size: 5,
-})
-const loading = ref(true)
-const error = ref(null)
+const blogConfig = useBlogConfigStore()
+const article = ref(null)
+const loading = ref(false)
+const error = ref('')
 
-const getArticles = async (page = 1) => {
+const featuredId = computed(() => Number(blogConfig.config.home_featured_article_id || 0))
+
+const loadFeaturedArticle = async () => {
   loading.value = true
-  error.value = null
+  error.value = ''
   try {
-    const keyword = route.query.keyword || ''
-    searchKeyword.value = keyword
-    const response = await fetchArticles({
-      page,
-      size: pagination.value.size,
-      keyword: keyword || undefined,
-    })
-    articles.value = response.data
-    pagination.value.total = response.pagination.total
-    pagination.value.currentPage = response.pagination.currentPage
+    if (featuredId.value) {
+      article.value = await fetchArticleById(featuredId.value)
+      return
+    }
+
+    // 兜底规则：标题严格等于“首页”的文章作为首页文章
+    const res = await fetchArticles({ page: 1, size: 50, keyword: '首页' })
+    const list = res?.data || []
+    const matched = list.find((item) => item.title === '首页')
+    if (matched?.id) {
+      article.value = await fetchArticleById(matched.id)
+    } else {
+      // 次级兜底：如果没有“首页”标题文章，展示最新一篇文章，避免首页空白
+      const latest = await fetchArticles({ page: 1, size: 1 })
+      const latestList = latest?.data || []
+      if (latestList[0]?.id) {
+        article.value = await fetchArticleById(latestList[0].id)
+      } else {
+        article.value = null
+      }
+    }
   } catch (err) {
-    error.value = '获取文章列表失败，请稍后再试。'
+    article.value = null
+    error.value = '首页文章加载失败，请检查“首页”文章是否存在。'
     console.error(err)
   } finally {
     loading.value = false
   }
 }
 
-const handlePageChange = (page) => {
-  getArticles(page)
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-onMounted(() => {
-  getArticles(1)
-})
-
 watch(
-  () => route.query.keyword,
+  () => featuredId.value,
   () => {
-    getArticles(1)
+    loadFeaturedArticle()
   },
+  { immediate: true },
 )
 </script>
 
 <style scoped>
 .home {
-  padding-top: 65px;
+  padding-top: 72px;
+  padding-bottom: 40px;
 }
 
-/* ---------- Articles ---------- */
-.home__articles {
-  min-width: 0;
-  overflow: hidden;
+.home-content {
+  padding: 24px;
 }
 
-.home__list {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+.article-body :deep(.md-editor-preview) {
+  background: transparent !important;
+  padding: 0 !important;
+}
+.home-comments {
+  margin-top: 40px;
 }
 
-.home__search-info {
-  font-size: 14px;
+.empty-tip {
   color: var(--text-secondary);
-  padding: 14px 18px;
-  background: var(--bg-card);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-light);
-  box-shadow: var(--shadow-xs);
-}
-.home__search-info strong {
-  color: var(--accent);
-}
-
-.home__sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-@media (max-width: 1024px) {
-  .home__sidebar {
-    order: 2;
-  }
-
-  .home__sidebar-card {
-    width: 100%;
-    max-width: 100%;
-  }
 }
 
 @media (max-width: 768px) {
-  .hero {
-    padding: 48px 0 36px;
+  .home {
+    padding-top: 68px;
   }
 
-  .hero__title {
-    font-size: 1.75rem;
-  }
-
-  .hero__subtitle {
-    font-size: 0.95rem;
-  }
-
-  .hero__orbs {
-    display: none;
-  }
-
-  .home__sidebar {
-    display: none;
+  .home-content {
+    padding: 14px;
   }
 }
 </style>

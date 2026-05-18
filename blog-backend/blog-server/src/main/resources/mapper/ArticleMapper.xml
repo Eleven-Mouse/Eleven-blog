@@ -8,9 +8,6 @@
             <if test="title != null">
                 title = #{title},
             </if>
-            <if test="summary != null">
-                summary = #{summary},
-            </if>
             <if test="content != null">
                 content = #{content},
             </if>
@@ -20,8 +17,14 @@
             <if test="categoryId != null">
                 category_id = #{categoryId},
             </if>
-            <if test="tags != null">
-                tags = #{tags},
+            <if test="chapterOrder != null">
+                chapter_order = #{chapterOrder},
+            </if>
+            <if test="readingMinutes != null">
+                reading_minutes = #{readingMinutes},
+            </if>
+            <if test="isCore != null">
+                is_core = #{isCore},
             </if>
             <if test="githubUrl != null">
                 github_url = #{githubUrl},
@@ -35,17 +38,11 @@
             <if test="githubSha != null">
                 github_sha = #{githubSha},
             </if>
-            <if test="authorId != null">
-                author_id = #{authorId},
-            </if>
             <if test="viewCount != null">
                 view_count = #{viewCount},
             </if>
             <if test="isComment != null">
                 is_comment = #{isComment},
-            </if>
-            <if test="status != null">
-                status = #{status},
             </if>
             <if test="publishTime != null">
                 publish_time = #{publishTime},
@@ -57,9 +54,9 @@
 
     <select id="selectByCategoryId" resultType="blog.vo.ArticleVO">
         SELECT
-            a.id, a.title, a.summary, a.content, a.cover_image as coverImage,
-            a.category_id as categoryId, a.tags, a.view_count as viewCount,
-            a.is_comment as isComment, a.status, a.publish_time as publishTime,
+            a.id, a.title, a.content, a.cover_image as coverImage,
+            a.category_id as categoryId, a.chapter_order as chapterOrder, a.reading_minutes as readingMinutes, a.is_core as isCore, a.view_count as viewCount,
+            a.is_comment as isComment, a.publish_time as publishTime,
             a.create_time as createTime, a.update_time as updateTime,
             a.github_url as githubUrl, a.sync_status as syncStatus, a.last_sync_time as lastSyncTime,
             a.github_sha as githubSha,
@@ -71,37 +68,17 @@
             category c ON a.category_id = c.id
         WHERE
             a.category_id = #{categoryId}
-            AND status = 1
         ORDER BY
-            COALESCE(a.publish_time, a.create_time) DESC
-    </select>
-
-    <select id="selectByTagId" resultType="blog.vo.ArticleVO">
-        SELECT
-            a.id, a.title, a.summary, a.content, a.cover_image as coverImage,
-            a.category_id as categoryId, a.tags, a.view_count as viewCount,
-            a.is_comment as isComment, a.status, a.publish_time as publishTime,
-            a.create_time as createTime, a.update_time as updateTime,
-            a.github_url as githubUrl, a.sync_status as syncStatus, a.last_sync_time as lastSyncTime,
-            a.github_sha as githubSha,
-            c.name as categoryName
-        FROM
-            article a
-        LEFT JOIN
-            category c ON a.category_id = c.id
-        WHERE
-            FIND_IN_SET(#{tagId}, a.tags)
-            AND status = 1
-        ORDER BY
+            a.chapter_order ASC,
             COALESCE(a.publish_time, a.create_time) DESC
     </select>
 
 
     <select id="selectAll" resultType="blog.vo.ArticleVO">
         SELECT
-            a.id, a.title, a.summary, a.cover_image as coverImage,
-            a.category_id as categoryId, a.tags, a.view_count as viewCount,
-            a.is_comment as isComment, a.status, a.publish_time as publishTime,
+            a.id, a.title, a.content, a.cover_image as coverImage,
+            a.category_id as categoryId, a.chapter_order as chapterOrder, a.reading_minutes as readingMinutes, a.is_core as isCore, a.view_count as viewCount,
+            a.is_comment as isComment, a.publish_time as publishTime,
             a.create_time as createTime, a.update_time as updateTime,
             a.github_url as githubUrl, a.sync_status as syncStatus, a.last_sync_time as lastSyncTime,
             a.github_sha as githubSha,
@@ -114,7 +91,8 @@
             category c ON a.category_id = c.id
 
         ORDER BY
-
+            a.category_id ASC,
+            a.chapter_order ASC,
             COALESCE(a.publish_time, a.create_time) DESC
     </select>
 

@@ -10,6 +10,17 @@ export function fetchCategories() {
   });
 }
 
+/**
+ * 获取分类详情
+ * @param {number} id - 分类ID
+ */
+export function fetchCategoryById(id) {
+  return request({
+    url: `/categories/${id}`,
+    method: 'get',
+  });
+}
+
 
 /**
  * 根据分类ID获取文章列表
@@ -17,11 +28,13 @@ export function fetchCategories() {
  * @param {object} params - 查询参数（如分页）
  */
 export function fetchArticlesByCategoryId(id, params) {
+  const mergedParams = {
+    ...(params || {}),
+    categoryId: id,
+  };
   return request({
-    url: `/categories/${id}/articles`,
+    url: '/articles',
     method: 'get',
-    params,
+    params: mergedParams,
   });
 }
-
-

@@ -16,4 +16,6 @@ public interface CategoryService
     void update(CategoryDTO categoryDTO);
     
     List<CategoryVO> selectAll();
+
+    CategoryVO selectById(Long id);
 }

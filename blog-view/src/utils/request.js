@@ -33,6 +33,14 @@ service.interceptors.response.use(
   },
   (error) => {
     const config = error.config
+    const status = error?.response?.status
+    const url = String(config?.url || '')
+
+    // 已知公开接口若被后端误拦截为 401，前端静默降级处理
+    if (status === 401 && (url.includes('/comments') || url.includes('/blog/config'))) {
+      return Promise.reject(error)
+    }
+
     // 超时自动重试一次
     if (error.code === 'ECONNABORTED' && config && !config._retry) {
       config._retry = true

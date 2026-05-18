@@ -21,17 +21,10 @@ public class Article implements Serializable {
     private Long id;
 
 
-    private Long authorId;
-
     /**
      * 文章标题
      */
     private String title;
-
-    /**
-     * 文章摘要
-     */
-    private String summary;
 
     /**
      * 文章内容（Markdown格式）
@@ -49,14 +42,24 @@ public class Article implements Serializable {
     private Long categoryId;
 
     /**
+     * 章节顺序（专题内）
+     */
+    private Integer chapterOrder;
+
+    /**
+     * 预计阅读分钟数
+     */
+    private Integer readingMinutes;
+
+    /**
+     * 是否核心文章（0-否，1-是）
+     */
+    private Integer isCore;
+
+    /**
      * 浏览次数
      */
     private Integer viewCount;
-
-    /**
-     * 标签（逗号分隔的字符串）
-     */
-    private String tags;
 
     /**
      * GitHub Markdown 文件地址（为null则不参与同步）
@@ -82,11 +85,6 @@ public class Article implements Serializable {
      * 是否允许评论（0-否，1-是）
      */
     private Integer isComment;
-
-    /**
-     * 状态（0-草稿，1-已发布）
-     */
-    private Integer status;
 
     /**
      * 发布时间

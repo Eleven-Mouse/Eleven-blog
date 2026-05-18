@@ -101,6 +101,8 @@ public class CommentServiceImpl implements CommentService {
 
         // 2. 初始化点赞数
         comment.setLikeCount(0);
+        comment.setIsPinned(false);
+        comment.setPinTime(null);
 
         // 3. 处理页面和文章ID的关联关系
         if (commentDTO.getBlogId() != null) {
@@ -310,6 +312,16 @@ public class CommentServiceImpl implements CommentService {
             throw new IllegalArgumentException("评论不存在");
         }
         commentMapper.incrementLikeCount(id);
+    }
+
+    @Override
+    public void pinComment(Long id, Boolean pinned) {
+        CommentVO comment = commentMapper.selectById(id);
+        if (comment == null) {
+            throw new IllegalArgumentException("评论不存在");
+        }
+        boolean shouldPin = Boolean.TRUE.equals(pinned);
+        commentMapper.setPinned(id, shouldPin, shouldPin ? LocalDateTime.now() : null);
     }
 
     /**

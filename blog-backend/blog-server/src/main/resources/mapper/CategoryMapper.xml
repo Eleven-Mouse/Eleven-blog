@@ -8,13 +8,17 @@
         SELECT 
             c.id,
             c.name,
+            c.slug,
+            c.description,
+            c.cover_image AS coverImage,
+            c.sort_order AS sortOrder,
             c.create_time AS createTime,
             c.update_time AS updateTime,
             COALESCE(COUNT(a.id), 0) AS articleCount
         FROM category c
         LEFT JOIN article a ON c.id = a.category_id
-        GROUP BY c.id, c.name, c.create_time, c.update_time
-        ORDER BY c.create_time DESC
+        GROUP BY c.id, c.name, c.slug, c.description, c.cover_image, c.sort_order, c.create_time, c.update_time
+        ORDER BY c.sort_order ASC, c.create_time DESC
     </select>
 
     <update id="update">
@@ -22,6 +26,18 @@
         <set>
             <if test="name != null">
                 name = #{name},
+            </if>
+            <if test="slug != null">
+                slug = #{slug},
+            </if>
+            <if test="description != null">
+                description = #{description},
+            </if>
+            <if test="coverImage != null">
+                cover_image = #{coverImage},
+            </if>
+            <if test="sortOrder != null">
+                sort_order = #{sortOrder},
             </if>
             update_time = NOW()
         </set>

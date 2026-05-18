@@ -101,6 +101,16 @@ public class CommentVO {
      * 楼层号
      */
     private Integer floor;
+
+    /**
+     * 是否置顶：0-否，1-是
+     */
+    private Boolean isPinned;
+
+    /**
+     * 置顶时间
+     */
+    private LocalDateTime pinTime;
     /**
      * 父评论id
      */

@@ -29,16 +29,6 @@ const router = createRouter({
           name: 'about',
           component: () => import('@/views/About.vue'),
         },
-        {
-          path: 'moment',
-          name: 'moment',
-          component: () => import('@/views/Moment.vue'),
-        },
-        {
-          path: 'friendlinks',
-          name: 'friendLinks',
-          component: () => import('@/views/FriendLinks.vue'),
-        },
 
         {
           path: 'article/:id',
@@ -49,6 +39,11 @@ const router = createRouter({
           path: 'category/:id',
           name: 'categoryDetail',
           component: () => import('@/views/CategoryDetail.vue'),
+        },
+        {
+          path: 'topic/:id',
+          name: 'topicDetail',
+          component: () => import('@/views/TopicDetail.vue'),
         },
         {
           path: 'oauth/callback',

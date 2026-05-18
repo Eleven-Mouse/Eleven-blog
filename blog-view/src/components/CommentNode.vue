@@ -8,6 +8,7 @@
       <div class="comment-body">
         <div class="comment-header">
           <span class="comment-nickname">{{ comment.nickname }}</span>
+          <span v-if="comment.isPinned" class="comment-pinned-tag">置顶</span>
           <!-- 博主标签 -->
           <span v-if="isOwner" class="comment-owner-tag">博主</span>
           <span class="comment-date">{{ formatDate(comment.createTime) }}</span>
@@ -179,6 +180,15 @@ const formatDate = (dateString) => {
   background: transparent;
   color: var(--accent);
   font-weight: 500;
+  line-height: 15px;
+}
+.comment-pinned-tag {
+  font-size: 9px;
+  padding: 0 6px;
+  border-radius: 8px;
+  background: rgba(232, 118, 0, 0.12);
+  color: #b55a00;
+  font-weight: 600;
   line-height: 15px;
 }
 

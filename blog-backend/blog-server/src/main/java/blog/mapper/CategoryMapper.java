@@ -9,7 +9,8 @@ import java.util.List;
 @Mapper
 public interface CategoryMapper
 {
-    @Insert("insert into category(name,create_time,update_time) values (#{name},#{createTime},#{updateTime})")
+    @Insert("insert into category(name, slug, description, cover_image, sort_order, create_time, update_time) " +
+            "values (#{name}, #{slug}, #{description}, #{coverImage}, #{sortOrder}, #{createTime}, #{updateTime})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insert(Category category);
 
@@ -28,5 +29,12 @@ public interface CategoryMapper
      */
     @Select("SELECT * FROM category WHERE name = #{name} LIMIT 1")
     Category selectByName(String name);
+
+    /**
+     * 根据ID查询分类
+     */
+    @Select("SELECT id, name, slug, description, cover_image as coverImage, sort_order as sortOrder, " +
+            "create_time as createTime, update_time as updateTime FROM category WHERE id = #{id}")
+    Category selectById(Long id);
 
 }

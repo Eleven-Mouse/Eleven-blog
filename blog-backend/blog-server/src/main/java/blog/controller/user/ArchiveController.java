@@ -34,7 +34,6 @@ public class ArchiveController
         log.info("获取归档数据");
 
         ArticleQueryDTO queryDTO = new ArticleQueryDTO();
-        queryDTO.setStatus(1);
         List<ArticleVO> articles = articleService.listArticles(queryDTO);
 
         Map<String, List<ArticleVO>> archiveMap = articles.stream()

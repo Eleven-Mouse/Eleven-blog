@@ -114,6 +114,16 @@ public class Comment {
     private Integer floor;
 
     /**
+     * 是否置顶：0-否，1-是
+     */
+    private Boolean isPinned;
+
+    /**
+     * 置顶时间
+     */
+    private LocalDateTime pinTime;
+
+    /**
      * 回复该评论的评论
      */
     private List<Comment> replyComments = new ArrayList<>();

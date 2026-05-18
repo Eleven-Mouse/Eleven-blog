@@ -22,13 +22,17 @@
         <result property="location" column="location"/>
         <result property="isOwner" column="is_owner"/>
         <result property="floor" column="floor"/>
+        <result property="isPinned" column="is_pinned"/>
+        <result property="pinTime" column="pin_time"/>
     </resultMap>
 
     <insert id="insert" parameterType="blog.entity.Comment" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO comment (nickname, email, website, avatar, ip, content, page, status, notice,
-                            create_time, parentCommentId, blog_id, like_count, location, is_owner, floor)
+                            create_time, parentCommentId, blog_id, like_count, location, is_owner, floor,
+                            is_pinned, pin_time)
         VALUES (#{nickname}, #{email}, #{website}, #{avatar}, #{ip}, #{content}, #{page}, #{status}, #{notice},
-                NOW(), #{parentCommentId}, #{blogId}, #{likeCount}, #{location}, #{isOwner}, #{floor})
+                NOW(), #{parentCommentId}, #{blogId}, #{likeCount}, #{location}, #{isOwner}, #{floor},
+                #{isPinned}, #{pinTime})
     </insert>
 
     <update id="update" parameterType="blog.entity.Comment">
@@ -49,6 +53,8 @@
             <if test="location != null">location = #{location},</if>
             <if test="isOwner != null">is_owner = #{isOwner},</if>
             <if test="floor != null">floor = #{floor},</if>
+            <if test="isPinned != null">is_pinned = #{isPinned},</if>
+            <if test="pinTime != null">pin_time = #{pinTime},</if>
             update_time = NOW()
         </set>
         WHERE id = #{id}
@@ -103,7 +109,10 @@
             </if>
             AND c.status = true
         </where>
-        ORDER BY c.create_time ASC
+        ORDER BY
+            CASE WHEN c.is_pinned = 1 THEN 0 ELSE 1 END ASC,
+            CASE WHEN c.is_pinned = 1 THEN c.pin_time ELSE c.create_time END ASC,
+            c.create_time ASC
     </select>
 
     <select id="selectByParentId" resultMap="CommentVOMap">
@@ -128,5 +137,13 @@
             AND parentCommentId IS NULL
         </where>
     </select>
+
+    <update id="setPinned">
+        UPDATE comment
+        SET is_pinned = #{isPinned},
+            pin_time = #{pinTime},
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
 
 </mapper>

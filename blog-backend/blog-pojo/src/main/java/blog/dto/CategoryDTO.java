@@ -23,6 +23,26 @@ public class CategoryDTO implements Serializable
     private String name;
 
     /**
+     * 专题别名（用于前端路由）
+     */
+    private String slug;
+
+    /**
+     * 专题简介
+     */
+    private String description;
+
+    /**
+     * 专题封面
+     */
+    private String coverImage;
+
+    /**
+     * 排序（越小越靠前）
+     */
+    private Integer sortOrder;
+
+    /**
      * 创建时间
      */
     private LocalDateTime createTime;

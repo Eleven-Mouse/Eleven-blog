@@ -2,7 +2,6 @@ package blog.controller.user;
 
 import blog.dto.ArticleDTO;
 import blog.dto.ArticleQueryDTO;
-import blog.entity.Article;
 import blog.result.Result;
 import blog.service.ArticleService;
 import blog.vo.ArticleVO;
@@ -50,9 +49,6 @@ public class ArticleController {
             {
                 queryDTO.setKeyword(keyword);
             }
-            // 只获取已发布的文章
-            queryDTO.setStatus(1);
-
             List<ArticleVO> allArticles = articleService.listArticles(queryDTO);
             log.info("从数据库获取到文章数量：{}", allArticles != null ? allArticles.size() : 0);
 
@@ -124,11 +120,7 @@ public class ArticleController {
         log.info("获取文章详情，ID：{}", id);
         String userIp = getIpAddress(request);
 
-        // 只获取已发布的文章
-        ArticleVO articleVO = new ArticleVO();
-        articleVO.setStatus(1);
-
-        articleVO = articleService.getArticleById(id,userIp);
+        ArticleVO articleVO = articleService.getArticleById(id,userIp);
 
         if (articleVO == null) {
             return Result.error("文章不存在");
@@ -172,7 +164,6 @@ public class ArticleController {
         log.info("获取随机文章，数量：{}", limit);
 
         ArticleQueryDTO queryDTO = new ArticleQueryDTO();
-        queryDTO.setStatus(1);
         List<ArticleVO> articles = articleService.listArticles(queryDTO);
 
         // 简单随机打乱（实际项目中可以用更好的算法）

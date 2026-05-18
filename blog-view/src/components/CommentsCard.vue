@@ -136,6 +136,7 @@ const handleLogout = () => {
 const buildTree = (commentsList) => {
   const commentMap = {}
   const rootComments = []
+  const toTime = (v) => (v ? new Date(v).getTime() : 0)
 
   commentsList.forEach((comment) => {
     comment.children = []
@@ -158,7 +159,17 @@ const buildTree = (commentsList) => {
     }
   })
 
-  rootComments.sort((a, b) => new Date(a.createTime) - new Date(b.createTime))
+  rootComments.sort((a, b) => {
+    const aPinned = a.isPinned === true || a.isPinned === 1
+    const bPinned = b.isPinned === true || b.isPinned === 1
+    if (aPinned !== bPinned) return aPinned ? -1 : 1
+
+    if (aPinned && bPinned) {
+      return toTime(b.pinTime) - toTime(a.pinTime)
+    }
+
+    return toTime(a.createTime) - toTime(b.createTime)
+  })
   return rootComments
 }
 
@@ -175,6 +186,14 @@ const getComments = async () => {
     comments.value = buildTree(flatList)
     if (flatList.length < pagination.pageSize) noMore.value = true
   } catch (err) {
+    if (err?.response?.status === 401) {
+      // 后端评论接口未放行时静默降级，避免影响正文阅读
+      comments.value = []
+      totalComments.value = 0
+      error.value = null
+      noMore.value = true
+      return
+    }
     error.value = '评论加载失败'
     console.error(err)
   } finally {
