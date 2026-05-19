@@ -949,14 +949,13 @@ watch(
 
 :global(.mobile-tree) {
   display: grid;
-  gap: 6px;
+  gap: 2px;
 }
 
 :global(.mobile-tree__topic) {
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-light);
-  background: var(--bg-card);
-  overflow: hidden;
+  border-bottom: 1px solid var(--border-light);
+  background: transparent;
+  overflow: visible;
 }
 
 :global(.mobile-tree__topic-trigger),
@@ -976,7 +975,7 @@ watch(
 :global(.mobile-tree__topic-trigger) {
   grid-template-columns: 1fr auto;
   gap: 8px;
-  padding: 12px 14px;
+  padding: 12px 8px;
   font-size: 14px;
   font-weight: 700;
 }
