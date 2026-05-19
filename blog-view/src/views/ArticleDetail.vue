@@ -314,6 +314,7 @@ onUnmounted(() => {
 /* ---------- Layout ---------- */
 .article-page__workspace {
   position: relative;
+  --topic-panel-width: 300px;
 }
 
 .article-page__topic-panel {
@@ -357,6 +358,20 @@ onUnmounted(() => {
   max-width: 1200px;
   margin: 0 auto;
   display: block;
+}
+
+.article-page__workspace.is-topic-open .article-page__layout {
+  width: calc(100% - var(--topic-panel-width));
+  max-width: none;
+  margin-left: var(--topic-panel-width);
+  margin-right: 0;
+  padding: 0 28px;
+}
+
+.article-page__workspace.is-topic-open .article-page__main {
+  max-width: none;
+  width: 100%;
+  margin: 0;
 }
 
 .topic-panel-shell {
@@ -692,6 +707,7 @@ onUnmounted(() => {
     padding: 0 24px;
     transform: none !important;
     width: 100% !important;
+    margin-left: 0 !important;
   }
   .article-page__topic-panel {
     display: none;
