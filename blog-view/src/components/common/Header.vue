@@ -162,9 +162,8 @@
       class="mobile-drawer"
     >
       <div class="mobile-directory">
-        <div class="mobile-directory__title">专题目录</div>
-        <div v-if="drawerTreeLoading" class="loading-tip mobile-directory__tip">正在加载目录...</div>
-        <div v-else-if="drawerTreeError" class="error-tip mobile-directory__tip">{{ drawerTreeError }}</div>
+        <div v-if="drawerTreeLoading" class="mobile-directory__tip">正在加载目录...</div>
+        <div v-else-if="drawerTreeError" class="mobile-directory__tip mobile-directory__tip--error">{{ drawerTreeError }}</div>
         <div v-else-if="mobileTree.length" class="mobile-tree">
           <section v-for="topic in mobileTree" :key="`mobile-topic-${topic.id}`" class="mobile-tree__topic">
             <button class="mobile-tree__topic-trigger" @click="toggleMobileTopic(topic.id)">
@@ -175,7 +174,7 @@
             <div class="mobile-tree__topic-body" :class="{ 'is-open': isMobileTopicOpen(topic.id) }">
               <div v-if="topic.loading" class="mobile-tree__status">正在加载文章...</div>
               <div v-else-if="topic.loadError" class="mobile-tree__status is-error">{{ topic.loadError }}</div>
-              <template v-else>
+              <template v-else-if="hasSecondLevelGroups(topic)">
                 <section
                   v-for="group in getTopicGroups(topic)"
                   :key="`mobile-group-${topic.id}-${group.key}`"
@@ -210,10 +209,24 @@
                 </section>
                 <div v-if="!getTopicGroups(topic).length" class="mobile-tree__status">该专题暂无文章</div>
               </template>
+              <div v-else-if="topic.rootArticles?.length" class="mobile-tree__articles mobile-tree__articles--root">
+                <router-link
+                  v-for="article in topic.rootArticles"
+                  :key="article.id"
+                  :to="`/article/${article.id}`"
+                  class="mobile-tree__article"
+                  :class="{ 'is-active': Number(activeDrawerArticleId) === Number(article.id) }"
+                  @click="drawerOpen = false"
+                >
+                  <span class="mobile-tree__article-index">{{ article.chapterOrder ?? 0 }}</span>
+                  <span class="mobile-tree__article-title">{{ article.title }}</span>
+                </router-link>
+              </div>
+              <div v-else class="mobile-tree__status">该专题暂无文章</div>
             </div>
           </section>
         </div>
-        <div v-else class="empty-tip mobile-directory__tip">暂无目录数据</div>
+        <div v-else class="mobile-directory__tip">暂无目录数据</div>
       </div>
     </el-drawer>
   </teleport>
@@ -455,6 +468,8 @@ const getTopicGroups = (topic) => {
   }
   return groups
 }
+
+const hasSecondLevelGroups = (topic) => (topic?.folderGroups || []).length > 0
 
 const loadTopicArticlesIntoTree = async (topicId) => {
   const id = Number(topicId || 0)
@@ -935,16 +950,16 @@ watch(
   padding: 8px 10px 20px;
 }
 
-:global(.mobile-directory__title) {
-  padding: 8px 8px 10px;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text-primary);
+:global(.mobile-directory__tip) {
+  display: block;
+  padding: 12px 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: left;
 }
 
-:global(.mobile-directory__tip) {
-  padding: 16px 12px;
-  font-size: 13px;
+:global(.mobile-directory__tip--error) {
+  color: #ef4444;
 }
 
 :global(.mobile-tree) {

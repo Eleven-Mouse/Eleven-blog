@@ -29,17 +29,19 @@
               >
             </button>
 
-            <div v-if="isGroupOpen(activeTopic.id, group.key)" class="drawer-group__articles">
-              <router-link
-                v-for="article in group.articles"
-                :key="article.id"
-                :to="`/article/${article.id}`"
-                class="drawer-article"
-                :class="{ 'is-active': Number(activeArticleId) === Number(article.id) }"
-              >
-                <span class="drawer-article__index">{{ article.chapterOrder ?? 0 }}</span>
-                <span class="drawer-article__title">{{ article.title }}</span>
-              </router-link>
+            <div class="drawer-group__body" :class="{ 'is-open': isGroupOpen(activeTopic.id, group.key) }">
+              <div class="drawer-group__articles">
+                <router-link
+                  v-for="article in group.articles"
+                  :key="article.id"
+                  :to="`/article/${article.id}`"
+                  class="drawer-article"
+                  :class="{ 'is-active': Number(activeArticleId) === Number(article.id) }"
+                >
+                  <span class="drawer-article__index">{{ article.chapterOrder ?? 0 }}</span>
+                  <span class="drawer-article__title">{{ article.title }}</span>
+                </router-link>
+              </div>
             </div>
           </section>
         </div>
@@ -383,6 +385,23 @@ onMounted(() => {
 
 .drawer-group__trigger:hover {
   background: var(--bg-secondary);
+}
+
+.drawer-group__body {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    max-height 0.28s ease,
+    opacity 0.22s ease,
+    transform 0.22s ease;
+}
+
+.drawer-group__body.is-open {
+  max-height: 1600px;
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .drawer-group__articles {
