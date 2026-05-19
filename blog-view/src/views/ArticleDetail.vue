@@ -325,7 +325,6 @@ onUnmounted(() => {
   opacity: 0;
   transform: translate3d(-100%, 0, 0);
   pointer-events: none;
-  z-index: 900;
   will-change: transform, opacity;
   backface-visibility: hidden;
   contain: layout paint;
