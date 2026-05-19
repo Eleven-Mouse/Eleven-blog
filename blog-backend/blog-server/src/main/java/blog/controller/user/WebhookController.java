@@ -14,6 +14,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.net.URI;
 import java.util.HexFormat;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -110,8 +111,9 @@ public class WebhookController {
     private boolean isFromConfiguredRepo(String payload) {
         try {
             Map<String, String> config = configService.getAllConfigAsMap();
-            String configOwner = config.get("github_sync_owner");
-            String configRepo = config.get("github_sync_repo");
+            OwnerRepo ownerRepo = resolveOwnerRepo(config);
+            String configOwner = ownerRepo.owner();
+            String configRepo = ownerRepo.repo();
             if (configOwner == null || configOwner.isBlank() || configRepo == null || configRepo.isBlank()) {
                 return true; // 未配置则不过滤
             }
@@ -172,15 +174,76 @@ public class WebhookController {
     private String getWebhookSecret() {
         try {
             Map<String, String> config = configService.getAllConfigAsMap();
-            return config.get("webhook_secret");
+            String configured = trimToNull(config.get("webhook_secret"));
+            if (configured != null) {
+                return configured;
+            }
+            return trimToNull(System.getenv("WEBHOOK_SECRET"));
         } catch (Exception e) {
+            return trimToNull(System.getenv("WEBHOOK_SECRET"));
+        }
+    }
+
+    private OwnerRepo resolveOwnerRepo(Map<String, String> config) {
+        String owner = trimToNull(config.get("github_sync_owner"));
+        String repoValue = trimToNull(config.get("github_sync_repo"));
+        if (owner == null) {
+            owner = trimToNull(System.getenv("GITHUB_SYNC_OWNER"));
+        }
+        if (repoValue == null) {
+            repoValue = trimToNull(System.getenv("GITHUB_SYNC_REPO"));
+        }
+
+        OwnerRepo parsed = parseOwnerRepo(repoValue);
+        if (owner == null) {
+            owner = parsed.owner();
+        }
+        String repo = parsed.repo();
+        return new OwnerRepo(owner, repo);
+    }
+
+    private OwnerRepo parseOwnerRepo(String repoValue) {
+        if (repoValue == null) {
+            return new OwnerRepo(null, null);
+        }
+        String raw = repoValue;
+        if (raw.startsWith("http://") || raw.startsWith("https://")) {
+            try {
+                URI uri = URI.create(raw);
+                if (uri.getHost() != null && uri.getHost().contains("github.com")) {
+                    String path = uri.getPath();
+                    if (path != null) {
+                        String[] seg = path.replaceAll("^/+", "").split("/");
+                        if (seg.length >= 2) {
+                            return new OwnerRepo(trimToNull(seg[0]), trimToNull(seg[1]));
+                        }
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+            return new OwnerRepo(null, raw);
+        }
+        if (raw.contains("/")) {
+            String[] parts = raw.split("/", 2);
+            return new OwnerRepo(trimToNull(parts[0]), trimToNull(parts[1]));
+        }
+        return new OwnerRepo(null, raw);
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) {
             return null;
         }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private String hmacSha256(String key, String data) throws Exception {
         Mac mac = Mac.getInstance("HmacSHA256");
         mac.init(new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
         return HexFormat.of().formatHex(mac.doFinal(data.getBytes(StandardCharsets.UTF_8)));
+    }
+
+    private record OwnerRepo(String owner, String repo) {
     }
 }

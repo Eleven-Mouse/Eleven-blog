@@ -157,13 +157,15 @@ public class ArticleSyncServiceImpl implements ArticleSyncService {
     @Override
     public Map<String, Integer> autoDiscover() {
         Map<String, String> config = configService.getAllConfigAsMap();
-        String owner = config.get(CONFIG_KEY_OWNER);
-        String repo = config.get(CONFIG_KEY_REPO);
-        String branch = config.getOrDefault(CONFIG_KEY_BRANCH, "main");
-        String path = config.getOrDefault(CONFIG_KEY_PATH, "");
+        RepoSyncConfig repoSyncConfig = resolveRepoSyncConfig(config);
+        String owner = repoSyncConfig.owner();
+        String repo = repoSyncConfig.repo();
+        String branch = repoSyncConfig.branch();
+        String path = repoSyncConfig.path();
+        String token = resolveConfigValue(config, CONFIG_KEY_TOKEN);
 
         if (owner == null || owner.isBlank() || repo == null || repo.isBlank()) {
-            log.warn("自动发现未配置：请设置 github_sync_owner 和 github_sync_repo");
+            log.warn("自动发现未配置：请设置 github_sync_owner 和 github_sync_repo（或 github_sync_repo=owner/repo）");
             return emptyResult();
         }
 
@@ -194,7 +196,7 @@ public class ArticleSyncServiceImpl implements ArticleSyncService {
                     log.warn("自动发现-跳过：无法拉取 '{}'", file.getName());
                     continue;
                 }
-                String processedMarkdown = processMarkdownAssets(rawMarkdown, owner, repo, branch, file.getPath(), config.get(CONFIG_KEY_TOKEN));
+                String processedMarkdown = processMarkdownAssets(rawMarkdown, owner, repo, branch, file.getPath(), token);
 
                 // 解析 Front Matter
                 MarkdownFrontMatter fm = MarkdownFrontMatter.parse(rawMarkdown);
@@ -234,10 +236,11 @@ public class ArticleSyncServiceImpl implements ArticleSyncService {
     @Override
     public List<GithubRepoScanner.MdFileInfo> previewDiscover() {
         Map<String, String> config = configService.getAllConfigAsMap();
-        String owner = config.get(CONFIG_KEY_OWNER);
-        String repo = config.get(CONFIG_KEY_REPO);
-        String branch = config.getOrDefault(CONFIG_KEY_BRANCH, "main");
-        String path = config.getOrDefault(CONFIG_KEY_PATH, "");
+        RepoSyncConfig repoSyncConfig = resolveRepoSyncConfig(config);
+        String owner = repoSyncConfig.owner();
+        String repo = repoSyncConfig.repo();
+        String branch = repoSyncConfig.branch();
+        String path = repoSyncConfig.path();
 
         if (owner == null || owner.isBlank() || repo == null || repo.isBlank()) {
             return List.of();
@@ -682,10 +685,95 @@ public class ArticleSyncServiceImpl implements ArticleSyncService {
     private String getConfigValue(String key) {
         try {
             Map<String, String> cfg = configService.getAllConfigAsMap();
-            return cfg.get(key);
+            return resolveConfigValue(cfg, key);
         } catch (Exception e) {
+            String envKey = envKeyForConfig(key);
+            if (envKey == null) {
+                return null;
+            }
+            return trimToNull(System.getenv(envKey));
+        }
+    }
+
+    private RepoSyncConfig resolveRepoSyncConfig(Map<String, String> config) {
+        String owner = resolveConfigValue(config, CONFIG_KEY_OWNER);
+        String repo = resolveConfigValue(config, CONFIG_KEY_REPO);
+        String branch = resolveConfigValue(config, CONFIG_KEY_BRANCH);
+        String path = resolveConfigValue(config, CONFIG_KEY_PATH);
+
+        OwnerRepo ownerRepo = parseOwnerRepo(repo);
+        if (owner == null) {
+            owner = ownerRepo.owner();
+        }
+        if (ownerRepo.repo() != null) {
+            repo = ownerRepo.repo();
+        }
+
+        return new RepoSyncConfig(owner, repo, branch != null ? branch : "main", path != null ? path : "");
+    }
+
+    private String resolveConfigValue(Map<String, String> config, String key) {
+        if (config != null) {
+            String value = trimToNull(config.get(key));
+            if (value != null) {
+                return value;
+            }
+        }
+        String envKey = envKeyForConfig(key);
+        if (envKey == null) {
             return null;
         }
+        return trimToNull(System.getenv(envKey));
+    }
+
+    private OwnerRepo parseOwnerRepo(String repoValue) {
+        String raw = trimToNull(repoValue);
+        if (raw == null) {
+            return new OwnerRepo(null, null);
+        }
+
+        String candidate = raw;
+        if (candidate.startsWith("http://") || candidate.startsWith("https://")) {
+            try {
+                URI uri = URI.create(candidate);
+                if (uri.getHost() != null && uri.getHost().contains("github.com")) {
+                    String path = uri.getPath();
+                    if (path != null) {
+                        String[] seg = path.replaceAll("^/+", "").split("/");
+                        if (seg.length >= 2) {
+                            return new OwnerRepo(trimToNull(seg[0]), trimToNull(seg[1]));
+                        }
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+            return new OwnerRepo(null, raw);
+        }
+
+        if (candidate.contains("/")) {
+            String[] parts = candidate.split("/", 2);
+            return new OwnerRepo(trimToNull(parts[0]), trimToNull(parts[1]));
+        }
+        return new OwnerRepo(null, raw);
+    }
+
+    private String envKeyForConfig(String key) {
+        return switch (key) {
+            case CONFIG_KEY_OWNER -> "GITHUB_SYNC_OWNER";
+            case CONFIG_KEY_REPO -> "GITHUB_SYNC_REPO";
+            case CONFIG_KEY_BRANCH -> "GITHUB_SYNC_BRANCH";
+            case CONFIG_KEY_PATH -> "GITHUB_SYNC_PATH";
+            case CONFIG_KEY_TOKEN -> "GITHUB_SYNC_TOKEN";
+            default -> null;
+        };
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private CategoryMeta parseCategoryMeta(String raw) {
@@ -712,6 +800,12 @@ public class ArticleSyncServiceImpl implements ArticleSyncService {
     }
 
     private record CategoryMeta(String displayName, Integer sortOrder) {
+    }
+
+    private record RepoSyncConfig(String owner, String repo, String branch, String path) {
+    }
+
+    private record OwnerRepo(String owner, String repo) {
     }
 
     private record RepoContext(String owner, String repo, String branch, String filePath) {

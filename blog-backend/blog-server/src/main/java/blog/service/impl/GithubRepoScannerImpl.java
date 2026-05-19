@@ -168,9 +168,15 @@ public class GithubRepoScannerImpl implements GithubRepoScanner {
     private String getToken() {
         try {
             Map<String, String> config = configService.getAllConfigAsMap();
-            return config.get(CONFIG_KEY_TOKEN);
+            String configured = config.get(CONFIG_KEY_TOKEN);
+            if (configured != null && !configured.isBlank()) {
+                return configured.trim();
+            }
+            String envToken = System.getenv("GITHUB_SYNC_TOKEN");
+            return envToken != null && !envToken.isBlank() ? envToken.trim() : null;
         } catch (Exception e) {
-            return null;
+            String envToken = System.getenv("GITHUB_SYNC_TOKEN");
+            return envToken != null && !envToken.isBlank() ? envToken.trim() : null;
         }
     }
 
