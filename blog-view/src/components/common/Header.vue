@@ -161,54 +161,59 @@
       :show-close="false"
       class="mobile-drawer"
     >
-      <!-- Profile -->
-      <div class="drawer-profile">
-        <img :src="blogConfig.config.blog_avatar" alt="Avatar" class="drawer-profile__avatar" />
-        <div class="drawer-profile__name">{{ blogConfig.config.blog_name }}</div>
-        <div class="drawer-profile__bio">{{ blogConfig.config.blog_bio }}</div>
-        <div class="drawer-profile__social"></div>
-      </div>
+      <div class="mobile-directory">
+        <div class="mobile-directory__title">专题目录</div>
+        <div v-if="drawerTreeLoading" class="loading-tip mobile-directory__tip">正在加载目录...</div>
+        <div v-else-if="drawerTreeError" class="error-tip mobile-directory__tip">{{ drawerTreeError }}</div>
+        <div v-else-if="mobileTree.length" class="mobile-tree">
+          <section v-for="topic in mobileTree" :key="`mobile-topic-${topic.id}`" class="mobile-tree__topic">
+            <button class="mobile-tree__topic-trigger" @click="toggleMobileTopic(topic.id)">
+              <span class="mobile-tree__topic-name">{{ topic.name }}</span>
+              <span class="mobile-tree__topic-arrow" :class="{ 'is-open': isMobileTopicOpen(topic.id) }">▾</span>
+            </button>
 
-      <div class="drawer-divider" />
-
-      <nav class="drawer-nav">
-        <router-link
-          to="/home"
-          class="drawer-nav__item"
-          :class="{ 'router-link-active': isHomeActive }"
-          @click="drawerOpen = false"
-        >
-          首页
-        </router-link>
-      </nav>
-
-      <div class="drawer-divider" />
-
-      <!-- Categories accordion -->
-      <div class="drawer-accordion">
-        <button class="drawer-accordion__trigger" @click="catExpanded = !catExpanded">
-          <span>专题目录</span>
-          <svg
-            class="drawer-accordion__arrow"
-            :class="{ 'is-open': catExpanded }"
-            viewBox="0 0 12 12"
-            width="12"
-            height="12"
-          >
-            <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" />
-          </svg>
-        </button>
-        <div class="drawer-accordion__body" :class="{ 'is-open': catExpanded }">
-          <router-link
-            v-for="topic in topics"
-            :key="topic.id"
-            :to="`/topic/${topic.id}`"
-            class="drawer-nav__item drawer-nav__item--sub"
-            @click="drawerOpen = false"
-          >
-            {{ topic.name }}
-          </router-link>
+            <div class="mobile-tree__topic-body" :class="{ 'is-open': isMobileTopicOpen(topic.id) }">
+              <div v-if="topic.loading" class="mobile-tree__status">正在加载文章...</div>
+              <div v-else-if="topic.loadError" class="mobile-tree__status is-error">{{ topic.loadError }}</div>
+              <template v-else>
+                <section
+                  v-for="group in getTopicGroups(topic)"
+                  :key="`mobile-group-${topic.id}-${group.key}`"
+                  class="mobile-tree__group"
+                >
+                  <button class="mobile-tree__group-trigger" @click="toggleMobileGroup(topic.id, group.key)">
+                    <span class="mobile-tree__group-name">{{ group.label }}</span>
+                    <span
+                      class="mobile-tree__group-arrow"
+                      :class="{ 'is-open': isMobileGroupOpen(topic.id, group.key) }"
+                      >▾</span
+                    >
+                  </button>
+                  <div
+                    class="mobile-tree__group-body"
+                    :class="{ 'is-open': isMobileGroupOpen(topic.id, group.key) }"
+                  >
+                    <div class="mobile-tree__articles">
+                      <router-link
+                        v-for="article in group.articles"
+                        :key="article.id"
+                        :to="`/article/${article.id}`"
+                        class="mobile-tree__article"
+                        :class="{ 'is-active': Number(activeDrawerArticleId) === Number(article.id) }"
+                        @click="drawerOpen = false"
+                      >
+                        <span class="mobile-tree__article-index">{{ article.chapterOrder ?? 0 }}</span>
+                        <span class="mobile-tree__article-title">{{ article.title }}</span>
+                      </router-link>
+                    </div>
+                  </div>
+                </section>
+                <div v-if="!getTopicGroups(topic).length" class="mobile-tree__status">该专题暂无文章</div>
+              </template>
+            </div>
+          </section>
         </div>
+        <div v-else class="empty-tip mobile-directory__tip">暂无目录数据</div>
       </div>
     </el-drawer>
   </teleport>
@@ -218,7 +223,7 @@
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchArticles } from '@/api/article.js'
-import { fetchCategories } from '@/api/categories'
+import { fetchArticlesByCategoryId, fetchCategories } from '@/api/categories'
 import ThemeToggle from './ThemeSwitcher.vue'
 import { useBlogConfigStore } from '@/stores/blogConfig'
 import { useUiStore } from '@/stores/ui'
@@ -239,11 +244,19 @@ const searchLoading = ref(false)
 const searchFetched = ref(false)
 const highlightedIndex = ref(-1)
 const scrollProgress = ref(0)
-const catExpanded = ref(false)
+const mobileTree = ref([])
+const drawerTreeLoading = ref(false)
+const drawerTreeError = ref('')
+const openMobileTopicIds = ref(new Set())
+const openMobileGroupKeys = ref(new Set())
+const loadedMobileTopicIds = ref(new Set())
 
 let debounceTimer = null
 const isHomeActive = computed(() => route.path === '/home' || route.path === '/')
 const isArticleRoute = computed(() => route.path.startsWith('/article/'))
+const activeDrawerArticleId = computed(() =>
+  route.path.startsWith('/article/') ? Number(route.params.id || 0) : 0,
+)
 
 const isTopicItemActive = (topic) => {
   if (!route.path.startsWith('/topic/')) return false
@@ -328,6 +341,181 @@ const toggleTopicTree = () => {
   uiStore.toggleTopicTree()
 }
 
+const mobileGroupKey = (topicId, groupKey) => `${Number(topicId)}:${String(groupKey || '')}`
+const isMobileTopicOpen = (topicId) => openMobileTopicIds.value.has(Number(topicId || 0))
+const isMobileGroupOpen = (topicId, groupKey) =>
+  openMobileGroupKeys.value.has(mobileGroupKey(topicId, groupKey))
+
+const safeDecode = (value) => {
+  if (!value) return ''
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
+const normalizePart = (value) => String(safeDecode(value || '')).trim()
+const isMarkdownFile = (name) => /\.mdx?$/i.test(String(name || '').trim())
+
+const extractGithubPath = (url) => {
+  if (!url) return ''
+  const raw = String(url).trim()
+  if (!raw) return ''
+
+  if (!/^https?:\/\//i.test(raw)) {
+    return raw
+      .replace(/\\/g, '/')
+      .replace(/^\.?\//, '')
+      .split('/')
+      .map((part) => safeDecode(part))
+      .filter(Boolean)
+      .join('/')
+  }
+
+  try {
+    const u = new URL(raw)
+    const parts = u.pathname.split('/').filter(Boolean).map((part) => safeDecode(part))
+    if (u.hostname === 'raw.githubusercontent.com') {
+      return parts.length > 3 ? parts.slice(3).join('/') : ''
+    }
+    if (u.hostname === 'github.com') {
+      const blobIndex = parts.findIndex((p) => p === 'blob')
+      if (blobIndex >= 0 && parts.length > blobIndex + 2) {
+        return parts.slice(blobIndex + 2).join('/')
+      }
+    }
+    return parts.join('/')
+  } catch {
+    return ''
+  }
+}
+
+const groupLabelFromArticle = (article, topicName) => {
+  const path = extractGithubPath(article.githubUrl || '')
+  if (!path) return ''
+  const parts = path
+    .split('/')
+    .map((part) => normalizePart(part))
+    .filter(Boolean)
+  const topicNames = Array.from(
+    new Set(
+      [article.categoryName, topicName]
+        .map((name) => normalizePart(name))
+        .filter(Boolean),
+    ),
+  )
+  const topicIndex = topicNames.length
+    ? parts.findIndex((part) => topicNames.some((name) => name === part))
+    : -1
+
+  if (topicIndex >= 0) {
+    if (parts.length >= topicIndex + 3) {
+      const folder = parts[topicIndex + 1]
+      const fileLike = parts[topicIndex + 2]
+      if (folder && fileLike) return folder
+    }
+    return ''
+  }
+
+  if (parts.length >= 3) {
+    const maybeFolder = parts[1]
+    const maybeFile = parts[2]
+    if (maybeFolder && maybeFile && isMarkdownFile(maybeFile)) return maybeFolder
+  }
+  return ''
+}
+
+const buildGroups = (articles, topicName) => {
+  const map = new Map()
+  const rootArticles = []
+  for (const article of articles) {
+    const label = groupLabelFromArticle(article, topicName)
+    if (!label) {
+      rootArticles.push(article)
+      continue
+    }
+    const key = label
+    if (!map.has(key)) {
+      map.set(key, { key, label, articles: [] })
+    }
+    map.get(key).articles.push(article)
+  }
+  const folderGroups = Array.from(map.values()).sort((a, b) =>
+    String(a.label).localeCompare(String(b.label), 'zh-CN'),
+  )
+  return { rootArticles, folderGroups }
+}
+
+const getTopicGroups = (topic) => {
+  const groups = topic?.folderGroups ? [...topic.folderGroups] : []
+  const rootArticles = topic?.rootArticles || []
+  if (rootArticles.length) {
+    groups.unshift({ key: '__root__', label: '未分组', articles: rootArticles })
+  }
+  return groups
+}
+
+const loadTopicArticlesIntoTree = async (topicId) => {
+  const id = Number(topicId || 0)
+  if (!id || loadedMobileTopicIds.value.has(id)) return
+  const idx = mobileTree.value.findIndex((topic) => Number(topic.id) === id)
+  if (idx < 0) return
+
+  const markLoading = [...mobileTree.value]
+  markLoading[idx] = { ...markLoading[idx], loading: true, loadError: '' }
+  mobileTree.value = markLoading
+
+  try {
+    const res = await fetchArticlesByCategoryId(id, { page: 1, size: 1000 })
+    const list = (res?.data || []).sort((a, b) => (a.chapterOrder || 0) - (b.chapterOrder || 0))
+    const topicName = mobileTree.value[idx]?.name || ''
+    const { rootArticles, folderGroups } = buildGroups(list, topicName)
+    const next = [...mobileTree.value]
+    next[idx] = {
+      ...next[idx],
+      loading: false,
+      loadError: '',
+      rootArticles,
+      folderGroups,
+    }
+    mobileTree.value = next
+    loadedMobileTopicIds.value = new Set(loadedMobileTopicIds.value).add(id)
+  } catch {
+    const next = [...mobileTree.value]
+    next[idx] = {
+      ...next[idx],
+      loading: false,
+      loadError: '文章加载失败，请重试',
+      rootArticles: [],
+      folderGroups: [],
+    }
+    mobileTree.value = next
+  }
+}
+
+const toggleMobileTopic = async (topicId) => {
+  const id = Number(topicId || 0)
+  if (!id) return
+  const next = new Set(openMobileTopicIds.value)
+  if (next.has(id)) {
+    next.delete(id)
+    openMobileTopicIds.value = next
+    return
+  }
+  next.add(id)
+  openMobileTopicIds.value = next
+  await loadTopicArticlesIntoTree(id)
+}
+
+const toggleMobileGroup = (topicId, groupKey) => {
+  const next = new Set(openMobileGroupKeys.value)
+  const key = mobileGroupKey(topicId, groupKey)
+  if (next.has(key)) next.delete(key)
+  else next.add(key)
+  openMobileGroupKeys.value = next
+}
+
 const highlightText = (text) => {
   if (!text || !searchQuery.value.trim()) return text
   const keyword = searchQuery.value.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -358,9 +546,11 @@ const onKeydown = (e) => {
 }
 
 const loadTopics = async () => {
+  drawerTreeLoading.value = true
+  drawerTreeError.value = ''
   try {
     const categories = (await fetchCategories()) || []
-    topics.value = categories
+    const filtered = categories
       .filter((item) => {
         const name = String(item?.name || '').trim()
         return item?.id && name && name !== '首页'
@@ -370,8 +560,23 @@ const loadTopics = async () => {
         if (orderDiff !== 0) return orderDiff
         return String(a.name || '').localeCompare(String(b.name || ''), 'zh-CN')
       })
+    topics.value = filtered
       .map((item) => ({ id: item.id, name: item.name }))
-  } catch {}
+    mobileTree.value = filtered.map((item) => ({
+      id: item.id,
+      name: item.name,
+      loading: false,
+      loadError: '',
+      rootArticles: [],
+      folderGroups: [],
+    }))
+  } catch {
+    topics.value = []
+    mobileTree.value = []
+    drawerTreeError.value = '目录加载失败，请稍后重试。'
+  } finally {
+    drawerTreeLoading.value = false
+  }
 }
 
 onMounted(() => {
@@ -389,6 +594,17 @@ watch(
   () => route.path,
   () => {
     drawerOpen.value = false
+  },
+)
+
+watch(
+  () => drawerOpen.value,
+  async (open) => {
+    if (!open || !mobileTree.value.length || openMobileTopicIds.value.size) return
+    const first = mobileTree.value[0]
+    if (first?.id) {
+      await toggleMobileTopic(first.id)
+    }
   },
 )
 </script>
@@ -715,124 +931,154 @@ watch(
   color: var(--text-primary);
 }
 
-:global(.drawer-profile) {
-  text-align: center;
-  padding: 8px 16px 16px;
-}
-:global(.drawer-profile__avatar) {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--accent);
-  margin-bottom: 10px;
-}
-:global(.drawer-profile__name) {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-}
-:global(.drawer-profile__bio) {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-bottom: 12px;
-}
-:global(.drawer-profile__social) {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-}
-:global(.drawer-profile__social-link) {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  color: var(--text-muted);
-  background: var(--bg-secondary);
-  text-decoration: none;
-  transition: all 0.2s;
-}
-:global(.drawer-profile__social-link):hover {
-  color: var(--text-primary);
-  background: var(--bg-hover);
+:global(.mobile-directory) {
+  padding: 8px 10px 20px;
 }
 
-:global(.drawer-divider) {
-  height: 1px;
-  background: var(--border-light);
-  margin: 0 16px 12px;
-}
-:global(.drawer-search) {
-  margin-bottom: 8px;
-  padding: 0 12px;
-}
-:global(.drawer-search) .el-input__wrapper {
-  background: var(--bg-secondary);
-}
-
-:global(.drawer-nav) {
-  display: flex;
-  flex-direction: column;
-}
-:global(.drawer-nav__item) {
-  display: flex;
-  align-items: center;
-  padding: 11px 16px;
+:global(.mobile-directory__title) {
+  padding: 8px 8px 10px;
   font-size: 15px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  text-decoration: none;
-  transition: all 0.15s;
-}
-:global(.drawer-nav__item):hover,
-:global(.drawer-nav__item.router-link-active) {
+  font-weight: 700;
   color: var(--text-primary);
-  background: var(--bg-secondary);
-}
-:global(.drawer-nav__item--sub) {
-  font-size: 14px;
-  font-weight: 400;
-  padding: 9px 16px 9px 32px;
 }
 
-/* Accordion */
-:global(.drawer-accordion) {
-  margin-bottom: 2px;
+:global(.mobile-directory__tip) {
+  padding: 16px 12px;
+  font-size: 13px;
 }
-:global(.drawer-accordion__trigger) {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+
+:global(.mobile-tree) {
+  display: grid;
+  gap: 6px;
+}
+
+:global(.mobile-tree__topic) {
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  background: var(--bg-card);
+  overflow: hidden;
+}
+
+:global(.mobile-tree__topic-trigger),
+:global(.mobile-tree__group-trigger) {
   width: 100%;
-  padding: 11px 16px;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  background: none;
   border: none;
+  background: transparent;
+  display: grid;
+  align-items: center;
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: color 0.15s;
+  transition:
+    color 0.2s,
+    background 0.2s;
 }
-:global(.drawer-accordion__trigger):hover {
+
+:global(.mobile-tree__topic-trigger) {
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+:global(.mobile-tree__topic-trigger:hover),
+:global(.mobile-tree__group-trigger:hover) {
   color: var(--text-primary);
+  background: var(--bg-secondary);
 }
-:global(.drawer-accordion__arrow) {
-  transition: transform 0.25s;
+
+:global(.mobile-tree__topic-arrow),
+:global(.mobile-tree__group-arrow) {
+  font-size: 11px;
+  transition: transform 0.24s ease;
 }
-:global(.drawer-accordion__arrow.is-open) {
+
+:global(.mobile-tree__topic-arrow.is-open),
+:global(.mobile-tree__group-arrow.is-open) {
   transform: rotate(180deg);
 }
 
-:global(.drawer-accordion__body) {
+:global(.mobile-tree__topic-body),
+:global(.mobile-tree__group-body) {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.3s ease;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    max-height 0.32s ease,
+    opacity 0.24s ease,
+    transform 0.24s ease;
 }
-:global(.drawer-accordion__body.is-open) {
-  max-height: 600px;
+
+:global(.mobile-tree__topic-body.is-open),
+:global(.mobile-tree__group-body.is-open) {
+  max-height: 9999px;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+:global(.mobile-tree__group) {
+  border-top: 1px solid var(--border-light);
+}
+
+:global(.mobile-tree__group-trigger) {
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 13px;
+}
+
+:global(.mobile-tree__group-name) {
+  font-weight: 600;
+}
+
+:global(.mobile-tree__articles) {
+  padding: 4px 8px 8px 8px;
+  display: grid;
+  gap: 2px;
+}
+
+:global(.mobile-tree__article) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px 7px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 12px;
+  transition:
+    color 0.18s,
+    background 0.18s;
+}
+
+:global(.mobile-tree__article:hover),
+:global(.mobile-tree__article.is-active) {
+  color: var(--accent);
+  background: var(--accent-light);
+}
+
+:global(.mobile-tree__article-index) {
+  min-width: 18px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+:global(.mobile-tree__article-title) {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:global(.mobile-tree__status) {
+  padding: 10px 16px 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+:global(.mobile-tree__status.is-error) {
+  color: #ef4444;
 }
 
 @keyframes scaleIn {

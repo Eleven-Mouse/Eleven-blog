@@ -19,7 +19,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, nextTick, onUnmounted } from 'vue'
 import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/preview.css'
 import { fetchArticleById, fetchArticles } from '@/api/article'
@@ -30,6 +30,7 @@ const blogConfig = useBlogConfigStore()
 const article = ref(null)
 const loading = ref(false)
 const error = ref('')
+let mediaObserver = null
 
 const featuredId = computed(() => Number(blogConfig.config.home_featured_article_id || 0))
 
@@ -67,6 +68,28 @@ const loadFeaturedArticle = async () => {
   }
 }
 
+const hydrateHomeImages = () => {
+  const container = document.querySelector('#home-featured-preview .md-editor-preview')
+  if (!container) return
+  container.querySelectorAll('img').forEach((img) => {
+    img.loading = 'eager'
+    img.decoding = 'async'
+    img.style.display = 'block'
+    img.style.visibility = 'visible'
+    img.style.opacity = '1'
+  })
+}
+
+const setupImageObserver = () => {
+  mediaObserver?.disconnect?.()
+  const root = document.querySelector('#home-featured-preview')
+  if (!root) return
+  mediaObserver = new MutationObserver(() => {
+    hydrateHomeImages()
+  })
+  mediaObserver.observe(root, { childList: true, subtree: true })
+}
+
 watch(
   () => featuredId.value,
   () => {
@@ -74,6 +97,21 @@ watch(
   },
   { immediate: true },
 )
+
+watch(
+  () => article.value?.id,
+  () => {
+    nextTick(() => {
+      hydrateHomeImages()
+      setupImageObserver()
+    })
+  },
+)
+
+onUnmounted(() => {
+  mediaObserver?.disconnect?.()
+  mediaObserver = null
+})
 </script>
 
 <style scoped>
@@ -89,6 +127,15 @@ watch(
 .article-body :deep(.md-editor-preview) {
   background: transparent !important;
   padding: 0 !important;
+}
+
+.article-body :deep(.md-editor-preview img) {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  max-width: 100%;
+  height: auto;
+  margin: 20px auto;
 }
 .home-comments {
   margin-top: 40px;

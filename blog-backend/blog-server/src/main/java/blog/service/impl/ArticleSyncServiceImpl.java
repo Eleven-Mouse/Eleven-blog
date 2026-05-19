@@ -543,8 +543,10 @@ public class ArticleSyncServiceImpl implements ArticleSyncService {
             if (token != null && !token.isBlank()) {
                 headers.set("Authorization", "Bearer " + token);
             }
+            // Use URI overload to avoid RestTemplate re-encoding an already encoded raw URL,
+            // which breaks non-ASCII asset paths (e.g. Chinese file names).
             ResponseEntity<byte[]> response = assetRestTemplate.exchange(
-                    asset.rawUrl(), HttpMethod.GET, new HttpEntity<>(headers), byte[].class
+                    URI.create(asset.rawUrl()), HttpMethod.GET, new HttpEntity<>(headers), byte[].class
             );
             if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null || response.getBody().length == 0) {
                 log.warn("资源下载失败: status={}, url={}", response.getStatusCode(), asset.rawUrl());
