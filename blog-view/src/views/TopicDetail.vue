@@ -14,6 +14,30 @@ const route = useRoute()
 const router = useRouter()
 const loading = ref(false)
 const error = ref('')
+const leadingNumber = (value) => {
+  const m = String(value || '')
+    .trim()
+    .match(/^(\d+)/)
+  return m ? Number(m[1]) : null
+}
+const compareLabel = (a, b) => {
+  const aText = String(a || '').trim()
+  const bText = String(b || '').trim()
+  const aNum = leadingNumber(aText)
+  const bNum = leadingNumber(bText)
+  if (aNum !== null && bNum !== null && aNum !== bNum) return aNum - bNum
+  if (aNum !== null && bNum === null) return -1
+  if (aNum === null && bNum !== null) return 1
+  return aText.localeCompare(bText, 'zh-CN', { numeric: true, sensitivity: 'base' })
+}
+const compareArticles = (a, b) => {
+  const aOrder = Number.isFinite(Number(a?.chapterOrder)) ? Number(a.chapterOrder) : null
+  const bOrder = Number.isFinite(Number(b?.chapterOrder)) ? Number(b.chapterOrder) : null
+  if (aOrder !== null && bOrder !== null && aOrder !== bOrder) return aOrder - bOrder
+  if (aOrder !== null && bOrder === null) return -1
+  if (aOrder === null && bOrder !== null) return 1
+  return compareLabel(a?.title, b?.title)
+}
 
 const openTopic = async () => {
   const topicId = route.params.id
@@ -25,7 +49,7 @@ const openTopic = async () => {
   error.value = ''
   try {
     const res = await fetchArticlesByCategoryId(topicId, { page: 1, size: 1000 })
-    const list = (res?.data || []).sort((a, b) => (a.chapterOrder || 0) - (b.chapterOrder || 0))
+    const list = (res?.data || []).sort(compareArticles)
     if (!list.length) {
       error.value = '该专题下暂无文章'
       return

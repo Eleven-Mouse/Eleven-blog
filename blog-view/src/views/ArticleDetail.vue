@@ -90,7 +90,7 @@
     </template>
 
     <!-- TOC floating button (all screen sizes) -->
-    <button v-if="catalogList.length > 0" class="mobile-toc-btn" @click="showMobileToc = true">
+    <button v-if="article && !loading && !error" class="mobile-toc-btn" @click="showMobileToc = true">
       <svg
         viewBox="0 0 24 24"
         width="20"
@@ -151,17 +151,36 @@ const activeHeading = ref('')
 const showTopicTreePanel = computed(() => article.value && article.value.title !== '首页')
 const panelTransitionReady = ref(false)
 
+const buildCatalogFromDom = (previewEl) => {
+  const headingEls = Array.from(previewEl.querySelectorAll('h1, h2, h3, h4, h5, h6'))
+  return headingEls
+    .map((el, index) => {
+      const uniqueId = `heading-${index}`
+      el.setAttribute('id', uniqueId)
+      return {
+        text: String(el.textContent || '').trim(),
+        level: Number(String(el.tagName || '').replace('H', '')) || 1,
+        uniqueId,
+      }
+    })
+    .filter((item) => item.text)
+}
+
 const onGetCatalog = (list) => {
-  catalogList.value = list.map((item, index) => ({
+  catalogList.value = (list || []).map((item, index) => ({
     ...item,
     uniqueId: `heading-${index}`,
   }))
   nextTick(() => {
     const previewEl = document.querySelector('#preview-only .md-editor-preview')
     if (!previewEl) return
-    previewEl.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach((el, i) => {
-      el.setAttribute('id', `heading-${i}`)
-    })
+    if (!catalogList.value.length) {
+      catalogList.value = buildCatalogFromDom(previewEl)
+    } else {
+      previewEl.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach((el, i) => {
+        el.setAttribute('id', `heading-${i}`)
+      })
+    }
     setupLightbox(previewEl)
     setupCodeCopy(previewEl)
   })
@@ -243,6 +262,13 @@ onMounted(async () => {
   try {
     const data = await fetchArticleById(articleId)
     article.value = data || null
+    nextTick(() => {
+      const previewEl = document.querySelector('#preview-only .md-editor-preview')
+      if (!previewEl) return
+      if (!catalogList.value.length) {
+        catalogList.value = buildCatalogFromDom(previewEl)
+      }
+    })
   } catch (err) {
     error.value = '加载文章失败，请稍后再试。'
     console.error(err)
