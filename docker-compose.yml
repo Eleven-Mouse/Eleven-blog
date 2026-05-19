@@ -1,97 +1,97 @@
 services:
-  mysql_db:
+  mysql:
     image: mysql:8.0
     container_name: blog-mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: 20469960
-      MYSQL_DATABASE: eleven_blog
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
       TZ: Asia/Shanghai
-    volumes:
-      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - db_data:/var/lib/mysql
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./sql/kunxing_blog_cloud_minimal.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p20469960"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
-      retries: 10
-      start_period: 30s
+      retries: 20
+      start_period: 40s
     networks:
       - blog-net
 
   redis:
-    image: redis:alpine
+    image: redis:7-alpine
     container_name: blog-redis
     restart: always
-    command: redis-server --requirepass "123456"
+    command: redis-server --requirepass "${REDIS_PASSWORD}" --appendonly yes
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "123456", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 10s
+      retries: 10
+      start_period: 20s
     networks:
       - blog-net
 
   blog-backend:
-    build:
-      context: ./blog-backend
-      dockerfile: Dockerfile
+    image: kunxingll/blog-backend:20260519-2
     container_name: blog-backend
     restart: always
+    env_file:
+      - .env.backend
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true"
+      SPRING_DATASOURCE_USERNAME: "${MYSQL_USERNAME:-root}"
+      SPRING_DATASOURCE_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      SPRING_DATA_REDIS_HOST: "redis"
+      SPRING_DATA_REDIS_PORT: "6379"
+      SPRING_DATA_REDIS_PASSWORD: "${REDIS_PASSWORD}"
+      SPRING_DATA_REDIS_DATABASE: "1"
+      FILE_UPLOAD_DIR: "/app/uploads"
+      MANAGEMENT_HEALTH_MAIL_ENABLED: "false"
+      TZ: "Asia/Shanghai"
+    volumes:
+      - ${UPLOAD_HOST_DIR:-./upload_data}:/app/uploads
     ports:
       - "8081:8081"
     depends_on:
-      mysql_db:
+      mysql:
         condition: service_healthy
       redis:
         condition: service_healthy
-    volumes:
-      - ./upload_data:/app/uploads
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://blog-mysql:3306/eleven_blog?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=20469960
-      - SPRING_DATA_REDIS_HOST=blog-redis
-      - SPRING_DATA_REDIS_PORT=6379
-      - SPRING_DATA_REDIS_PASSWORD=123456
-      - SPRING_DATA_REDIS_DATABASE=1
-      - FILE_UPLOAD_DIR=/app/uploads
-      - GITHUB_OAUTH_REDIRECT_URI=http://8.162.7.124/oauth/callback
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8081/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
     networks:
       - blog-net
 
   blog-view:
-    build:
-      context: ./blog-view
-      dockerfile: Dockerfile
+    image: kunxingll/blog-view:latest
     container_name: blog-view
     restart: always
     ports:
       - "80:80"
+    volumes:
+      - ./blog-view/nginx-view.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
-      - blog-backend
-    networks:
-      - blog-net
-
-  blog-cms:
-    build:
-      context: ./blog-cms
-      dockerfile: Dockerfile
-    container_name: blog-cms
-    restart: always
-    ports:
-      - "8080:8080"
-    depends_on:
-      - blog-backend
+      blog-backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
     networks:
       - blog-net
 
 volumes:
-  db_data:
+  mysql_data:
   redis_data:
 
 networks:
