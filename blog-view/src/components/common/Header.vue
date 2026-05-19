@@ -980,6 +980,7 @@ watch(
   background: transparent;
   display: grid;
   align-items: center;
+  text-align: left;
   color: var(--text-secondary);
   cursor: pointer;
   transition:
@@ -1003,6 +1004,7 @@ watch(
 
 :global(.mobile-tree__topic-arrow),
 :global(.mobile-tree__group-arrow) {
+  justify-self: end;
   font-size: 11px;
   transition: transform 0.24s ease;
 }
