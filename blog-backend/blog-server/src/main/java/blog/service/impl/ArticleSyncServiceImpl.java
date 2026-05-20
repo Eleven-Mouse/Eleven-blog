@@ -59,7 +59,7 @@ public class ArticleSyncServiceImpl implements ArticleSyncService {
     private static final Pattern OBSIDIAN_EMBED_PATTERN = Pattern.compile("!\\[\\[([^\\]|]+)(?:\\|[^\\]]+)?]]");
     private static final Pattern OBSIDIAN_LINK_PATTERN = Pattern.compile("(?<!!)\\[\\[([^\\]|]+)(?:\\|([^\\]]+))?]]");
     private static final Set<String> ASSET_EXTENSIONS = Set.of(
-            "png", "jpg", "jpeg", "gif", "webp", "svg", "pdf"
+            "png", "jpg", "jpeg", "gif", "webp", "svg", "pdf", "ppt", "pptx", "doc", "docx", "xls", "xlsx"
     );
 
     private final GithubMarkdownFetcher fetcher;

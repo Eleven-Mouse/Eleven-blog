@@ -78,7 +78,7 @@
             <article class="article-page__content animate-fade-in-up">
               <MdPreview
                 editorId="preview-only"
-                :modelValue="article.content"
+                :modelValue="renderedArticleContent"
                 @onGetCatalog="onGetCatalog"
                 :headingId="(index) => `heading-${index}`"
                 :markedHeadingId="(index) => `heading-${index}`"
@@ -138,6 +138,7 @@ import TopicTreeSidebar from '@/components/TopicTreeSidebar.vue'
 import { useUiStore } from '@/stores/ui'
 import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/preview.css'
+import { transformObsidianAssetLinks } from '@/utils/markdownAssets'
 
 const route = useRoute()
 const uiStore = useUiStore()
@@ -150,6 +151,7 @@ const lightboxSrc = ref('')
 const activeHeading = ref('')
 const showTopicTreePanel = computed(() => article.value && article.value.title !== '首页')
 const panelTransitionReady = ref(false)
+const renderedArticleContent = computed(() => transformObsidianAssetLinks(article.value?.content || ''))
 
 const buildCatalogFromDom = (previewEl) => {
   const headingEls = Array.from(previewEl.querySelectorAll('h1, h2, h3, h4, h5, h6'))
@@ -314,7 +316,8 @@ onUnmounted(() => {
 /* ---------- Layout ---------- */
 .article-page__workspace {
   position: relative;
-  --topic-panel-width: 300px;
+  --topic-panel-width: 360px;
+  --topic-panel-gap: 48px;
 }
 
 .article-page__topic-panel {
@@ -322,7 +325,7 @@ onUnmounted(() => {
   top: 56px;
   left: 0;
   height: calc(100vh - 56px);
-  width: 300px;
+  width: var(--topic-panel-width);
   opacity: 0;
   transform: translate3d(-100%, 0, 0);
   pointer-events: none;
@@ -361,9 +364,9 @@ onUnmounted(() => {
 }
 
 .article-page__workspace.is-topic-open .article-page__layout {
-  width: calc(100% - var(--topic-panel-width));
+  width: calc(100% - var(--topic-panel-width) - var(--topic-panel-gap));
   max-width: none;
-  margin-left: var(--topic-panel-width);
+  margin-left: calc(var(--topic-panel-width) + var(--topic-panel-gap));
   margin-right: 0;
   padding: 0 28px;
 }

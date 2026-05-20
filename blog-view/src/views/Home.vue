@@ -6,7 +6,7 @@
 
       <template v-else-if="article">
         <article class="article-body">
-          <MdPreview editorId="home-featured-preview" :modelValue="article.content || ''" />
+          <MdPreview editorId="home-featured-preview" :modelValue="renderedFeaturedContent" />
         </article>
         <section class="home-comments">
           <el-divider />
@@ -25,6 +25,7 @@ import 'md-editor-v3/lib/preview.css'
 import { fetchArticleById, fetchArticles } from '@/api/article'
 import { useBlogConfigStore } from '@/stores/blogConfig'
 import CommentsCard from '@/components/CommentsCard.vue'
+import { transformObsidianAssetLinks } from '@/utils/markdownAssets'
 
 const blogConfig = useBlogConfigStore()
 const article = ref(null)
@@ -33,6 +34,7 @@ const error = ref('')
 let mediaObserver = null
 
 const featuredId = computed(() => Number(blogConfig.config.home_featured_article_id || 0))
+const renderedFeaturedContent = computed(() => transformObsidianAssetLinks(article.value?.content || ''))
 
 const loadFeaturedArticle = async () => {
   loading.value = true
