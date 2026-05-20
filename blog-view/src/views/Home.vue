@@ -119,43 +119,11 @@ onUnmounted(() => {
 
 <style scoped>
 .home {
-  position: relative;
-  overflow: hidden;
   padding-top: 72px;
   padding-bottom: 40px;
 }
 
-.home::before,
-.home::after {
-  content: '';
-  position: absolute;
-  border-radius: 999px;
-  filter: blur(64px);
-  pointer-events: none;
-  opacity: 0.42;
-}
-
-.home::before {
-  width: 280px;
-  height: 280px;
-  top: 48px;
-  left: -120px;
-  background: color-mix(in srgb, var(--accent) 28%, transparent);
-  animation: floatBlobA 8s ease-in-out infinite;
-}
-
-.home::after {
-  width: 220px;
-  height: 220px;
-  right: -90px;
-  bottom: 40px;
-  background: color-mix(in srgb, var(--accent) 20%, #7ec7ff 18%);
-  animation: floatBlobB 9s ease-in-out infinite;
-}
-
 .home-content {
-  position: relative;
-  z-index: 1;
   padding: 24px;
   animation: homeContentRise 0.55s cubic-bezier(0.2, 0.9, 0.2, 1) both;
 }
@@ -230,31 +198,11 @@ onUnmounted(() => {
   }
 }
 
-@keyframes floatBlobA {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-  50% {
-    transform: translate3d(14px, -18px, 0);
-  }
-}
-
-@keyframes floatBlobB {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-  50% {
-    transform: translate3d(-12px, 14px, 0);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .home-content,
   .home-block,
-  .home::before,
-  .home::after {
+  .article-body,
+  .home-comments {
     animation: none !important;
   }
 
