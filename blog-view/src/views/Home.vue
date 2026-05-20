@@ -1,14 +1,14 @@
 <template>
   <div class="home page-container">
-    <section class="home-content">
+    <section class="home-content" :class="{ 'is-ready': homeReady }">
       <div v-if="loading" class="loading-tip">正在加载首页文章...</div>
       <div v-else-if="error" class="error-tip">{{ error }}</div>
 
       <template v-else-if="article">
-        <article class="article-body">
+        <article class="article-body home-block home-block--hero">
           <MdPreview editorId="home-featured-preview" :modelValue="renderedFeaturedContent" />
         </article>
-        <section class="home-comments">
+        <section class="home-comments home-block home-block--comments">
           <el-divider />
           <CommentsCard :blog-id="article.id" />
         </section>
@@ -35,6 +35,7 @@ let mediaObserver = null
 
 const featuredId = computed(() => Number(blogConfig.config.home_featured_article_id || 0))
 const renderedFeaturedContent = computed(() => transformObsidianAssetLinks(article.value?.content || ''))
+const homeReady = computed(() => Boolean(article.value) && !loading.value && !error.value)
 
 const loadFeaturedArticle = async () => {
   loading.value = true
@@ -118,12 +119,72 @@ onUnmounted(() => {
 
 <style scoped>
 .home {
+  position: relative;
+  overflow: hidden;
   padding-top: 72px;
   padding-bottom: 40px;
 }
 
+.home::before,
+.home::after {
+  content: '';
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(64px);
+  pointer-events: none;
+  opacity: 0.42;
+}
+
+.home::before {
+  width: 280px;
+  height: 280px;
+  top: 48px;
+  left: -120px;
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+  animation: floatBlobA 8s ease-in-out infinite;
+}
+
+.home::after {
+  width: 220px;
+  height: 220px;
+  right: -90px;
+  bottom: 40px;
+  background: color-mix(in srgb, var(--accent) 20%, #7ec7ff 18%);
+  animation: floatBlobB 9s ease-in-out infinite;
+}
+
 .home-content {
+  position: relative;
+  z-index: 1;
   padding: 24px;
+  animation: homeContentRise 0.55s cubic-bezier(0.2, 0.9, 0.2, 1) both;
+}
+
+.home-block {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  animation: homeBlockIn 0.62s cubic-bezier(0.2, 0.85, 0.25, 1) forwards;
+}
+
+.home-content.is-ready .home-block--hero {
+  animation-delay: 0.06s;
+}
+
+.home-content.is-ready .home-block--comments {
+  animation-delay: 0.18s;
+}
+
+.article-body,
+.home-comments {
+  transition:
+    transform 0.28s ease,
+    filter 0.28s ease;
+}
+
+.article-body:hover,
+.home-comments:hover {
+  transform: translateY(-2px);
+  filter: saturate(1.03);
 }
 
 .article-body :deep(.md-editor-preview) {
@@ -145,6 +206,62 @@ onUnmounted(() => {
 
 .empty-tip {
   color: var(--text-secondary);
+}
+
+@keyframes homeContentRise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes homeBlockIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes floatBlobA {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(14px, -18px, 0);
+  }
+}
+
+@keyframes floatBlobB {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(-12px, 14px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-content,
+  .home-block,
+  .home::before,
+  .home::after {
+    animation: none !important;
+  }
+
+  .article-body,
+  .home-comments {
+    transition: none;
+  }
 }
 
 @media (max-width: 768px) {
