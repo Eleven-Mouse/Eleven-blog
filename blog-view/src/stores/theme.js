@@ -13,11 +13,9 @@ export const useThemeStore = defineStore('theme', {
     toggleTheme() {
       this.theme = this.theme === 'light' ? 'dark' : 'light';
       localStorage.setItem('theme', this.theme);
-      applyTheme(this.theme);
     },
     initTheme() {
       applyTheme(this.theme);
     }
   },
 });
-

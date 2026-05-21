@@ -1,6 +1,6 @@
 <template>
   <el-switch
-    v-model="isDarkMode"
+    :model-value="isDarkMode"
     @change="toggleTheme"
     inline-prompt
     :active-icon="Moon"
@@ -10,18 +10,27 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import { useThemeStore } from '@/stores/theme';
-import { Sunny, Moon } from '@element-plus/icons-vue';
-import { triggerSilentGithubSync } from '@/api/sync';
+import { computed } from 'vue'
+import { useThemeStore } from '@/stores/theme'
+import { Sunny, Moon } from '@element-plus/icons-vue'
+import { triggerSilentGithubSync } from '@/api/sync'
 
-const themeStore = useThemeStore();
+const themeStore = useThemeStore()
 
-const isDarkMode = computed(() => themeStore.theme === 'dark');
+const isDarkMode = computed(() => themeStore.theme === 'dark')
 
-const toggleTheme = () => {
-  themeStore.toggleTheme();
-  // 静默触发文章自动同步，不阻塞主题切换，也不提示用户
-  triggerSilentGithubSync().catch(() => {});
-};
+const emitTopicsRefresh = () => {
+  window.dispatchEvent(new Event('blog:topics-refresh'))
+}
+
+const toggleTheme = (checked) => {
+  if ((checked && themeStore.theme === 'dark') || (!checked && themeStore.theme === 'light')) {
+    return
+  }
+  themeStore.toggleTheme()
+  // 非阻塞触发同步和分类刷新，不阻塞主题切换 UI
+  triggerSilentGithubSync()
+    .then(() => emitTopicsRefresh())
+    .catch(() => emitTopicsRefresh())
+}
 </script>

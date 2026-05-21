@@ -101,4 +101,10 @@ public interface ArticleMapper {
      */
     @Select("SELECT * FROM article WHERE github_sha = #{githubSha} LIMIT 1")
     ArticleDTO selectByGithubSha(String githubSha);
+
+    /**
+     * 删除指定分类下的所有文章（用于分类同步清理）
+     */
+    @Delete("DELETE FROM article WHERE category_id = #{categoryId}")
+    int deleteByCategoryId(Long categoryId);
 }

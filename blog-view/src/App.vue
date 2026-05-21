@@ -18,7 +18,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useThemeStore } from '@/stores/theme'
 import { useBlogConfigStore } from '@/stores/blogConfig'
 import AppNavbar from '@/components/common/Header.vue'
@@ -27,6 +27,12 @@ import AppFooter from '@/components/common/Footer.vue'
 const themeStore = useThemeStore()
 const blogConfigStore = useBlogConfigStore()
 const isDark = computed(() => themeStore.theme === 'dark')
+
+// 响应式同步：任何导致 theme 状态变更的操作都自动更新 DOM
+watch(() => themeStore.theme, (newTheme) => {
+  document.documentElement.setAttribute('data-theme', newTheme)
+  document.documentElement.classList.toggle('md-editor-dark', newTheme === 'dark')
+})
 
 onMounted(() => {
   themeStore.initTheme()

@@ -10,6 +10,7 @@ import blog.service.GithubMarkdownFetcher;
 import blog.service.GithubRepoScanner;
 import blog.service.SystemConfigService;
 import blog.utils.MarkdownFrontMatter;
+import blog.vo.CategoryVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -185,6 +186,7 @@ public class ArticleSyncServiceImpl implements ArticleSyncService {
         int matched = 0;
         int created = 0;
         int failed = 0;
+        Set<String> discoveredCategoryNames = new HashSet<>();
         Set<String> discoveredGitKeys = new HashSet<>();
 
         for (GithubRepoScanner.MdFileInfo file : files) {
@@ -192,6 +194,11 @@ public class ArticleSyncServiceImpl implements ArticleSyncService {
                 String fileGitKey = buildGitFileKey(owner, repo, branch, file.getPath());
                 if (fileGitKey != null) {
                     discoveredGitKeys.add(fileGitKey);
+                }
+
+                String discoveredCategoryName = discoverCategoryName(file.getPath());
+                if (discoveredCategoryName != null) {
+                    discoveredCategoryNames.add(discoveredCategoryName);
                 }
 
                 String normalizedDownloadUrl = normalizeGithubUrl(file.getDownloadUrl());
@@ -275,12 +282,15 @@ public class ArticleSyncServiceImpl implements ArticleSyncService {
         }
 
         int deleted = cleanupMissingArticles(owner, repo, branch, path, discoveredGitKeys);
+        int deletedCategories = cleanupMissingCategories(discoveredCategoryNames);
 
-        log.info("自动发现完成：匹配={}，新建={}，删除={}，失败={}", matched, created, deleted, failed);
+        log.info("自动发现完成：匹配={}，新建={}，删除文章={}，删除分类={}，失败={}",
+                matched, created, deleted, deletedCategories, failed);
         Map<String, Integer> result = new HashMap<>();
         result.put("matched", matched);
         result.put("created", created);
         result.put("deleted", deleted);
+        result.put("deletedCategories", deletedCategories);
         result.put("failed", failed);
         return result;
     }
@@ -451,6 +461,41 @@ public class ArticleSyncServiceImpl implements ArticleSyncService {
             log.info("删除仓库中已不存在的文章：ID={} URL={}", candidate.getId(), candidate.getGithubUrl());
         }
         return deleted;
+    }
+
+    private int cleanupMissingCategories(Set<String> discoveredCategoryNames) {
+        if (discoveredCategoryNames.isEmpty()) {
+            log.warn("本次扫描未识别到分类，为避免误删，跳过缺失分类清理");
+            return 0;
+        }
+
+        List<CategoryVO> categories = categoryMapper.selectAll();
+        int deleted = 0;
+        for (CategoryVO category : categories) {
+            String categoryName = normalizeCategoryName(category.getName());
+            if (categoryName == null || discoveredCategoryNames.contains(categoryName)) {
+                continue;
+            }
+
+            // 分类不在 GitHub 仓库中，先清理其下所有文章再删除分类
+            if (category.getArticleCount() != null && category.getArticleCount() > 0) {
+                int removed = articleMapper.deleteByCategoryId(category.getId());
+                log.info("清理孤立分类下的文章：分类={} (ID={})，删除文章数={}", category.getName(), category.getId(), removed);
+            }
+
+            categoryMapper.delete(category.getId());
+            deleted++;
+            log.info("删除仓库中已不存在的分类：ID={} 名称={}", category.getId(), category.getName());
+        }
+        return deleted;
+    }
+
+    private String discoverCategoryName(String filePath) {
+        String rawCategory = MarkdownFrontMatter.inferCategoryFromPath(filePath);
+        if (rawCategory == null || rawCategory.isBlank()) {
+            return null;
+        }
+        return normalizeCategoryName(parseCategoryMeta(rawCategory).displayName());
     }
 
     private void markSyncSuccess(Long articleId) {
@@ -912,6 +957,10 @@ public class ArticleSyncServiceImpl implements ArticleSyncService {
         }
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private String normalizeCategoryName(String value) {
+        return trimToNull(value);
     }
 
     private CategoryMeta parseCategoryMeta(String raw) {

@@ -264,6 +264,7 @@ const openMobileTopicIds = ref(new Set())
 const openMobileGroupKeys = ref(new Set())
 const loadedMobileTopicIds = ref(new Set())
 
+let categoryPollTimer = null
 let debounceTimer = null
 const isHomeActive = computed(() => route.path === '/home' || route.path === '/')
 const isArticleRoute = computed(() => route.path.startsWith('/article/'))
@@ -620,13 +621,18 @@ const loadTopics = async () => {
 
 onMounted(() => {
   loadTopics()
+  window.addEventListener('blog:topics-refresh', loadTopics)
   window.addEventListener('scroll', onScroll, { passive: true })
   window.addEventListener('keydown', onKeydown)
+  // 每5分钟静默刷新分类，确保后端同步后前端自动更新
+  categoryPollTimer = setInterval(loadTopics, 5 * 60 * 1000)
 })
 
 onUnmounted(() => {
+  window.removeEventListener('blog:topics-refresh', loadTopics)
   window.removeEventListener('scroll', onScroll)
   window.removeEventListener('keydown', onKeydown)
+  clearInterval(categoryPollTimer)
 })
 
 watch(
