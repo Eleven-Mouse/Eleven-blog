@@ -173,48 +173,97 @@ public class ArticleSyncServiceImpl implements ArticleSyncService {
         List<GithubRepoScanner.MdFileInfo> files = scanner.scanMarkdownFiles(owner, repo, branch, path);
         log.info("扫描到{}个 Markdown 文件", files.size());
 
+        List<Article> syncCandidates = articleMapper.selectSyncCandidates();
+        Map<String, Long> existingIdByGitKey = new HashMap<>();
+        for (Article candidate : syncCandidates) {
+            String key = buildGitFileKeyFromUrl(candidate.getGithubUrl());
+            if (key != null) {
+                existingIdByGitKey.putIfAbsent(key, candidate.getId());
+            }
+        }
+
         int matched = 0;
         int created = 0;
         int failed = 0;
+        Set<String> discoveredGitKeys = new HashSet<>();
 
         for (GithubRepoScanner.MdFileInfo file : files) {
             try {
-                // SHA 增量比对：SHA 不变则跳过拉取
-                if (file.getSha() != null) {
-                    ArticleDTO existingByTitle = articleMapper.selectByTitle(
-                            file.getTitle() != null ? file.getTitle() : file.getName().replace(".md", ""));
-                    if (existingByTitle != null && file.getSha().equals(existingByTitle.getGithubSha())) {
-                        log.info("SHA 未变化，跳过：'{}'", file.getName());
-                        continue;
+                String fileGitKey = buildGitFileKey(owner, repo, branch, file.getPath());
+                if (fileGitKey != null) {
+                    discoveredGitKeys.add(fileGitKey);
+                }
+
+                String normalizedDownloadUrl = normalizeGithubUrl(file.getDownloadUrl());
+                ArticleDTO existing = null;
+                if (normalizedDownloadUrl != null) {
+                    existing = articleMapper.selectByGithubUrl(normalizedDownloadUrl);
+                }
+                if (existing == null) {
+                    existing = articleMapper.selectByGithubUrl(file.getDownloadUrl());
+                }
+                if (existing == null && fileGitKey != null) {
+                    Long existingId = existingIdByGitKey.get(fileGitKey);
+                    if (existingId != null) {
+                        existing = articleMapper.selectById(existingId);
                     }
                 }
-
-                // 拉取 Markdown 内容
-                String rawMarkdown = fetcher.fetchMarkdown(file.getDownloadUrl());
-                if (rawMarkdown == null || rawMarkdown.isBlank()) {
-                    failed++;
-                    log.warn("自动发现-跳过：无法拉取 '{}'", file.getName());
-                    continue;
+                if (existing == null && file.getSha() != null) {
+                    existing = articleMapper.selectByGithubSha(file.getSha());
                 }
-                String processedMarkdown = processMarkdownAssets(rawMarkdown, owner, repo, branch, file.getPath(), token);
 
-                // 解析 Front Matter
-                MarkdownFrontMatter fm = MarkdownFrontMatter.parse(rawMarkdown);
+                String fallbackTitle = file.getTitle() != null ? file.getTitle() : file.getName().replace(".md", "");
+                String title = fallbackTitle;
+                String rawMarkdown = null;
+                String processedMarkdown = null;
+                MarkdownFrontMatter fm = new MarkdownFrontMatter();
 
-                // 确定标题：Front Matter title > 文件名
-                String title = fm.getTitle() != null ? fm.getTitle() : file.getTitle();
+                boolean needFetch = existing == null
+                        || file.getSha() == null
+                        || existing.getGithubSha() == null
+                        || !file.getSha().equals(existing.getGithubSha());
 
-                // 按标题匹配已有文章
-                ArticleDTO existing = articleMapper.selectByTitle(title);
+                if (needFetch) {
+                    rawMarkdown = fetcher.fetchMarkdown(file.getDownloadUrl());
+                    if (rawMarkdown == null || rawMarkdown.isBlank()) {
+                        failed++;
+                        log.warn("自动发现-跳过：无法拉取 '{}'", file.getName());
+                        continue;
+                    }
+                    processedMarkdown = processMarkdownAssets(rawMarkdown, owner, repo, branch, file.getPath(), token);
+                    fm = MarkdownFrontMatter.parse(rawMarkdown);
+                    if (fm.getTitle() != null && !fm.getTitle().isBlank()) {
+                        title = fm.getTitle();
+                    }
+                } else if (existing != null && existing.getContent() != null) {
+                    MarkdownFrontMatter existingFm = MarkdownFrontMatter.parse(existing.getContent());
+                    if (existingFm.getTitle() != null && !existingFm.getTitle().isBlank()) {
+                        title = existingFm.getTitle();
+                    }
+                    fm = existingFm;
+                }
+
+                if (existing == null) {
+                    existing = articleMapper.selectByTitle(title);
+                }
 
                 if (existing != null) {
-                    updateExistingArticle(existing, file.getDownloadUrl(), fm, file.getPath(), file.getSha());
-                    syncArticle(existing.getId());
+                    updateExistingArticle(existing, title,
+                            normalizedDownloadUrl != null ? normalizedDownloadUrl : file.getDownloadUrl(),
+                            fm, file.getPath(), file.getSha());
+                    if (needFetch) {
+                        syncArticle(existing.getId());
+                    } else {
+                        markSyncSuccess(existing.getId());
+                    }
                     setHomeFeaturedIfNeeded(existing.getId(), title, fm);
                     matched++;
                     log.info("自动发现-匹配：'{}' → 文章ID={}", title, existing.getId());
                 } else {
-                    Long createdId = createArticleFromGithub(title, file.getDownloadUrl(), fm, processedMarkdown, file.getPath(), file.getSha());
+                    Long createdId = createArticleFromGithub(
+                            title,
+                            normalizedDownloadUrl != null ? normalizedDownloadUrl : file.getDownloadUrl(),
+                            fm, processedMarkdown, file.getPath(), file.getSha());
                     setHomeFeaturedIfNeeded(createdId, title, fm);
                     created++;
                     log.info("自动发现-新建：'{}'", title);
@@ -225,10 +274,13 @@ public class ArticleSyncServiceImpl implements ArticleSyncService {
             }
         }
 
-        log.info("自动发现完成：匹配={}，新建={}，失败={}", matched, created, failed);
+        int deleted = cleanupMissingArticles(owner, repo, branch, path, discoveredGitKeys);
+
+        log.info("自动发现完成：匹配={}，新建={}，删除={}，失败={}", matched, created, deleted, failed);
         Map<String, Integer> result = new HashMap<>();
         result.put("matched", matched);
         result.put("created", created);
+        result.put("deleted", deleted);
         result.put("failed", failed);
         return result;
     }
@@ -295,10 +347,11 @@ public class ArticleSyncServiceImpl implements ArticleSyncService {
 
     // ==================== 创建/更新文章 ====================
 
-    private void updateExistingArticle(ArticleDTO existing, String downloadUrl,
+    private void updateExistingArticle(ArticleDTO existing, String title, String downloadUrl,
                                        MarkdownFrontMatter fm, String filePath, String sha) {
         Article updateEntity = new Article();
         updateEntity.setId(existing.getId());
+        updateEntity.setTitle(title);
         updateEntity.setGithubUrl(downloadUrl);
         if (sha != null) {
             updateEntity.setGithubSha(sha);
@@ -369,8 +422,35 @@ public class ArticleSyncServiceImpl implements ArticleSyncService {
         Map<String, Integer> empty = new HashMap<>();
         empty.put("matched", 0);
         empty.put("created", 0);
+        empty.put("deleted", 0);
         empty.put("failed", 0);
         return empty;
+    }
+
+    private int cleanupMissingArticles(String owner, String repo, String branch, String pathPrefix, Set<String> discoveredGitKeys) {
+        if (discoveredGitKeys.isEmpty()) {
+            log.warn("本次扫描结果为空，为避免误删，跳过缺失文章清理");
+            return 0;
+        }
+
+        List<Article> candidates = articleMapper.selectSyncCandidates();
+        int deleted = 0;
+        for (Article candidate : candidates) {
+            RepoContext context = parseRepoContext(candidate.getGithubUrl());
+            if (!isManagedByCurrentSync(context, owner, repo, branch, pathPrefix)) {
+                continue;
+            }
+
+            String articleKey = buildGitFileKeyFromContext(context);
+            if (articleKey == null || discoveredGitKeys.contains(articleKey)) {
+                continue;
+            }
+
+            articleMapper.deleteById(candidate.getId());
+            deleted++;
+            log.info("删除仓库中已不存在的文章：ID={} URL={}", candidate.getId(), candidate.getGithubUrl());
+        }
+        return deleted;
     }
 
     private void markSyncSuccess(Long articleId) {
@@ -571,6 +651,14 @@ public class ArticleSyncServiceImpl implements ArticleSyncService {
                 encodePath(assetPath);
     }
 
+    private String normalizeGithubUrl(String githubUrl) {
+        RepoContext context = parseRepoContext(githubUrl);
+        if (context == null) {
+            return githubUrl;
+        }
+        return buildRawUrl(context.owner(), context.repo(), context.branch(), context.filePath());
+    }
+
     private String encodePath(String path) {
         String[] segments = path.split("/");
         List<String> encoded = new ArrayList<>();
@@ -650,6 +738,54 @@ public class ArticleSyncServiceImpl implements ArticleSyncService {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    private String buildGitFileKeyFromUrl(String githubUrl) {
+        RepoContext context = parseRepoContext(githubUrl);
+        return buildGitFileKeyFromContext(context);
+    }
+
+    private String buildGitFileKey(String owner, String repo, String branch, String filePath) {
+        if (owner == null || repo == null || branch == null) {
+            return null;
+        }
+        String normalizedPath = normalizeRepoPath(filePath);
+        if (normalizedPath == null) {
+            return null;
+        }
+        return owner.toLowerCase(Locale.ROOT) + "/" +
+                repo.toLowerCase(Locale.ROOT) + "/" +
+                branch + "/" +
+                normalizedPath;
+    }
+
+    private String buildGitFileKeyFromContext(RepoContext context) {
+        if (context == null) {
+            return null;
+        }
+        return buildGitFileKey(context.owner(), context.repo(), context.branch(), context.filePath());
+    }
+
+    private boolean isManagedByCurrentSync(RepoContext context, String owner, String repo, String branch, String pathPrefix) {
+        if (context == null) {
+            return false;
+        }
+        if (!context.owner().equalsIgnoreCase(owner) || !context.repo().equalsIgnoreCase(repo)) {
+            return false;
+        }
+        if (!Objects.equals(context.branch(), branch)) {
+            return false;
+        }
+
+        String normalizedPrefix = normalizeRepoPath(pathPrefix);
+        if (normalizedPrefix == null || normalizedPrefix.isBlank()) {
+            return true;
+        }
+        String normalizedFilePath = normalizeRepoPath(context.filePath());
+        if (normalizedFilePath == null) {
+            return false;
+        }
+        return normalizedFilePath.equals(normalizedPrefix) || normalizedFilePath.startsWith(normalizedPrefix + "/");
     }
 
     private String safeUrlPath(String token) {

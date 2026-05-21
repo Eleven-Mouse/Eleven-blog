@@ -104,6 +104,7 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/api/archive/**", "GET"),
                                 new AntPathRequestMatcher("/api/blog/**", "GET")
                         ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/blog/sync/silent").permitAll()
                         // 评论接口 + 访客头像上传 (post 请求)
                         .requestMatchers(HttpMethod.POST,
                                 "/api/comments/**",

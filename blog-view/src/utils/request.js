@@ -33,6 +33,7 @@ service.interceptors.response.use(
   },
   (error) => {
     const config = error.config
+    const silent = Boolean(config?.silent)
     const status = error?.response?.status
     const url = String(config?.url || '')
 
@@ -45,6 +46,9 @@ service.interceptors.response.use(
     if (error.code === 'ECONNABORTED' && config && !config._retry) {
       config._retry = true
       return service(config)
+    }
+    if (silent) {
+      return Promise.reject(error)
     }
     console.error('Network Error:', error)
     ElMessage({

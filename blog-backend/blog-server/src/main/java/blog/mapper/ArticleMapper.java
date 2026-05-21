@@ -89,4 +89,16 @@ public interface ArticleMapper {
      */
     @Select("SELECT * FROM article WHERE title = #{title} LIMIT 1")
     ArticleDTO selectByTitle(String title);
+
+    /**
+     * 根据 GitHub Raw URL 精确查询文章
+     */
+    @Select("SELECT * FROM article WHERE github_url = #{githubUrl} LIMIT 1")
+    ArticleDTO selectByGithubUrl(String githubUrl);
+
+    /**
+     * 根据 GitHub Blob SHA 查询文章
+     */
+    @Select("SELECT * FROM article WHERE github_sha = #{githubSha} LIMIT 1")
+    ArticleDTO selectByGithubSha(String githubSha);
 }
