@@ -11,7 +11,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -97,12 +96,12 @@ public class SecurityConfig {
                         .requestMatchers("/api/comments/**", "/comments/**").permitAll()
 
                         // 3. 公共只读接口 (GET 请求) - 所有人(包括游客)可访问
-                        .requestMatchers(
-                                new AntPathRequestMatcher("/api/articles/**", "GET"),
-                                new AntPathRequestMatcher("/api/categories/**", "GET"),
-                                new AntPathRequestMatcher("/api/tags/**", "GET"),
-                                new AntPathRequestMatcher("/api/archive/**", "GET"),
-                                new AntPathRequestMatcher("/api/blog/**", "GET")
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/articles", "/api/articles/**",
+                                "/api/categories", "/api/categories/**",
+                                "/api/tags", "/api/tags/**",
+                                "/api/archive", "/api/archive/**",
+                                "/api/blog", "/api/blog/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/blog/sync/silent").permitAll()
                         // 评论接口 + 访客头像上传 (post 请求)

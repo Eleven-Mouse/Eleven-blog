@@ -36,9 +36,13 @@ service.interceptors.response.use(
     const silent = Boolean(config?.silent)
     const status = error?.response?.status
     const url = String(config?.url || '')
+    const respMsg = error?.response?.data?.msg || error?.response?.data?.message
 
     // 已知公开接口若被后端误拦截为 401，前端静默降级处理
-    if (status === 401 && (url.includes('/comments') || url.includes('/blog/config'))) {
+    if (
+      status === 401 &&
+      (url.includes('/comments') || url.includes('/blog/config') || url.includes('/blog/sync/silent'))
+    ) {
       return Promise.reject(error)
     }
 
@@ -52,7 +56,7 @@ service.interceptors.response.use(
     }
     console.error('Network Error:', error)
     ElMessage({
-      message: error.message || '网络错误，请检查您的连接',
+      message: respMsg || error.message || '网络错误，请检查您的连接',
       type: 'error',
       duration: 5 * 1000,
     })
