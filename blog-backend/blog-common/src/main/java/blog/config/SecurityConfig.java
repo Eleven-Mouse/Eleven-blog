@@ -103,6 +103,13 @@ public class SecurityConfig {
                                 "/api/archive", "/api/archive/**",
                                 "/api/blog", "/api/blog/**"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.HEAD,
+                                "/api/articles", "/api/articles/**",
+                                "/api/categories", "/api/categories/**",
+                                "/api/tags", "/api/tags/**",
+                                "/api/archive", "/api/archive/**",
+                                "/api/blog", "/api/blog/**"
+                        ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/blog/sync/silent").permitAll()
                         // 评论接口 + 访客头像上传 (post 请求)
                         .requestMatchers(HttpMethod.POST,
