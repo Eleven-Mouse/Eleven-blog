@@ -1,4 +1,5 @@
 
+<div align="center">
 # Eleven Blog
 
 **以 GitHub 为内容源的极简个人博客系统**
