@@ -7,6 +7,9 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.InputStream;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
 
@@ -45,17 +48,33 @@ public class GithubMarkdownFetcherImpl implements GithubMarkdownFetcher {
         for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
             try {
                 HttpHeaders headers = buildHeaders();
+                String token = getToken();
 
-                ResponseEntity<String> response = restTemplate.exchange(
-                        rawUrl, HttpMethod.GET, new HttpEntity<>(headers), String.class
+                String content = restTemplate.execute(
+                        URI.create(rawUrl), HttpMethod.GET,
+                        request -> {
+                            request.getHeaders().addAll(headers);
+                        },
+                        response -> {
+                            if (!response.getStatusCode().is2xxSuccessful()) {
+                                log.warn("GitHub 返回状态: {}，URL: {}", response.getStatusCode(), rawUrl);
+                                return null;
+                            }
+                            try (InputStream is = response.getBody()) {
+                                byte[] bytes = is.readAllBytes();
+                                if (bytes.length == 0) {
+                                    log.warn("GitHub 返回空响应体，URL: {}", rawUrl);
+                                    return null;
+                                }
+                                return new String(bytes, StandardCharsets.UTF_8);
+                            }
+                        }
                 );
 
-                if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-                    log.info("成功获取 GitHub Markdown，URL: {}，长度: {}", rawUrl, response.getBody().length());
-                    return response.getBody();
+                if (content != null) {
+                    log.info("成功获取 GitHub Markdown，URL: {}，长度: {}", rawUrl, content.length());
+                    return content;
                 }
-
-                log.warn("GitHub 返回非200状态: {}，URL: {}", response.getStatusCode(), rawUrl);
             } catch (Exception e) {
                 log.warn("获取 GitHub Markdown 失败（第{}/{}次），URL: {}，原因: {}",
                         attempt, MAX_RETRIES, rawUrl, e.getMessage());

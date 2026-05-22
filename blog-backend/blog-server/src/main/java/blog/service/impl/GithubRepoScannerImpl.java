@@ -10,6 +10,8 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -88,7 +90,7 @@ public class GithubRepoScannerImpl implements GithubRepoScanner {
 
                 if ("blob".equals(type) && itemPath.endsWith(".md")) {
                     String downloadUrl = String.format("https://raw.githubusercontent.com/%s/%s/%s/%s",
-                            owner, repo, branch, itemPath);
+                            owner, repo, branch, encodePath(itemPath));
                     String name = itemPath.substring(itemPath.lastIndexOf('/') + 1);
                     String title = name.endsWith(".md") ? name.substring(0, name.length() - 3) : name;
                     result.add(new MdFileInfo(name, title, downloadUrl, itemPath, sha));
@@ -140,7 +142,7 @@ public class GithubRepoScannerImpl implements GithubRepoScanner {
                     String downloadUrl = item.getString("download_url");
                     if (downloadUrl == null || downloadUrl.isEmpty()) {
                         downloadUrl = String.format("https://raw.githubusercontent.com/%s/%s/%s/%s",
-                                owner, repo, branch, itemPath);
+                                owner, repo, branch, encodePath(itemPath));
                     }
                     String title = name.endsWith(".md") ? name.substring(0, name.length() - 3) : name;
                     result.add(new MdFileInfo(name, title, downloadUrl, itemPath, sha));
@@ -197,5 +199,14 @@ public class GithubRepoScannerImpl implements GithubRepoScanner {
         }
         sb.append("?ref=").append(branch);
         return sb.toString();
+    }
+
+    private String encodePath(String path) {
+        String[] segments = path.split("/");
+        List<String> encoded = new ArrayList<>();
+        for (String seg : segments) {
+            encoded.add(URLEncoder.encode(seg, StandardCharsets.UTF_8).replace("+", "%20"));
+        }
+        return String.join("/", encoded);
     }
 }

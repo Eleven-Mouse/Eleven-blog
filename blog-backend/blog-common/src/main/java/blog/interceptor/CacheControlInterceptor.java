@@ -31,6 +31,12 @@ public class CacheControlInterceptor implements HandlerInterceptor {
 
         String uri = request.getRequestURI();
 
+        // 同步接口不缓存，必须每次回源
+        if (uri.startsWith("/api/blog/sync")) {
+            response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+            return true;
+        }
+
         // 长缓存：分类、标签、博客配置 — 很少变动
         if (uri.startsWith("/api/categories")
                 || uri.startsWith("/api/tags")
@@ -71,6 +77,14 @@ public class CacheControlInterceptor implements HandlerInterceptor {
                 "public, max-age=" + maxAge
                         + ", s-maxage=" + sMaxage
                         + ", stale-while-revalidate=" + staleWhileReval);
-        response.setHeader("Vary", "Accept-Encoding");
+        response.setHeader("Vary", "Accept-Encoding, Origin");
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+        if (response.getStatus() >= 400) {
+            response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+            response.setHeader("Pragma", "no-cache");
+        }
     }
 }
