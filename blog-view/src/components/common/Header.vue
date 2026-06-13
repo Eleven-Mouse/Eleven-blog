@@ -69,6 +69,17 @@
         <button class="navbar__hamburger" @click="drawerOpen = true" aria-label="Menu">
           <span /><span /><span />
         </button>
+        <button
+          v-if="canManualSync"
+          class="navbar__icon-btn"
+          :class="{ 'is-disabled': syncLoading }"
+          :disabled="syncLoading"
+          @click="handleManualSync"
+          :aria-label="syncLoading ? '正在同步文章' : '同步文章'"
+          :title="syncLoading ? '正在同步文章' : '同步文章'"
+        >
+          <RefreshRight :class="{ 'is-spinning': syncLoading }" />
+        </button>
       </div>
     </div>
 
@@ -235,8 +246,12 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { RefreshRight } from '@element-plus/icons-vue'
 import { fetchArticles } from '@/api/article.js'
 import { fetchArticlesByCategoryId, fetchCategories } from '@/api/categories'
+import { triggerSilentGithubSync } from '@/api/sync'
+import { resolveContentMode } from '@/content/siteContent'
 import ThemeToggle from './ThemeSwitcher.vue'
 import { useBlogConfigStore } from '@/stores/blogConfig'
 import { useUiStore } from '@/stores/ui'
@@ -263,6 +278,8 @@ const drawerTreeError = ref('')
 const openMobileTopicIds = ref(new Set())
 const openMobileGroupKeys = ref(new Set())
 const loadedMobileTopicIds = ref(new Set())
+const syncLoading = ref(false)
+const contentMode = ref('unknown')
 
 let categoryPollTimer = null
 let debounceTimer = null
@@ -271,6 +288,7 @@ const isArticleRoute = computed(() => route.path.startsWith('/article/'))
 const activeDrawerArticleId = computed(() =>
   route.path.startsWith('/article/') ? Number(route.params.id || 0) : 0,
 )
+const canManualSync = computed(() => contentMode.value === 'api')
 
 const isTopicItemActive = (topic) => {
   if (!route.path.startsWith('/topic/')) return false
@@ -353,6 +371,45 @@ const handleSelectArticle = (item) => {
 
 const toggleTopicTree = () => {
   uiStore.toggleTopicTree()
+}
+
+const emitTopicsRefresh = () => {
+  window.dispatchEvent(new Event('blog:topics-refresh'))
+}
+
+const formatSyncResultMessage = (result) => {
+  if (!result || !Object.keys(result).length) {
+    return '同步已完成，本次没有新的变更'
+  }
+  const matched = Number(result.matched || 0)
+  const created = Number(result.created || 0)
+  const deleted = Number(result.deleted || 0)
+  const deletedCategories = Number(result.deletedCategories || 0)
+  const failed = Number(result.failed || 0)
+  return `同步完成：匹配 ${matched} 篇，新建 ${created} 篇，删除 ${deleted} 篇，清理分类 ${deletedCategories} 个，失败 ${failed} 篇`
+}
+
+const handleManualSync = async () => {
+  if (syncLoading.value) return
+  syncLoading.value = true
+  const loadingMessage = ElMessage({
+    message: '正在同步文章',
+    type: 'info',
+    duration: 0,
+    showClose: true,
+  })
+
+  try {
+    const result = await triggerSilentGithubSync()
+    loadingMessage.close()
+    emitTopicsRefresh()
+    ElMessage.success(formatSyncResultMessage(result))
+  } catch (error) {
+    loadingMessage.close()
+    ElMessage.error(error?.message || '文章同步失败，请稍后重试')
+  } finally {
+    syncLoading.value = false
+  }
 }
 
 const mobileGroupKey = (topicId, groupKey) => `${Number(topicId)}:${String(groupKey || '')}`
@@ -620,6 +677,13 @@ const loadTopics = async () => {
 }
 
 onMounted(() => {
+  resolveContentMode()
+    .then((mode) => {
+      contentMode.value = mode
+    })
+    .catch(() => {
+      contentMode.value = 'api'
+    })
   loadTopics()
   window.addEventListener('blog:topics-refresh', loadTopics)
   window.addEventListener('scroll', onScroll, { passive: true })
@@ -773,6 +837,17 @@ watch(
 .navbar__icon-btn.is-active {
   color: var(--accent);
   background: var(--accent-light);
+}
+.navbar__icon-btn.is-disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+.navbar__icon-btn :deep(svg) {
+  width: 18px;
+  height: 18px;
+}
+.navbar__icon-btn :deep(.is-spinning) {
+  animation: spin 0.9s linear infinite;
 }
 
 .navbar__hamburger {

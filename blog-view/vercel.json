@@ -7,5 +7,13 @@
     { "source": "/upload/:match*", "destination": "http://8.130.123.195:8081/upload/:match*" },
     { "source": "/webhook/:match*", "destination": "http://8.130.123.195:8081/webhook/:match*" },
     { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/content/site.json",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=300, s-maxage=600, stale-while-revalidate=86400" }
+      ]
+    }
   ]
 }

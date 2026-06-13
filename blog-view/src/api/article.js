@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+import { getStaticArticleById, getStaticArticleList, withContentSource } from '@/content/siteContent'
 
 /**
  * 获取文章列表（支持分页和筛选）
@@ -12,11 +13,15 @@ import request from '@/utils/request'
  * @param {string} [params.order] - 排序方式
  */
 export function fetchArticles(params) {
-  return request({
-    url: '/articles',
-    method: 'get',
-    params,
-  })
+  return withContentSource(
+    (site) => getStaticArticleList(site, params),
+    () =>
+      request({
+        url: '/articles',
+        method: 'get',
+        params,
+      }),
+  )
 }
 
 /**
@@ -24,10 +29,13 @@ export function fetchArticles(params) {
  * @param {number} id - 文章ID
  */
 export function fetchArticleById(id) {
-  return request({
-    url: `/articles/${id}`,
-    method: 'get',
-  })
+  return withContentSource(
+    (site) => getStaticArticleById(site, id),
+    () =>
+      request({
+        url: `/articles/${id}`,
+        method: 'get',
+      }),
+  )
 }
-
 

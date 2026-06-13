@@ -1,13 +1,23 @@
 import request from '@/utils/request';
+import {
+  getStaticArticleList,
+  getStaticCategories,
+  getStaticCategoryById,
+  withContentSource,
+} from '@/content/siteContent'
 
 /**
  * 获取分类列表
  */
 export function fetchCategories() {
-  return request({
-    url: '/categories',
-    method: 'get',
-  });
+  return withContentSource(
+    (site) => getStaticCategories(site),
+    () =>
+      request({
+        url: '/categories',
+        method: 'get',
+      }),
+  )
 }
 
 /**
@@ -15,10 +25,14 @@ export function fetchCategories() {
  * @param {number} id - 分类ID
  */
 export function fetchCategoryById(id) {
-  return request({
-    url: `/categories/${id}`,
-    method: 'get',
-  });
+  return withContentSource(
+    (site) => getStaticCategoryById(site, id),
+    () =>
+      request({
+        url: `/categories/${id}`,
+        method: 'get',
+      }),
+  )
 }
 
 
@@ -32,9 +46,13 @@ export function fetchArticlesByCategoryId(id, params) {
     ...(params || {}),
     categoryId: id,
   };
-  return request({
-    url: '/articles',
-    method: 'get',
-    params: mergedParams,
-  });
+  return withContentSource(
+    (site) => getStaticArticleList(site, mergedParams),
+    () =>
+      request({
+        url: '/articles',
+        method: 'get',
+        params: mergedParams,
+      }),
+  )
 }

@@ -1,13 +1,22 @@
 import request from '@/utils/request';
+import {
+  getStaticArticlesByTagId,
+  getStaticTags,
+  withContentSource,
+} from '@/content/siteContent'
 
 /**
  * 获取标签列表
  */
 export function fetchTags() {
-  return request({
-    url: '/tags',
-    method: 'get',
-  });
+  return withContentSource(
+    (site) => getStaticTags(site),
+    () =>
+      request({
+        url: '/tags',
+        method: 'get',
+      }),
+  )
 }
 
 
@@ -17,11 +26,14 @@ export function fetchTags() {
  * @param {object} params - 查询参数（如分页）
  */
 export function fetchArticlesByTagId(id, params) {
-  return request({
-    url: `/tags/${id}/articles`,
-    method: 'get',
-    params,
-  });
+  return withContentSource(
+    (site) => getStaticArticlesByTagId(site, id, params),
+    () =>
+      request({
+        url: `/tags/${id}/articles`,
+        method: 'get',
+        params,
+      }),
+  )
 }
-
 

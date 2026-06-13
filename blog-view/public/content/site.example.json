@@ -1,0 +1,45 @@
+{
+  "generatedAt": "2026-06-13T00:00:00.000Z",
+  "config": {
+    "blog_name": "Kunxing Blog",
+    "blog_bio": "把文章静态化后，读者就不用跨境排队了。",
+    "blog_github_url": "https://github.com/your-name/your-blog-content",
+    "home_featured_article_id": 1
+  },
+  "categories": [
+    {
+      "id": 1,
+      "name": "Java",
+      "slug": "java",
+      "description": "示例专题",
+      "coverImage": "",
+      "sortOrder": 1,
+      "articleCount": 1
+    }
+  ],
+  "tags": [
+    {
+      "id": 1,
+      "name": "Spring",
+      "articleIds": [1]
+    }
+  ],
+  "articles": [
+    {
+      "id": 1,
+      "title": "首页",
+      "content": "# 首页\\n\\n把真正的 `site.json` 放到 `public/content/site.json`，前端就会优先读取静态内容。",
+      "summary": "静态内容数据格式示例",
+      "categoryId": 1,
+      "categoryName": "Java",
+      "chapterOrder": 1,
+      "publishTime": "2026-06-13T00:00:00.000Z",
+      "updateTime": "2026-06-13T00:00:00.000Z",
+      "githubUrl": "notes/Java/首页.md",
+      "tags": ["Spring"],
+      "tagIds": [1],
+      "isComment": 1,
+      "viewCount": 0
+    }
+  ]
+}
