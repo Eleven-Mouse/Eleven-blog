@@ -99,5 +99,104 @@ class ArticleSyncServiceRenameIntegrationTest {
 
         assertThat(articleMapper.selectSyncCandidates()).hasSize(1);
     }
+
+    @Test
+    void autoDiscover_shouldCreateNewArticle_whenExistingManualArticleHasSameTitle() {
+        jdbcTemplate.update(
+                """
+                INSERT INTO category(name, slug, sort_order, create_time, update_time)
+                VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                """,
+                "面筋", "mi-jin", 10
+        );
+        Long existingCategoryId = jdbcTemplate.queryForObject(
+                "SELECT id FROM category WHERE name = ?",
+                Long.class,
+                "面筋"
+        );
+        jdbcTemplate.update(
+                """
+                INSERT INTO article(title, content, category_id, chapter_order, reading_minutes, is_core, view_count,
+                                    is_comment, publish_time, create_time, update_time)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                """,
+                "agent总结", "manual content", existingCategoryId, 1, 8, 0, 0, 1
+        );
+
+        systemConfigService.updateConfig(Map.of("github_sync_path", ""));
+
+        String newPath = "10-面筋/agent总结.md";
+        String newUrl = "https://raw.githubusercontent.com/demo-owner/demo-repo/main/" + newPath;
+        GithubRepoScanner.MdFileInfo discoveredFile = new GithubRepoScanner.MdFileInfo(
+                "agent总结.md", "agent总结", newUrl, newPath, "agent-sha"
+        );
+
+        when(scanner.scanMarkdownFiles(eq("demo-owner"), eq("demo-repo"), eq("main"), eq("")))
+                .thenReturn(List.of(discoveredFile));
+        when(fetcher.fetchMarkdown(newUrl)).thenReturn("# agent summary\nnew content");
+
+        Map<String, Integer> result = articleSyncService.autoDiscover();
+
+        assertThat(result.get("created")).isEqualTo(1);
+        assertThat(result.get("matched")).isEqualTo(0);
+        assertThat(result.get("failed")).isEqualTo(0);
+
+        ArticleDTO synced = articleMapper.selectByGithubSha("agent-sha");
+        assertThat(synced).isNotNull();
+        assertThat(synced.getTitle()).isEqualTo("agent总结");
+
+        Integer countByTitle = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM article WHERE title = ?",
+                Integer.class,
+                "agent总结"
+        );
+        assertThat(countByTitle).isEqualTo(2);
+    }
+
+    @Test
+    void autoDiscover_shouldUpdateCategory_whenArticleMovedToAnotherFolder() {
+        systemConfigService.updateConfig(Map.of("github_sync_path", ""));
+
+        String oldPath = "6-Agent/agent总结.md";
+        String newPath = "10-面筋/agent总结.md";
+        String oldUrl = "https://raw.githubusercontent.com/demo-owner/demo-repo/main/" + oldPath;
+        String newUrl = "https://raw.githubusercontent.com/demo-owner/demo-repo/main/" + newPath;
+
+        GithubRepoScanner.MdFileInfo oldFile = new GithubRepoScanner.MdFileInfo(
+                "agent总结.md", "agent总结", oldUrl, oldPath, "same-agent-sha"
+        );
+        GithubRepoScanner.MdFileInfo movedFile = new GithubRepoScanner.MdFileInfo(
+                "agent总结.md", "agent总结", newUrl, newPath, "same-agent-sha"
+        );
+
+        when(scanner.scanMarkdownFiles(eq("demo-owner"), eq("demo-repo"), eq("main"), eq("")))
+                .thenReturn(List.of(oldFile), List.of(movedFile));
+        when(fetcher.fetchMarkdown(oldUrl)).thenReturn("# agent summary\nold content");
+
+        Map<String, Integer> first = articleSyncService.autoDiscover();
+        assertThat(first.get("created")).isEqualTo(1);
+
+        ArticleDTO original = articleMapper.selectByGithubSha("same-agent-sha");
+        assertThat(original).isNotNull();
+        Long originalId = original.getId();
+        Long originalCategoryId = original.getCategoryId();
+
+        Map<String, Integer> second = articleSyncService.autoDiscover();
+        assertThat(second.get("created")).isEqualTo(0);
+        assertThat(second.get("matched")).isEqualTo(1);
+        assertThat(second.get("failed")).isEqualTo(0);
+
+        ArticleDTO moved = articleMapper.selectByGithubSha("same-agent-sha");
+        assertThat(moved).isNotNull();
+        assertThat(moved.getId()).isEqualTo(originalId);
+        assertThat(moved.getCategoryId()).isNotEqualTo(originalCategoryId);
+
+        String movedCategoryName = jdbcTemplate.queryForObject(
+                "SELECT c.name FROM article a LEFT JOIN category c ON a.category_id = c.id WHERE a.id = ?",
+                String.class,
+                moved.getId()
+        );
+        assertThat(movedCategoryName).isEqualTo("面筋");
+    }
 }
 

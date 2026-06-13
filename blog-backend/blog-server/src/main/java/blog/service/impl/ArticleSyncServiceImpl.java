@@ -250,10 +250,6 @@ public class ArticleSyncServiceImpl implements ArticleSyncService {
                     fm = existingFm;
                 }
 
-                if (existing == null) {
-                    existing = articleMapper.selectByTitle(title);
-                }
-
                 if (existing != null) {
                     updateExistingArticle(existing, title,
                             normalizedDownloadUrl != null ? normalizedDownloadUrl : file.getDownloadUrl(),
@@ -313,13 +309,13 @@ public class ArticleSyncServiceImpl implements ArticleSyncService {
     // ==================== 分类解析 ====================
 
     /**
-     * 解析分类：一级文件夹名 > Front Matter category
+     * 解析分类：Front Matter category > 一级文件夹名
      * 匹配数据库分类（按名称），找不到则自动创建
      */
     private Long resolveCategoryId(MarkdownFrontMatter fm, String filePath) {
-        String rawCategory = MarkdownFrontMatter.inferCategoryFromPath(filePath);
+        String rawCategory = fm.getCategory();
         if (rawCategory == null || rawCategory.isEmpty()) {
-            rawCategory = fm.getCategory();
+            rawCategory = MarkdownFrontMatter.inferCategoryFromPath(filePath);
         }
         if (rawCategory == null) {
             return null;
@@ -367,11 +363,9 @@ public class ArticleSyncServiceImpl implements ArticleSyncService {
             updateEntity.setGithubSha(sha);
         }
 
-        if (existing.getCategoryId() == null) {
-            Long categoryId = resolveCategoryId(fm, filePath);
-            if (categoryId != null) {
-                updateEntity.setCategoryId(categoryId);
-            }
+        Long categoryId = resolveCategoryId(fm, filePath);
+        if (categoryId != null && !Objects.equals(categoryId, existing.getCategoryId())) {
+            updateEntity.setCategoryId(categoryId);
         }
         if (fm.getChapterOrder() != null) {
             updateEntity.setChapterOrder(fm.getChapterOrder());
