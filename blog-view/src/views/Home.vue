@@ -6,7 +6,7 @@
 
       <template v-else-if="article">
         <article class="article-body home-block home-block--hero">
-          <MdPreview editorId="home-featured-preview" :modelValue="renderedFeaturedContent" />
+          <ArticleMarkdown content-id="home-featured-preview" :content="renderedFeaturedContent" />
         </article>
         <section class="home-comments home-block home-block--comments">
           <el-divider />
@@ -20,12 +20,11 @@
 
 <script setup>
 import { computed, ref, watch, nextTick, onUnmounted } from 'vue'
-import { MdPreview } from 'md-editor-v3'
-import 'md-editor-v3/lib/preview.css'
 import { fetchArticleById, fetchArticles } from '@/api/article'
 import { useBlogConfigStore } from '@/stores/blogConfig'
 import CommentsCard from '@/components/CommentsCard.vue'
 import { transformObsidianAssetLinks } from '@/utils/markdownAssets'
+import ArticleMarkdown from '@/components/ArticleMarkdown.vue'
 
 const blogConfig = useBlogConfigStore()
 const article = ref(null)
@@ -72,7 +71,7 @@ const loadFeaturedArticle = async () => {
 }
 
 const hydrateHomeImages = () => {
-  const container = document.querySelector('#home-featured-preview .md-editor-preview')
+  const container = document.querySelector('#home-featured-preview')
   if (!container) return
   container.querySelectorAll('img').forEach((img) => {
     img.loading = 'eager'
@@ -155,12 +154,12 @@ onUnmounted(() => {
   filter: saturate(1.03);
 }
 
-.article-body :deep(.md-editor-preview) {
-  background: transparent !important;
-  padding: 0 !important;
+.article-body {
+  width: min(100%, 920px);
+  margin: 0 auto;
 }
 
-.article-body :deep(.md-editor-preview img) {
+.article-body :deep(img) {
   display: block !important;
   visibility: visible !important;
   opacity: 1 !important;

@@ -77,12 +77,12 @@
 
             <!-- Article Content -->
             <article class="article-page__content animate-fade-in-up">
-              <MdPreview
-                editorId="preview-only"
-                :modelValue="renderedArticleContent"
-                @onGetCatalog="onGetCatalog"
-                :headingId="(index) => `heading-${index}`"
-                :markedHeadingId="(index) => `heading-${index}`"
+              <ArticleMarkdown
+                content-id="article-markdown-preview"
+                :content="renderedArticleContent"
+                heading-prefix="heading"
+                @catalog-change="onCatalogChange"
+                @image-click="openLightbox"
               />
             </article>
           </div>
@@ -159,9 +159,8 @@ import { useRoute } from 'vue-router'
 import { fetchArticleById } from '@/api/article.js'
 import TopicTreeSidebar from '@/components/TopicTreeSidebar.vue'
 import { useUiStore } from '@/stores/ui'
-import { MdPreview } from 'md-editor-v3'
-import 'md-editor-v3/lib/preview.css'
 import { transformObsidianAssetLinks } from '@/utils/markdownAssets'
+import ArticleMarkdown from '@/components/ArticleMarkdown.vue'
 
 const route = useRoute()
 const uiStore = useUiStore()
@@ -177,38 +176,9 @@ const showTopicTreePanel = computed(() => article.value && article.value.title !
 const panelTransitionReady = ref(false)
 const renderedArticleContent = computed(() => transformObsidianAssetLinks(article.value?.content || ''))
 
-const buildCatalogFromDom = (previewEl) => {
-  const headingEls = Array.from(previewEl.querySelectorAll('h1, h2, h3, h4, h5, h6'))
-  return headingEls
-    .map((el, index) => {
-      const uniqueId = `heading-${index}`
-      el.setAttribute('id', uniqueId)
-      return {
-        text: String(el.textContent || '').trim(),
-        level: Number(String(el.tagName || '').replace('H', '')) || 1,
-        uniqueId,
-      }
-    })
-    .filter((item) => item.text)
-}
-
-const onGetCatalog = (list) => {
-  catalogList.value = (list || []).map((item, index) => ({
-    ...item,
-    uniqueId: `heading-${index}`,
-  }))
+const onCatalogChange = (list) => {
+  catalogList.value = Array.isArray(list) ? list : []
   nextTick(() => {
-    const previewEl = document.querySelector('#preview-only .md-editor-preview')
-    if (!previewEl) return
-    if (!catalogList.value.length) {
-      catalogList.value = buildCatalogFromDom(previewEl)
-    } else {
-      previewEl.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach((el, i) => {
-        el.setAttribute('id', `heading-${i}`)
-      })
-    }
-    setupLightbox(previewEl)
-    setupCodeCopy(previewEl)
     updateActiveHeading()
   })
 }
@@ -237,33 +207,8 @@ const formatTime = (datetime) => {
   })
 }
 
-const setupLightbox = (container) => {
-  container.querySelectorAll('img').forEach((img) => {
-    img.style.cursor = 'zoom-in'
-    img.addEventListener('click', () => {
-      lightboxSrc.value = img.src
-    })
-  })
-}
-
-const setupCodeCopy = (container) => {
-  container.querySelectorAll('pre').forEach((pre) => {
-    pre.style.position = 'relative'
-    const btn = document.createElement('button')
-    btn.className = 'code-copy-btn'
-    btn.textContent = 'Copy'
-    btn.addEventListener('click', async () => {
-      const code = pre.querySelector('code')
-      if (code) {
-        await navigator.clipboard.writeText(code.textContent)
-        btn.textContent = 'Copied!'
-        setTimeout(() => {
-          btn.textContent = 'Copy'
-        }, 2000)
-      }
-    })
-    pre.appendChild(btn)
-  })
+const openLightbox = (src) => {
+  lightboxSrc.value = src || ''
 }
 
 const updateActiveHeading = () => {
@@ -300,14 +245,6 @@ onMounted(async () => {
   try {
     const data = await fetchArticleById(articleId)
     article.value = data || null
-    nextTick(() => {
-      const previewEl = document.querySelector('#preview-only .md-editor-preview')
-      if (!previewEl) return
-      if (!catalogList.value.length) {
-        catalogList.value = buildCatalogFromDom(previewEl)
-      }
-      updateActiveHeading()
-    })
   } catch (err) {
     error.value = '加载文章失败，请稍后再试。'
     console.error(err)
@@ -528,129 +465,16 @@ onUnmounted(() => {
   gap: 5px;
 }
 
-/* ---------- Content — Premium Reading ---------- */
-.article-page__content :deep(.md-editor-preview) {
-  background: transparent !important;
-  padding: 0 !important;
-  font-family:
-    'Inter',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    'PingFang SC',
-    'Hiragino Sans GB',
-    'Microsoft YaHei',
-    sans-serif;
+/* ---------- Content ---------- */
+.article-page__header,
+.article-page__content {
+  width: min(100%, 860px);
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.article-page__content :deep(.md-editor-preview p) {
-  font-size: 17px;
-  line-height: 1.9;
-  color: var(--text-primary);
-  margin: 0 0 24px;
-}
-
-.article-page__content :deep(.md-editor-preview h1),
-.article-page__content :deep(.md-editor-preview h2),
-.article-page__content :deep(.md-editor-preview h3),
-.article-page__content :deep(.md-editor-preview h4) {
-  color: var(--text-primary);
-  font-weight: 700;
-  margin: 48px 0 20px;
-  line-height: 1.4;
-  scroll-margin-top: 80px;
-  letter-spacing: -0.02em;
-}
-
-.article-page__content :deep(.md-editor-preview h2) {
-  font-size: 1.5rem;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.article-page__content :deep(.md-editor-preview h3) {
-  font-size: 1.25rem;
-}
-
-.article-page__content :deep(.md-editor-preview blockquote) {
-  margin: 28px 0;
-  padding: 16px 24px;
-  border-left: 4px solid var(--accent);
-  background: var(--accent-light);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  color: var(--text-secondary);
-  font-style: italic;
-}
-
-.article-page__content :deep(.md-editor-preview code:not(pre code)) {
-  padding: 2px 8px;
-  font-size: 14px;
-  background: var(--bg-inline-code);
-  color: var(--accent);
-  border-radius: 6px;
-  font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
-  font-weight: 500;
-}
-
-.article-page__content :deep(.md-editor-preview pre) {
-  margin: 32px 0;
-  padding: 24px;
-  background: var(--bg-code);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.article-page__content :deep(.md-editor-preview pre code) {
-  font-size: 14px;
-  line-height: 1.7;
-  font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
-}
-
-.article-page__content :deep(.md-editor-preview img) {
-  border-radius: var(--radius-md);
-  margin: 24px 0;
-  max-width: 100%;
-  box-shadow: var(--shadow-sm);
-}
-
-.article-page__content :deep(.md-editor-preview a) {
-  color: var(--accent);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-thickness: 1px;
-}
-
-.article-page__content :deep(.md-editor-preview ul),
-.article-page__content :deep(.md-editor-preview ol) {
-  padding-left: 24px;
-  margin-bottom: 24px;
-}
-
-.article-page__content :deep(.md-editor-preview li) {
-  margin: 8px 0;
-  line-height: 1.9;
-  color: var(--text-primary);
-}
-
-.article-page__content :deep(.md-editor-preview table) {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 28px 0;
-  font-size: 14.5px;
-}
-
-.article-page__content :deep(.md-editor-preview th),
-.article-page__content :deep(.md-editor-preview td) {
-  padding: 12px 16px;
-  border: 1px solid var(--border-color);
-  text-align: left;
-}
-
-.article-page__content :deep(.md-editor-preview th) {
-  background: var(--bg-secondary);
-  font-weight: 600;
+.article-page__content {
+  padding-bottom: 32px;
 }
 
 /* ---------- TOC Floating Button ---------- */
@@ -678,34 +502,6 @@ onUnmounted(() => {
 .mobile-toc-btn:hover {
   transform: scale(1.08);
   box-shadow: var(--shadow-glow);
-}
-
-/* ---------- Code Copy Button ---------- */
-:global(.code-copy-btn) {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  padding: 4px 10px;
-  font-size: 12px;
-  color: var(--text-muted);
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  opacity: 0;
-  transition:
-    opacity 0.2s,
-    background 0.2s;
-}
-
-:global(.code-copy-btn:hover) {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-}
-
-:global(pre:hover .code-copy-btn) {
-  opacity: 1;
 }
 
 /* ---------- TOC Drawer Nav ---------- */
@@ -788,11 +584,6 @@ onUnmounted(() => {
   .article-page__meta {
     gap: 10px;
     font-size: 12px;
-  }
-
-  .article-page__content :deep(.md-editor-preview pre) {
-    padding: 14px;
-    font-size: 13px;
   }
 
   .mobile-toc-btn {
