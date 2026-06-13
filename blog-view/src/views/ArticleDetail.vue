@@ -8,6 +8,7 @@
         class="article-page__workspace"
         :class="{
           'is-topic-open': uiStore.topicTreeOpen && showTopicTreePanel,
+          'is-toc-open': showDesktopTocPanel,
           'is-panel-ready': panelTransitionReady,
         }"
       >
@@ -86,10 +87,32 @@
             </article>
           </div>
         </div>
+
+        <aside v-if="showDesktopTocPanel" class="article-page__toc-panel">
+          <div class="topic-panel-shell">
+            <div class="topic-panel-shell__body article-page__toc-body">
+              <nav v-if="catalogList.length" class="toc-nav toc-nav--desktop">
+                <a
+                  v-for="item in catalogList"
+                  :key="item.uniqueId"
+                  :href="`#${item.uniqueId}`"
+                  class="toc-link"
+                  :class="[
+                    `toc-link--${item.level}`,
+                    { 'toc-link--active': activeHeading === item.uniqueId },
+                  ]"
+                  @click.prevent="handleDesktopTocClick(item.uniqueId)"
+                  >{{ item.text }}</a
+                >
+              </nav>
+              <div v-else class="toc-empty">暂无目录</div>
+            </div>
+          </div>
+        </aside>
       </div>
     </template>
 
-    <!-- TOC floating button (all screen sizes) -->
+    <!-- TOC floating button (mobile only) -->
     <button v-if="article && !loading && !error" class="mobile-toc-btn" @click="showMobileToc = true">
       <svg
         viewBox="0 0 24 24"
@@ -149,6 +172,7 @@ const catalogList = ref([])
 const showMobileToc = ref(false)
 const lightboxSrc = ref('')
 const activeHeading = ref('')
+const showDesktopTocPanel = computed(() => Boolean(showTopicTreePanel.value && !loading.value && !error.value))
 const showTopicTreePanel = computed(() => article.value && article.value.title !== '首页')
 const panelTransitionReady = ref(false)
 const renderedArticleContent = computed(() => transformObsidianAssetLinks(article.value?.content || ''))
@@ -185,6 +209,7 @@ const onGetCatalog = (list) => {
     }
     setupLightbox(previewEl)
     setupCodeCopy(previewEl)
+    updateActiveHeading()
   })
 }
 
@@ -195,6 +220,11 @@ const scrollToHeading = (id) => {
 
 const handleMobileTocClick = (id) => {
   showMobileToc.value = false
+  nextTick(() => scrollToHeading(id))
+}
+
+const handleDesktopTocClick = (id) => {
+  activeHeading.value = id
   nextTick(() => scrollToHeading(id))
 }
 
@@ -244,6 +274,12 @@ const updateActiveHeading = () => {
     }))
     .filter((h) => h.el)
 
+  if (!headings.length) {
+    activeHeading.value = ''
+    return
+  }
+
+  activeHeading.value = headings[0].id
   for (let i = headings.length - 1; i >= 0; i--) {
     if (headings[i].el.getBoundingClientRect().top <= 120) {
       activeHeading.value = headings[i].id
@@ -270,6 +306,7 @@ onMounted(async () => {
       if (!catalogList.value.length) {
         catalogList.value = buildCatalogFromDom(previewEl)
       }
+      updateActiveHeading()
     })
   } catch (err) {
     error.value = '加载文章失败，请稍后再试。'
@@ -317,7 +354,9 @@ onUnmounted(() => {
 .article-page__workspace {
   position: relative;
   --topic-panel-width: 360px;
+  --toc-panel-width: 360px;
   --topic-panel-gap: 48px;
+  --toc-panel-gap: 48px;
 }
 
 .article-page__topic-panel {
@@ -335,13 +374,35 @@ onUnmounted(() => {
   transition: none;
 }
 
-.article-page__workspace.is-panel-ready .article-page__topic-panel {
+.article-page__toc-panel {
+  position: fixed;
+  top: 56px;
+  right: 0;
+  height: calc(100vh - 56px);
+  width: var(--toc-panel-width);
+  opacity: 0;
+  transform: translate3d(100%, 0, 0);
+  pointer-events: none;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  contain: layout paint;
+  transition: none;
+}
+
+.article-page__workspace.is-panel-ready .article-page__topic-panel,
+.article-page__workspace.is-panel-ready .article-page__toc-panel {
   transition:
     opacity 0.24s ease,
     transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .article-page__workspace.is-topic-open .article-page__topic-panel {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  pointer-events: auto;
+}
+
+.article-page__workspace.is-toc-open .article-page__toc-panel {
   opacity: 1;
   transform: translate3d(0, 0, 0);
   pointer-events: auto;
@@ -371,7 +432,22 @@ onUnmounted(() => {
   padding: 0 28px;
 }
 
-.article-page__workspace.is-topic-open .article-page__main {
+.article-page__workspace.is-toc-open .article-page__layout {
+  width: calc(100% - var(--toc-panel-width) - var(--toc-panel-gap));
+  max-width: none;
+  margin-left: 0;
+  margin-right: calc(var(--toc-panel-width) + var(--toc-panel-gap));
+  padding: 0 28px;
+}
+
+.article-page__workspace.is-topic-open.is-toc-open .article-page__layout {
+  width: calc(100% - var(--topic-panel-width) - var(--topic-panel-gap) - var(--toc-panel-width) - var(--toc-panel-gap));
+  margin-left: calc(var(--topic-panel-width) + var(--topic-panel-gap));
+  margin-right: calc(var(--toc-panel-width) + var(--toc-panel-gap));
+}
+
+.article-page__workspace.is-topic-open .article-page__main,
+.article-page__workspace.is-toc-open .article-page__main {
   max-width: none;
   width: 100%;
   margin: 0;
@@ -390,6 +466,20 @@ onUnmounted(() => {
 .topic-panel-shell__body {
   flex: 1;
   min-height: 0;
+}
+
+.article-page__toc-body {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 14px;
+}
+
+.article-page__toc-body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 :deep(.article-page__topic-panel .topic-drawer) {
@@ -577,7 +667,7 @@ onUnmounted(() => {
   box-shadow: var(--shadow-md);
   cursor: pointer;
   z-index: 100;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   transition:
@@ -625,6 +715,10 @@ onUnmounted(() => {
   gap: 2px;
 }
 
+.toc-nav--desktop {
+  padding: 6px 0;
+}
+
 .toc-link {
   display: block;
   padding: 5px 0;
@@ -641,6 +735,12 @@ onUnmounted(() => {
 
 .toc-link:hover {
   color: var(--accent);
+}
+
+.toc-link--active {
+  color: var(--accent);
+  background: var(--accent-light);
+  border-radius: var(--radius-sm);
 }
 
 .toc-link--2 {
@@ -668,7 +768,8 @@ onUnmounted(() => {
   .article-page__layout {
     padding: 0 16px;
   }
-  .article-page__topic-panel {
+  .article-page__topic-panel,
+  .article-page__toc-panel {
     display: none;
   }
   .article-page__main {
@@ -699,6 +800,7 @@ onUnmounted(() => {
     right: 16px;
     width: 44px;
     height: 44px;
+    display: flex;
   }
 }
 
@@ -711,15 +813,21 @@ onUnmounted(() => {
     transform: none !important;
     width: 100% !important;
     margin-left: 0 !important;
+    margin-right: 0 !important;
   }
-  .article-page__topic-panel {
+  .article-page__topic-panel,
+  .article-page__toc-panel {
     display: none;
   }
-  .article-page__workspace.is-topic-open .article-page__main {
+  .article-page__workspace.is-topic-open .article-page__main,
+  .article-page__workspace.is-toc-open .article-page__main {
     max-width: 100%;
   }
   .article-page__main {
     max-width: 100%;
+  }
+  .mobile-toc-btn {
+    display: flex;
   }
 }
 </style>
