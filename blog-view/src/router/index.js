@@ -29,7 +29,6 @@ const router = createRouter({
           name: 'about',
           component: () => import('@/views/About.vue'),
         },
-
         {
           path: 'article/:id',
           name: 'articleDetail',
@@ -53,20 +52,28 @@ const router = createRouter({
       ],
     },
   ],
-  // 路由切换时自动滚动到页面顶部
   scrollBehavior(to, from, savedPosition) {
-    // 如果路径变了（从页面A跳到页面B），但没有锚点，才回到顶部
-    if (to.path !== from.path && !to.hash) {
-      const container = document.querySelector('.main-scroll-container')
-      if (container) {
-        container.scrollTop = 0
+    if (savedPosition) {
+      return savedPosition
+    }
+
+    if (to.hash) {
+      return {
+        el: to.hash,
+        top: 80,
+        behavior: 'smooth',
       }
     }
 
-    // 如果有锚点，我们什么都不做，让 el-anchor 自己去处理跳转
-    if (to.hash) {
-      return false // 返回 false 表示不干预滚动
+    if (to.path !== from.path) {
+      return {
+        top: 0,
+        left: 0,
+        behavior: 'smooth',
+      }
     }
+
+    return false
   },
 })
 
