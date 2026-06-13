@@ -10,6 +10,7 @@ import blog.service.GithubMarkdownFetcher;
 import blog.service.GithubRepoScanner;
 import blog.service.SystemConfigService;
 import blog.utils.MarkdownFrontMatter;
+import blog.vo.ArticleVO;
 import blog.vo.CategoryVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -278,7 +279,7 @@ public class ArticleSyncServiceImpl implements ArticleSyncService {
         }
 
         int deleted = cleanupMissingArticles(owner, repo, branch, path, discoveredGitKeys);
-        int deletedCategories = cleanupMissingCategories(discoveredCategoryNames);
+        int deletedCategories = cleanupMissingCategories(owner, repo, branch, path, discoveredCategoryNames);
 
         log.info("自动发现完成：匹配={}，新建={}，删除文章={}，删除分类={}，失败={}",
                 matched, created, deleted, deletedCategories, failed);
@@ -457,7 +458,8 @@ public class ArticleSyncServiceImpl implements ArticleSyncService {
         return deleted;
     }
 
-    private int cleanupMissingCategories(Set<String> discoveredCategoryNames) {
+    private int cleanupMissingCategories(String owner, String repo, String branch, String pathPrefix,
+                                         Set<String> discoveredCategoryNames) {
         if (discoveredCategoryNames.isEmpty()) {
             log.warn("本次扫描未识别到分类，为避免误删，跳过缺失分类清理");
             return 0;
@@ -468,6 +470,10 @@ public class ArticleSyncServiceImpl implements ArticleSyncService {
         for (CategoryVO category : categories) {
             String categoryName = normalizeCategoryName(category.getName());
             if (categoryName == null || discoveredCategoryNames.contains(categoryName)) {
+                continue;
+            }
+            if (!isCategoryManagedByCurrentSync(category.getId(), owner, repo, branch, pathPrefix)) {
+                log.info("跳过删除非当前同步托管的分类：ID={} 名称={}", category.getId(), category.getName());
                 continue;
             }
 
@@ -482,6 +488,20 @@ public class ArticleSyncServiceImpl implements ArticleSyncService {
             log.info("删除仓库中已不存在的分类：ID={} 名称={}", category.getId(), category.getName());
         }
         return deleted;
+    }
+
+    private boolean isCategoryManagedByCurrentSync(Long categoryId, String owner, String repo, String branch, String pathPrefix) {
+        List<ArticleVO> articles = articleMapper.selectByCategoryId(categoryId);
+        if (articles == null || articles.isEmpty()) {
+            return false;
+        }
+        for (ArticleVO article : articles) {
+            RepoContext context = parseRepoContext(article.getGithubUrl());
+            if (isManagedByCurrentSync(context, owner, repo, branch, pathPrefix)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String discoverCategoryName(String filePath) {

@@ -198,5 +198,55 @@ class ArticleSyncServiceRenameIntegrationTest {
         );
         assertThat(movedCategoryName).isEqualTo("面筋");
     }
+
+    @Test
+    void autoDiscover_shouldNotDeleteManualCategory_whenCategoryIsNotManagedBySync() {
+        jdbcTemplate.update(
+                """
+                INSERT INTO category(name, slug, sort_order, create_time, update_time)
+                VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                """,
+                "手工分类", "manual", 99
+        );
+        Long manualCategoryId = jdbcTemplate.queryForObject(
+                "SELECT id FROM category WHERE name = ?",
+                Long.class,
+                "手工分类"
+        );
+        jdbcTemplate.update(
+                """
+                INSERT INTO article(title, content, category_id, chapter_order, reading_minutes, is_core, view_count,
+                                    is_comment, publish_time, create_time, update_time)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                """,
+                "手工文章", "manual content", manualCategoryId, 1, 8, 0, 0, 1
+        );
+
+        String path = "notes/redis-distributed-lock.md";
+        String url = "https://raw.githubusercontent.com/demo-owner/demo-repo/main/" + path;
+        GithubRepoScanner.MdFileInfo discoveredFile = new GithubRepoScanner.MdFileInfo(
+                "redis-distributed-lock.md", "redis-distributed-lock", url, path, "redis-sha"
+        );
+
+        when(scanner.scanMarkdownFiles(eq("demo-owner"), eq("demo-repo"), eq("main"), eq("notes")))
+                .thenReturn(List.of(discoveredFile));
+        when(fetcher.fetchMarkdown(url)).thenReturn("# redis lock\ncontent");
+
+        Map<String, Integer> result = articleSyncService.autoDiscover();
+
+        assertThat(result.get("created")).isEqualTo(1);
+        Integer manualCategoryCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM category WHERE name = ?",
+                Integer.class,
+                "手工分类"
+        );
+        Integer manualArticleCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM article WHERE title = ?",
+                Integer.class,
+                "手工文章"
+        );
+        assertThat(manualCategoryCount).isEqualTo(1);
+        assertThat(manualArticleCount).isEqualTo(1);
+    }
 }
 
