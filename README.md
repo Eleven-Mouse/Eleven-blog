@@ -1,5 +1,6 @@
-<div align="center">
 
+<div align="center">
+ 
 # Eleven Blog
 
 **以 GitHub 为内容源的极简个人博客系统**
@@ -23,9 +24,9 @@
 ## 截图
 
 <div align="center">
-<img width="1920" height="869" alt="首页" src="https://github.com/user-attachments/assets/100f169a-0a2c-40b1-bef0-7dfeb850387c" />
-<img width="1920" height="869" alt="文章详情" src="https://github.com/user-attachments/assets/174200d1-e589-429a-a719-16675eb9b095" />
-<img width="1920" height="869" alt="深色主题" src="https://github.com/user-attachments/assets/52956207-f557-437d-9106-c94a2267a0d7" />
+ <img width="2550" height="1227" alt="首页" src="https://github.com/user-attachments/assets/5edfdaaf-56fc-4a67-99b5-d02c162392a2" />
+<img width="2549" height="1227" alt="文章详细" src="https://github.com/user-attachments/assets/0a908201-f225-4090-b0d4-cf986cacdd36" />
+
 </div>
 
 ---
