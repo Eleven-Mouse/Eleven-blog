@@ -8,7 +8,7 @@
 
       <nav class="navbar__nav">
         <router-link to="/home" class="navbar__nav-item" :class="{ 'is-active': isHomeActive }">
-          棣栭〉
+          首页
         </router-link>
         <router-link
           v-for="topic in topics"
@@ -40,7 +40,7 @@
             <path d="M4 6h16M4 12h16M4 18h10" />
           </svg>
         </button>
-        <button class="navbar__icon-btn" @click="toggleSearch" aria-label="Search">
+        <button class="navbar__icon-btn" @click="toggleSearch" aria-label="搜索">
           <svg
             viewBox="0 0 24 24"
             width="18"
@@ -75,8 +75,8 @@
           :class="{ 'is-disabled': syncLoading }"
           :disabled="syncLoading"
           @click="handleManualSync"
-          :aria-label="syncLoading ? '姝ｅ湪鍚屾鏂囩珷' : '鍚屾鏂囩珷'"
-          :title="syncLoading ? '姝ｅ湪鍚屾鏂囩珷' : '鍚屾鏂囩珷'"
+          :aria-label="syncLoading ? '正在同步文章' : '同步文章'"
+          :title="syncLoading ? '正在同步文章' : '同步文章'"
         >
           <RefreshRight :class="{ 'is-spinning': syncLoading }" />
         </button>
@@ -108,7 +108,7 @@
               ref="searchInputRef"
               v-model="searchQuery"
               class="search-panel__input"
-              placeholder="鎼滅储鏂囩珷..."
+              placeholder="搜索文章..."
               @input="onSearchInput"
               @keydown.enter="onSearchEnter"
               @keydown.down.prevent="highlightNext"
@@ -123,7 +123,7 @@
 
           <div v-if="searchLoading" class="search-panel__loading">
             <div class="search-spinner" />
-            <span>鎼滅储涓?..</span>
+            <span>搜索中...</span>
           </div>
 
           <div v-else-if="searchResults.length" class="search-panel__results">
@@ -152,11 +152,11 @@
             v-else-if="searchQuery && searchFetched && !searchLoading"
             class="search-panel__empty"
           >
-            娌℃湁鎵惧埌鐩稿叧鏂囩珷
+            没有找到相关文章
           </div>
 
           <div v-else-if="!searchQuery" class="search-panel__hint">
-            杈撳叆鍏抽敭璇嶆悳绱㈡枃绔狅紝鎸?Enter 鏌ョ湅鍏ㄩ儴缁撴灉
+            输入关键词搜索文章，按 Enter 查看全部结果
           </div>
         </div>
       </div>
@@ -173,7 +173,7 @@
       class="mobile-drawer"
     >
       <div class="mobile-directory">
-        <div v-if="drawerTreeLoading" class="mobile-directory__tip">姝ｅ湪鍔犺浇鐩綍...</div>
+        <div v-if="drawerTreeLoading" class="mobile-directory__tip">正在加载目录...</div>
         <div v-else-if="drawerTreeError" class="mobile-directory__tip mobile-directory__tip--error">{{ drawerTreeError }}</div>
         <div v-else-if="mobileTree.length" class="mobile-tree">
           <section v-for="topic in mobileTree" :key="`mobile-topic-${topic.id}`" class="mobile-tree__topic">
@@ -183,7 +183,7 @@
             </button>
 
             <div class="mobile-tree__topic-body" :class="{ 'is-open': isMobileTopicOpen(topic.id) }">
-              <div v-if="topic.loading" class="mobile-tree__status">姝ｅ湪鍔犺浇鏂囩珷...</div>
+              <div v-if="topic.loading" class="mobile-tree__status">正在加载文章...</div>
               <div v-else-if="topic.loadError" class="mobile-tree__status is-error">{{ topic.loadError }}</div>
               <template v-else-if="hasSecondLevelGroups(topic)">
                 <section
@@ -237,7 +237,7 @@
             </div>
           </section>
         </div>
-        <div v-else class="mobile-directory__tip">鏆傛棤鐩綍鏁版嵁</div>
+        <div v-else class="mobile-directory__tip">暂无目录数据</div>
       </div>
     </el-drawer>
   </teleport>
@@ -394,7 +394,7 @@ const handleManualSync = async () => {
   if (syncLoading.value) return
   syncLoading.value = true
   const loadingMessage = ElMessage({
-    message: '姝ｅ湪鍚屾鏂囩珷',
+    message: '正在同步文章',
     type: 'info',
     duration: 0,
     showClose: true,
@@ -407,7 +407,7 @@ const handleManualSync = async () => {
     ElMessage.success(formatSyncResultMessage(result))
   } catch (error) {
     loadingMessage.close()
-    ElMessage.error(error?.message || '鏂囩珷鍚屾澶辫触锛岃绋嶅悗閲嶈瘯')
+    ElMessage.error(error?.message || '文章同步失败，请稍后重试')
   } finally {
     syncLoading.value = false
   }
@@ -584,7 +584,7 @@ const loadTopicArticlesIntoTree = async (topicId) => {
     next[idx] = {
       ...next[idx],
       loading: false,
-      loadError: '鏂囩珷鍔犺浇澶辫触锛岃閲嶈瘯',
+      loadError: '文章加载失败，请重试',
       rootArticles: [],
       folderGroups: [],
     }
@@ -668,7 +668,7 @@ const buildTopicsFromArticles = (articles, categories) => {
     const id = Number(article?.categoryId || 0)
     const fallbackName = categoryMetaMap.get(id)?.name || ''
     const name = String(article?.categoryName || fallbackName).trim()
-    if (!id || !name || name === '棣栭〉') continue
+    if (!id || !name || name === '首页') continue
     if (topicMap.has(id)) continue
 
     const meta = categoryMetaMap.get(id)
@@ -739,7 +739,7 @@ onMounted(() => {
   window.addEventListener('blog:topics-refresh', loadTopics)
   window.addEventListener('scroll', onScroll, { passive: true })
   window.addEventListener('keydown', onKeydown)
-  // 姣?鍒嗛挓闈欓粯鍒锋柊鍒嗙被锛岀‘淇濆悗绔悓姝ュ悗鍓嶇鑷姩鏇存柊
+  // 每 5 分钟静默刷新分类，确保后端同步后前端自动更新
   categoryPollTimer = setInterval(loadTopics, 5 * 60 * 1000)
 })
 
