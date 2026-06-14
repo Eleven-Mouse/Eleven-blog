@@ -27,7 +27,7 @@
           class="navbar__icon-btn topic-tree-toggle-btn"
           :class="{ 'is-active': uiStore.topicTreeOpen }"
           @click="toggleTopicTree"
-          aria-label="鐩綍鏍?
+          aria-label="目录树"
         >
           <svg
             viewBox="0 0 24 24"
