@@ -179,7 +179,7 @@
           <section v-for="topic in mobileTree" :key="`mobile-topic-${topic.id}`" class="mobile-tree__topic">
             <button class="mobile-tree__topic-trigger" @click="toggleMobileTopic(topic.id)">
               <span class="mobile-tree__topic-name">{{ topic.name }}</span>
-              <span class="mobile-tree__topic-arrow" :class="{ 'is-open': isMobileTopicOpen(topic.id) }">鈻?/span>
+              <span class="mobile-tree__topic-arrow" :class="{ 'is-open': isMobileTopicOpen(topic.id) }">▾</span>
             </button>
 
             <div class="mobile-tree__topic-body" :class="{ 'is-open': isMobileTopicOpen(topic.id) }">
@@ -196,7 +196,7 @@
                     <span
                       class="mobile-tree__group-arrow"
                       :class="{ 'is-open': isMobileGroupOpen(topic.id, group.key) }"
-                      >鈻?/span
+                      >▾</span
                     >
                   </button>
                   <div
@@ -218,7 +218,7 @@
                     </div>
                   </div>
                 </section>
-                <div v-if="!getTopicGroups(topic).length" class="mobile-tree__status">璇ヤ笓棰樻殏鏃犳枃绔?/div>
+                <div v-if="!getTopicGroups(topic).length" class="mobile-tree__status">该专题暂无文章</div>
               </template>
               <div v-else-if="topic.rootArticles?.length" class="mobile-tree__articles mobile-tree__articles--root">
                 <router-link
@@ -233,7 +233,7 @@
                   <span class="mobile-tree__article-title">{{ article.title }}</span>
                 </router-link>
               </div>
-              <div v-else class="mobile-tree__status">璇ヤ笓棰樻殏鏃犳枃绔?/div>
+              <div v-else class="mobile-tree__status">该专题暂无文章</div>
             </div>
           </section>
         </div>
@@ -380,14 +380,14 @@ const emitTopicsRefresh = () => {
 
 const formatSyncResultMessage = (result) => {
   if (!result || !Object.keys(result).length) {
-    return '鍚屾宸插畬鎴愶紝鏈娌℃湁鏂扮殑鍙樻洿'
+    return '同步已完成，本次没有新的变更'
   }
   const matched = Number(result.matched || 0)
   const created = Number(result.created || 0)
   const deleted = Number(result.deleted || 0)
   const deletedCategories = Number(result.deletedCategories || 0)
   const failed = Number(result.failed || 0)
-  return `鍚屾瀹屾垚锛氬尮閰?${matched} 绡囷紝鏂板缓 ${created} 绡囷紝鍒犻櫎 ${deleted} 绡囷紝娓呯悊鍒嗙被 ${deletedCategories} 涓紝澶辫触 ${failed} 绡嘸
+  return `同步完成：匹配 ${matched} 篇，新建 ${created} 篇，删除 ${deleted} 篇，清理分类 ${deletedCategories} 个，失败 ${failed} 篇`
 }
 
 const handleManualSync = async () => {
@@ -547,7 +547,7 @@ const getTopicGroups = (topic) => {
   const groups = topic?.folderGroups ? [...topic.folderGroups] : []
   const rootArticles = topic?.rootArticles || []
   if (rootArticles.length) {
-    groups.unshift({ key: '__root__', label: '鏈垎缁?, articles: rootArticles })
+    groups.unshift({ key: '__root__', label: '未分组', articles: rootArticles })
   }
   return groups
 }
@@ -721,7 +721,7 @@ const loadTopics = async () => {
   } catch {
     topics.value = []
     mobileTree.value = []
-    drawerTreeError.value = '鐩綍鍔犺浇澶辫触锛岃绋嶅悗閲嶈瘯銆?
+    drawerTreeError.value = '目录加载失败，请稍后重试。'
   } finally {
     drawerTreeLoading.value = false
   }
