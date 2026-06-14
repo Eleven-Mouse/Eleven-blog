@@ -51,6 +51,17 @@ const stripHtml = (value) =>
     .replace(/&nbsp;/g, ' ')
     .trim()
 
+const stripQueryAndHash = (value) => String(value || '').split('#')[0].split('?')[0]
+
+const getFileExtension = (value) => {
+  const cleaned = stripQueryAndHash(value).trim().toLowerCase()
+  const dot = cleaned.lastIndexOf('.')
+  if (dot < 0 || dot === cleaned.length - 1) return ''
+  return cleaned.slice(dot + 1)
+}
+
+const isPdfUrl = (value) => getFileExtension(value) === 'pdf'
+
 const isSafeUrl = (value) => {
   const normalized = String(value || '').trim().toLowerCase()
   if (!normalized) return false
@@ -93,6 +104,23 @@ const renderMarkdown = (source, headingPrefix) => {
       if (!src) return ''
       const alt = String(text || '').trim()
       const caption = title || alt
+      if (isPdfUrl(src)) {
+        return `
+          <figure class="article-markdown__figure article-markdown__figure--pdf">
+            <div class="article-markdown__pdf-shell">
+              <iframe
+                src="${escapeAttr(src)}"
+                title="${escapeAttr(caption || 'PDF 预览')}"
+                class="article-markdown__pdf-frame"
+                loading="lazy"
+              ></iframe>
+            </div>
+            <figcaption>
+              <a href="${escapeAttr(src)}" target="_blank" rel="noreferrer">打开 PDF</a>
+            </figcaption>
+          </figure>
+        `
+      }
       return `
         <figure class="article-markdown__figure">
           <img
@@ -318,6 +346,26 @@ const handleContentClick = async (event) => {
   margin: 30px 0;
 }
 
+.article-markdown :deep(.article-markdown__figure--pdf) {
+  margin: 36px 0;
+}
+
+.article-markdown :deep(.article-markdown__pdf-shell) {
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.article-markdown :deep(.article-markdown__pdf-frame) {
+  display: block;
+  width: 100%;
+  min-height: 720px;
+  border: 0;
+  background: #fff;
+}
+
 .article-markdown :deep(.article-markdown__figure img) {
   display: block;
   width: auto;
@@ -452,6 +500,10 @@ html[data-theme='dark'] .article-markdown :deep(.hljs-operator) {
 
   .article-markdown :deep(pre) {
     padding: 40px 14px 14px;
+  }
+
+  .article-markdown :deep(.article-markdown__pdf-frame) {
+    min-height: 520px;
   }
 
   .article-markdown :deep(th),

@@ -1,6 +1,8 @@
 const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'avif'])
+const EMBED_DOCUMENT_EXTENSIONS = new Set(['pdf'])
 const FILE_EXTENSIONS = new Set([
   ...IMAGE_EXTENSIONS,
+  ...EMBED_DOCUMENT_EXTENSIONS,
   'pdf',
   'ppt',
   'pptx',
@@ -62,6 +64,9 @@ export const transformObsidianAssetLinks = (markdown) => {
     const alias = String(rawAlias || '').trim()
     const ext = getExt(target)
     if (IMAGE_EXTENSIONS.has(ext)) {
+      return `![${alias}](${url})`
+    }
+    if (EMBED_DOCUMENT_EXTENSIONS.has(ext)) {
       return `![${alias}](${url})`
     }
     const text = alias || filenameFromTarget(target)
