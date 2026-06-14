@@ -3,9 +3,9 @@
  
 # Eleven Blog
 
-**以 GitHub 为内容源的极简个人博客系统**
+**把 GitHub 仓库当 CMS 的个人博客系统**
 
-用 Markdown 写作，用 Git 管理版本，推送到 GitHub 即可自动发布。
+在 Obsidian 写 Markdown，用 Git 插件推送到自己的仓库，配置好 `.env` 和 Webhook 后，文章就能自动同步到博客。
 
 [![Java 21](https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white)](https://openjdk.org/)
 [![Spring Boot 3.5.6](https://img.shields.io/badge/Spring%20Boot-3.5.6-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
@@ -21,6 +21,42 @@
 
 ---
 
+## 先看结论
+
+如果你想要的是这种体验，这个项目就是给你准备的：
+
+- 在本地 Obsidian 里写文章，不进博客后台复制粘贴
+- 用 Git 管理内容版本，文章和笔记共用一套仓库
+- `git push` 之后自动同步到线上博客
+- 保留 Obsidian 常用写法，比如 `![[image.png]]` 和 `[[wiki-link]]`
+
+一句话概括：
+
+> **Obsidian 负责写，GitHub 负责存，Eleven Blog 负责自动同步和展示。**
+
+## 30 秒看懂工作流
+
+```text
+Obsidian 写文章
+    ↓
+Obsidian Git 插件 / 本地 Git 提交并 push
+    ↓
+GitHub 仓库收到变更
+    ↓
+Webhook 通知 Eleven Blog
+    ↓
+后端扫描 Markdown、解析 Front Matter、同步文章和资源
+    ↓
+前台博客自动展示最新内容
+```
+
+如果你暂时不想配 Webhook，也能工作：
+
+- 可以在前台手动触发一次静默同步
+- 后端还会定时扫描仓库并同步内容
+
+---
+
 ## 截图
 
 <div align="center">
@@ -31,11 +67,20 @@
 
 ---
 
-## 为什么做这个项目
+## 这项目解决什么问题
 
-传统博客系统（WordPress、Hexo 等）要么依赖数据库手动编辑，要么需要本地构建部署。Eleven Blog 选择了不同的方式：
+传统博客系统经常有两个别扭点：
 
-**用 GitHub 仓库作为内容源。** 你只需在自己的 GitHub 仓库中维护 Markdown 文件，Eleven Blog 会自动发现、同步并发布它们。支持 YAML Front Matter、Obsidian 风格嵌入、图片自动镜像到本地。设置 Webhook 后，`git push` 即可触发增量同步。
+- 内容写在后台富文本编辑器里，写作体验一般
+- 文章在博客系统里，笔记在本地，内容管理是割裂的
+
+Eleven Blog 走的是另一条路：
+
+- **内容源就是你的 GitHub 仓库**
+- **写作入口就是你的 Obsidian**
+- **发布动作就是一次 `git push`**
+
+后端会自动发现仓库中的 `.md` 文件，解析 YAML Front Matter，兼容 Obsidian 风格嵌入，把图片等资源镜像到本地存储，再把内容发布到博客前台。
 
 ---
 
@@ -43,9 +88,10 @@
 
 | 特性 | 说明 |
 |:---|:---|
+| Obsidian + Git 写作流 | 本地 Obsidian 写作，配合 Git 插件把文章直接推到 GitHub 仓库 |
 | GitHub 内容同步 | 自动发现仓库中的 `.md` 文件，匹配已有文章或创建新文章，支持 Front Matter 解析 |
 | Webhook 实时同步 | 配置 GitHub Webhook 后，`git push` 自动触发增量内容同步（HMAC-SHA256 验签） |
-| Obsidian 兼容 | 支持 `![[image.png]]` 嵌入语法和 `[[wiki-link]]`，资产自动镜像到本地存储 |
+| Obsidian 兼容 | 支持 `![[image.png]]` 嵌入语法和 `[[wiki-link]]`，资源自动镜像到本地存储 |
 | 分类自动推断 | 从文件路径自动推断分类，支持数字前缀排序（如 `01-Java/`、`02-Network/`） |
 | Markdown 文章 | 完整的 Markdown 渲染，支持代码高亮、目录导航（TOC）、图片灯箱 |
 | 嵌套评论系统 | 支持多级回复、楼层编号、评论点赞、评论置顶，GitHub OAuth 识别博主身份 |
@@ -152,6 +198,15 @@ blog-backend/
 
 ## 快速开始
 
+### 部署前先分清两件事
+
+这个项目通常会涉及两个仓库/目录：
+
+- **Eleven Blog 仓库**：就是当前这个项目，负责运行博客前后端服务
+- **内容仓库**：你自己的 Markdown 仓库，通常就是 Obsidian Vault 对应的 Git 仓库
+
+博客程序和内容仓库可以分开，这是推荐用法。
+
 ### 环境要求
 
 - Java 21+
@@ -166,16 +221,21 @@ blog-backend/
 git clone https://github.com/your-username/Eleven-blog.git
 cd Eleven-blog
 
-# 复制环境变量文件并填写配置
+# 1) Docker 基础变量
+cp .env.example .env
+
+# 2) 后端业务变量
 cp .env.backend.example .env.backend
-# 编辑 .env.backend 填入真实值
+# 编辑 .env 和 .env.backend，填入真实值
 
-# 创建 .env 文件
-cp .env .env.example  # 参考示例配置
-
-# 启动所有服务
+# 3) 启动所有服务
 docker compose up -d
 ```
+
+你至少需要先改这两份文件：
+
+- `.env`：Docker Compose 基础变量，主要是 MySQL、Redis、挂载目录
+- `.env.backend`：博客后端业务变量，主要是 GitHub 同步、OAuth、JWT、邮件、博主信息
 
 | 服务 | 端口 | 说明 |
 |:---|:---|:---|
@@ -183,6 +243,49 @@ docker compose up -d
 | `blog-backend` | `:8081` | REST API（Spring Boot） |
 | `mysql` | 内部 | MySQL 8.0 数据库 |
 | `redis` | 内部 | Redis 缓存 |
+
+### Obsidian 接入步骤
+
+这是这个项目最推荐的使用方式。
+
+**1. 准备你的内容仓库**
+
+- 新建一个 GitHub 仓库，例如 `my-blog-notes`
+- 把它作为你的 Obsidian Vault，或者把现有 Vault 初始化成 Git 仓库
+- 在 Obsidian 中安装 Git 插件，日常写完直接提交并推送
+
+**2. 配置博客读取哪个仓库**
+
+编辑 `.env.backend`，至少设置这些变量：
+
+| 变量 | 是否必须 | 作用 |
+|:---|:---|:---|
+| `GITHUB_SYNC_OWNER` | 是 | 内容仓库 owner |
+| `GITHUB_SYNC_REPO` | 是 | 内容仓库名 |
+| `GITHUB_SYNC_BRANCH` | 否 | 同步分支，默认 `main` |
+| `GITHUB_SYNC_PATH` | 否 | 只同步某个子目录时填写，比如 `notes` |
+| `GITHUB_SYNC_TOKEN` | 视情况 | 私有仓库必须；公开仓库建议配置，避免 GitHub API 限流 |
+| `WEBHOOK_SECRET` | 强烈建议 | GitHub Webhook 的签名密钥 |
+
+**3. 在 GitHub 配置 Webhook**
+
+内容仓库里进入 `Settings -> Webhooks`，新增：
+
+- `Payload URL`：`http://你的域名/webhook/github`
+- `Content type`：`application/json`
+- `Secret`：与 `.env.backend` 里的 `WEBHOOK_SECRET` 保持一致
+- 事件类型：选择 `Just the push event`
+
+**4. 开始写作和发布**
+
+- 在 Obsidian 里写 Markdown
+- 用 Git 插件或命令行执行 commit + push
+- Eleven Blog 收到 Webhook 后自动扫描并同步文章
+
+如果你没配 Webhook，也还有两个兜底方式：
+
+- 访问前台后可手动触发静默同步
+- 后端定时任务会自动发现新文件并同步
 
 ### 方式二：本地开发
 
@@ -220,25 +323,44 @@ npm run build
 
 ## 环境变量
 
-后端通过 `.env.backend` 文件或环境变量配置，关键变量如下：
+建议把配置分成两层理解，不然第一次看很容易脑壳疼：
+
+- 根目录 `.env`：给 `docker-compose.yml` 用，负责基础设施变量
+- 根目录 `.env.backend`：给博客后端用，负责同步、OAuth、邮件、JWT 等业务变量
+
+### `.env`（Docker Compose 基础变量）
 
 | 变量 | 说明 | 示例 |
 |:---|:---|:---|
-| `MYSQL_ROOT_PASSWORD` | MySQL root 密码 | `your_password` |
-| `MYSQL_DATABASE` | 数据库名 | `eleven_blog` |
-| `REDIS_PASSWORD` | Redis 密码 | `your_redis_pwd` |
+| `MYSQL_ROOT_PASSWORD` | MySQL root 密码 | `change_me` |
+| `MYSQL_DATABASE` | 初始化数据库名 | `eleven_blog` |
+| `MYSQL_USERNAME` | MySQL 用户名 | `root` |
+| `REDIS_PASSWORD` | Redis 密码 | `change_me` |
+| `UPLOAD_HOST_DIR` | 宿主机上传目录映射 | `./upload_data` |
+
+### `.env.backend`（博客后端业务变量）
+
+| 变量 | 说明 | 示例 |
+|:---|:---|:---|
 | `JWT_SECRET` | JWT 签名密钥 | `随机长字符串` |
 | `GITHUB_OAUTH_CLIENT_ID` | GitHub OAuth 应用 ID | `Ov23...` |
 | `GITHUB_OAUTH_CLIENT_SECRET` | GitHub OAuth 密钥 | `xxx...` |
+| `GITHUB_OAUTH_REDIRECT_URI` | GitHub OAuth 回调地址 | `https://your-domain/oauth/callback` |
 | `GITHUB_SYNC_OWNER` | 同步仓库所有者 | `your-username` |
 | `GITHUB_SYNC_REPO` | 同步仓库名 | `my-blog-posts` |
+| `GITHUB_SYNC_BRANCH` | 同步分支 | `main` |
+| `GITHUB_SYNC_PATH` | 同步子目录前缀 | `notes` |
 | `GITHUB_SYNC_TOKEN` | GitHub Personal Access Token | `ghp_xxx...` |
 | `WEBHOOK_SECRET` | Webhook 签名密钥 | `your_secret` |
 | `BLOG_OWNER_EMAIL` | 博主邮箱 | `you@example.com` |
 | `BLOG_OWNER_NICKNAME` | 博主昵称 | `kunxing` |
 | `BLOG_OWNER_GITHUB_ID` | 博主 GitHub ID | `12345` |
+| `SPRING_MAIL_HOST` | SMTP 服务器 | `smtp.qq.com` |
+| `SPRING_MAIL_PORT` | SMTP 端口 | `587` |
+| `SPRING_MAIL_USERNAME` | 发信邮箱账号 | `you@example.com` |
+| `SPRING_MAIL_PASSWORD` | 发信邮箱授权码 | `smtp-token` |
 
-完整变量列表参见 [.env.backend.example](.env.backend.example)。
+完整示例参见 [.env.example](.env.example) 和 [.env.backend.example](.env.backend.example)。
 
 ---
 
@@ -275,7 +397,8 @@ Eleven-blog/
 ├── upload_data/                     # 文件上传目录（Docker 卷挂载）
 ├── docker-compose.yml               # 全栈编排
 ├── nginx.conf                       # Nginx 反向代理配置
-└── .env.backend.example             # 环境变量示例
+├── .env.example                     # Docker Compose 环境变量示例
+└── .env.backend.example             # 后端业务环境变量示例
 ```
 
 ---
@@ -329,13 +452,21 @@ Eleven-blog/
 
 ## GitHub 同步工作流
 
-这是本项目的核心功能。文章内容不是在后台手动编辑，而是通过 GitHub 仓库管理：
+这是本项目的核心功能。最顺手的用法就是：
+
+1. 在 **Obsidian** 里写 Markdown
+2. 用 **Obsidian Git 插件** 或命令行 push 到内容仓库
+3. Eleven Blog 通过 **Webhook / 手动静默同步 / 定时任务** 把内容同步到站点
+
+底层同步链路如下：
 
 ```
+Obsidian / 本地 Markdown 仓库
+    │
+    │  commit + push
+    ▼
 GitHub 仓库（Markdown 文件）
     │
-    │  git push
-    ▼
 Webhook → HMAC-SHA256 验签 → 触发同步
     │
     ▼

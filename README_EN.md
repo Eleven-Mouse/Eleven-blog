@@ -2,9 +2,9 @@
 
 # Eleven Blog
 
-**A minimalist personal blog powered by GitHub as a content source**
+**A personal blog that treats your GitHub repo as the CMS**
 
-Write in Markdown, version with Git, publish with a `git push`.
+Write in Obsidian, push with Git, and let Eleven Blog sync your posts automatically after `.env` and Webhook setup.
 
 [![Java 21](https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white)](https://openjdk.org/)
 [![Spring Boot 3.5.6](https://img.shields.io/badge/Spring%20Boot-3.5.6-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
@@ -14,9 +14,45 @@ Write in Markdown, version with Git, publish with a `git push`.
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-English | [中文](README_CN.md)
+English | [中文](README.md)
 
 </div>
+
+---
+
+## The Pitch
+
+If this is the workflow you want, this project is built for it:
+
+- write posts locally in Obsidian instead of in a browser admin editor
+- keep your content in a Git repository with full history
+- publish by doing a normal `git push`
+- keep Obsidian-friendly syntax such as `![[image.png]]` and `[[wiki-links]]`
+
+In one sentence:
+
+> **Obsidian is for writing, GitHub is for storing, Eleven Blog is for syncing and publishing.**
+
+## Workflow in 30 Seconds
+
+```text
+Write in Obsidian
+    ↓
+Commit and push with Obsidian Git or local Git
+    ↓
+GitHub receives the changes
+    ↓
+Webhook notifies Eleven Blog
+    ↓
+Backend scans Markdown, parses Front Matter, syncs posts and assets
+    ↓
+Frontend serves the latest content
+```
+
+If you do not want to configure Webhook yet, it still works:
+
+- the frontend can trigger a silent manual sync
+- the backend also runs scheduled sync jobs
 
 ---
 
@@ -30,11 +66,20 @@ English | [中文](README_CN.md)
 
 ---
 
-## Why This Project
+## What Problem It Solves
 
-Traditional blog platforms (WordPress, Hexo, Hugo) either require a database-backed editor or a local build-and-deploy cycle. Eleven Blog takes a different approach:
+Traditional blog setups usually have two annoying tradeoffs:
 
-**Your GitHub repository is the content source.** Maintain Markdown files in your own repo, and Eleven Blog automatically discovers, syncs, and publishes them. It supports YAML Front Matter, Obsidian-style embeds, and automatic asset mirroring. Once you set up a Webhook, a simple `git push` triggers incremental synchronization.
+- you write inside a backend editor with a mediocre writing experience
+- your notes live locally, but your blog content lives somewhere else
+
+Eleven Blog takes a different route:
+
+- **your GitHub repo is the content source**
+- **your writing tool can be Obsidian**
+- **publishing is just a `git push`**
+
+The backend discovers Markdown files, parses YAML Front Matter, supports Obsidian-style embeds, mirrors assets to local storage, and publishes everything to the blog frontend.
 
 ---
 
@@ -42,6 +87,7 @@ Traditional blog platforms (WordPress, Hexo, Hugo) either require a database-bac
 
 | Feature | Description |
 |:---|:---|
+| Obsidian + Git Authoring Flow | Write locally in Obsidian and push posts straight to your GitHub content repo |
 | GitHub Content Sync | Auto-discovers `.md` files in a repo, matches existing articles or creates new ones, with full Front Matter parsing |
 | Webhook-driven Sync | Configure a GitHub Webhook; `git push` triggers incremental sync with HMAC-SHA256 signature verification |
 | Obsidian Compatible | Supports `![[image.png]]` embeds and `[[wiki-links]]`, with automatic asset mirroring to local storage |
@@ -152,6 +198,15 @@ blog-backend/
 
 ## Getting Started
 
+### Understand the Two Repos First
+
+In the typical setup, you are dealing with two separate repositories or directories:
+
+- **Eleven Blog repo**: this project, which runs the frontend and backend
+- **content repo**: your own Markdown repository, usually the same repo as your Obsidian vault
+
+Keeping the app repo and the content repo separate is the recommended setup.
+
 ### Prerequisites
 
 - Java 21+
@@ -166,13 +221,21 @@ blog-backend/
 git clone https://github.com/your-username/Eleven-blog.git
 cd Eleven-blog
 
-# Copy and fill in environment variables
-cp .env.backend.example .env.backend
-# Edit .env.backend with your actual values
+# 1) Docker Compose variables
+cp .env.example .env
 
-# Start all services
+# 2) Backend application variables
+cp .env.backend.example .env.backend
+# Edit .env and .env.backend with real values
+
+# 3) Start all services
 docker compose up -d
 ```
+
+At minimum, you should edit these two files first:
+
+- `.env`: Docker Compose variables for MySQL, Redis, and volume mapping
+- `.env.backend`: application variables for GitHub sync, OAuth, JWT, mail, and owner metadata
 
 | Service | Port | Description |
 |:---|:---|:---|
@@ -180,6 +243,49 @@ docker compose up -d
 | `blog-backend` | `:8081` | REST API (Spring Boot) |
 | `mysql` | Internal | MySQL 8.0 database |
 | `redis` | Internal | Redis cache |
+
+### Obsidian Setup
+
+This is the most natural way to use the project.
+
+**1. Create your content repo**
+
+- create a GitHub repository such as `my-blog-notes`
+- use it as your Obsidian vault, or turn an existing vault into a Git repo
+- install an Obsidian Git plugin so your daily writing flow can stay inside Obsidian
+
+**2. Tell the blog which repo to read**
+
+Edit `.env.backend` and set at least these variables:
+
+| Variable | Required | Purpose |
+|:---|:---|:---|
+| `GITHUB_SYNC_OWNER` | Yes | Owner of the content repo |
+| `GITHUB_SYNC_REPO` | Yes | Repository name of the content repo |
+| `GITHUB_SYNC_BRANCH` | No | Branch to sync, default is `main` |
+| `GITHUB_SYNC_PATH` | No | Optional subdirectory to scan, e.g. `notes` |
+| `GITHUB_SYNC_TOKEN` | Depends | Required for private repos; recommended for public repos to avoid API rate limits |
+| `WEBHOOK_SECRET` | Strongly recommended | Shared secret used by the GitHub Webhook |
+
+**3. Configure GitHub Webhook**
+
+In your content repo, go to `Settings -> Webhooks` and add:
+
+- `Payload URL`: `http://your-domain/webhook/github`
+- `Content type`: `application/json`
+- `Secret`: the same value as `WEBHOOK_SECRET` in `.env.backend`
+- event type: `Just the push event`
+
+**4. Start writing and publishing**
+
+- write Markdown in Obsidian
+- commit and push with the Obsidian Git plugin or command line Git
+- Eleven Blog receives the webhook and syncs the changed content
+
+If you do not configure Webhook yet, you still have two fallback paths:
+
+- trigger a silent sync from the frontend
+- let the scheduled backend sync jobs discover new files
 
 ### Option B: Local Development
 
@@ -217,25 +323,44 @@ npm run build
 
 ## Environment Variables
 
-The backend reads configuration from a `.env.backend` file or environment variables:
+It is easier to understand the configuration in two layers:
+
+- root `.env`: used by `docker-compose.yml` for infrastructure variables
+- root `.env.backend`: used by the backend application for sync, OAuth, mail, JWT, and owner settings
+
+### `.env` (Docker Compose variables)
 
 | Variable | Description | Example |
 |:---|:---|:---|
-| `MYSQL_ROOT_PASSWORD` | MySQL root password | `your_password` |
-| `MYSQL_DATABASE` | Database name | `eleven_blog` |
-| `REDIS_PASSWORD` | Redis password | `your_redis_pwd` |
+| `MYSQL_ROOT_PASSWORD` | MySQL root password | `change_me` |
+| `MYSQL_DATABASE` | Initial database name | `eleven_blog` |
+| `MYSQL_USERNAME` | MySQL username | `root` |
+| `REDIS_PASSWORD` | Redis password | `change_me` |
+| `UPLOAD_HOST_DIR` | Host directory mapped for uploads/assets | `./upload_data` |
+
+### `.env.backend` (backend application variables)
+
+| Variable | Description | Example |
+|:---|:---|:---|
 | `JWT_SECRET` | JWT signing secret | `a-long-random-string` |
 | `GITHUB_OAUTH_CLIENT_ID` | GitHub OAuth app ID | `Ov23...` |
 | `GITHUB_OAUTH_CLIENT_SECRET` | GitHub OAuth secret | `xxx...` |
+| `GITHUB_OAUTH_REDIRECT_URI` | GitHub OAuth callback URL | `https://your-domain/oauth/callback` |
 | `GITHUB_SYNC_OWNER` | Sync repo owner | `your-username` |
 | `GITHUB_SYNC_REPO` | Sync repo name | `my-blog-posts` |
+| `GITHUB_SYNC_BRANCH` | Sync branch | `main` |
+| `GITHUB_SYNC_PATH` | Sync subdirectory prefix | `notes` |
 | `GITHUB_SYNC_TOKEN` | GitHub Personal Access Token | `ghp_xxx...` |
 | `WEBHOOK_SECRET` | Webhook signing secret | `your_secret` |
 | `BLOG_OWNER_EMAIL` | Blog owner email | `you@example.com` |
 | `BLOG_OWNER_NICKNAME` | Blog owner display name | `kunxing` |
 | `BLOG_OWNER_GITHUB_ID` | Blog owner GitHub ID | `12345` |
+| `SPRING_MAIL_HOST` | SMTP host | `smtp.qq.com` |
+| `SPRING_MAIL_PORT` | SMTP port | `587` |
+| `SPRING_MAIL_USERNAME` | SMTP username | `you@example.com` |
+| `SPRING_MAIL_PASSWORD` | SMTP app password | `smtp-token` |
 
-See [.env.backend.example](.env.backend.example) for the full list.
+See [.env.example](.env.example) and [.env.backend.example](.env.backend.example) for complete examples.
 
 ---
 
@@ -272,7 +397,8 @@ Eleven-blog/
 ├── upload_data/                     # File upload directory (Docker volume mount)
 ├── docker-compose.yml               # Full-stack orchestration
 ├── nginx.conf                       # Nginx reverse proxy configuration
-└── .env.backend.example             # Environment variable template
+├── .env.example                     # Docker Compose env template
+└── .env.backend.example             # Backend application env template
 ```
 
 ---
@@ -326,13 +452,21 @@ Eleven-blog/
 
 ## GitHub Sync Workflow
 
-This is the core feature. Content is managed through a GitHub repository rather than a traditional admin panel:
+This is the core feature. The most natural workflow is:
+
+1. write in **Obsidian**
+2. push to your **content repository** with Git or the Obsidian Git plugin
+3. let Eleven Blog sync content through **Webhook, silent manual sync, or scheduled jobs**
+
+Under the hood, the sync pipeline looks like this:
 
 ```
+Obsidian / local Markdown repo
+    │
+    │  commit + push
+    ▼
 GitHub Repo (Markdown files)
     │
-    │  git push
-    ▼
 Webhook → HMAC-SHA256 verification → triggers sync
     │
     ▼
