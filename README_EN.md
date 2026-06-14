@@ -553,18 +553,6 @@ No database writes on each page view. Redis Hash `article:view_count` centralize
 - Health checks on all services
 - MySQL with utf8mb4 charset, Redis with AOF persistence
 
----
-
-## Roadmap
-
-- [ ] Full-text search (Elasticsearch)
-- [ ] RSS / Atom feed generation
-- [ ] Sitemap auto-generation
-- [ ] Multi-language (i18n) support
-- [ ] CI/CD pipeline (GitHub Actions)
-- [ ] Unit and integration test coverage
-- [ ] Image CDN / OSS integration
-- [ ] Article series / collections
 
 ---
 

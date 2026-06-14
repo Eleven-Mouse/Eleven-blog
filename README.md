@@ -553,18 +553,6 @@ summary: 深入理解 TCP 三次握手的工作原理
 - 所有服务配置健康检查
 - MySQL 字符集 utf8mb4，Redis AOF 持久化
 
----
-
-## 路线图
-
-- [ ] 全文搜索（Elasticsearch）
-- [ ] RSS / Atom 订阅源
-- [ ] Sitemap 自动生成
-- [ ] 多语言（i18n）
-- [ ] CI/CD 流水线（GitHub Actions）
-- [ ] 单元测试与集成测试覆盖
-- [ ] 图片 CDN / OSS 集成
-- [ ] 文章系列 / 合集功能
 
 ---
 
