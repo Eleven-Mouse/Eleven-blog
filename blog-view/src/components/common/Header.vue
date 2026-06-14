@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <header class="navbar">
     <div class="navbar__inner page-container">
       <router-link to="/home" class="navbar__logo">
@@ -8,7 +8,7 @@
 
       <nav class="navbar__nav">
         <router-link to="/home" class="navbar__nav-item" :class="{ 'is-active': isHomeActive }">
-          首页
+          棣栭〉
         </router-link>
         <router-link
           v-for="topic in topics"
@@ -27,7 +27,7 @@
           class="navbar__icon-btn topic-tree-toggle-btn"
           :class="{ 'is-active': uiStore.topicTreeOpen }"
           @click="toggleTopicTree"
-          aria-label="目录树"
+          aria-label="鐩綍鏍?
         >
           <svg
             viewBox="0 0 24 24"
@@ -75,8 +75,8 @@
           :class="{ 'is-disabled': syncLoading }"
           :disabled="syncLoading"
           @click="handleManualSync"
-          :aria-label="syncLoading ? '正在同步文章' : '同步文章'"
-          :title="syncLoading ? '正在同步文章' : '同步文章'"
+          :aria-label="syncLoading ? '姝ｅ湪鍚屾鏂囩珷' : '鍚屾鏂囩珷'"
+          :title="syncLoading ? '姝ｅ湪鍚屾鏂囩珷' : '鍚屾鏂囩珷'"
         >
           <RefreshRight :class="{ 'is-spinning': syncLoading }" />
         </button>
@@ -108,7 +108,7 @@
               ref="searchInputRef"
               v-model="searchQuery"
               class="search-panel__input"
-              placeholder="搜索文章..."
+              placeholder="鎼滅储鏂囩珷..."
               @input="onSearchInput"
               @keydown.enter="onSearchEnter"
               @keydown.down.prevent="highlightNext"
@@ -123,7 +123,7 @@
 
           <div v-if="searchLoading" class="search-panel__loading">
             <div class="search-spinner" />
-            <span>搜索中...</span>
+            <span>鎼滅储涓?..</span>
           </div>
 
           <div v-else-if="searchResults.length" class="search-panel__results">
@@ -152,11 +152,11 @@
             v-else-if="searchQuery && searchFetched && !searchLoading"
             class="search-panel__empty"
           >
-            没有找到相关文章
+            娌℃湁鎵惧埌鐩稿叧鏂囩珷
           </div>
 
           <div v-else-if="!searchQuery" class="search-panel__hint">
-            输入关键词搜索文章，按 Enter 查看全部结果
+            杈撳叆鍏抽敭璇嶆悳绱㈡枃绔狅紝鎸?Enter 鏌ョ湅鍏ㄩ儴缁撴灉
           </div>
         </div>
       </div>
@@ -173,17 +173,17 @@
       class="mobile-drawer"
     >
       <div class="mobile-directory">
-        <div v-if="drawerTreeLoading" class="mobile-directory__tip">正在加载目录...</div>
+        <div v-if="drawerTreeLoading" class="mobile-directory__tip">姝ｅ湪鍔犺浇鐩綍...</div>
         <div v-else-if="drawerTreeError" class="mobile-directory__tip mobile-directory__tip--error">{{ drawerTreeError }}</div>
         <div v-else-if="mobileTree.length" class="mobile-tree">
           <section v-for="topic in mobileTree" :key="`mobile-topic-${topic.id}`" class="mobile-tree__topic">
             <button class="mobile-tree__topic-trigger" @click="toggleMobileTopic(topic.id)">
               <span class="mobile-tree__topic-name">{{ topic.name }}</span>
-              <span class="mobile-tree__topic-arrow" :class="{ 'is-open': isMobileTopicOpen(topic.id) }">▾</span>
+              <span class="mobile-tree__topic-arrow" :class="{ 'is-open': isMobileTopicOpen(topic.id) }">鈻?/span>
             </button>
 
             <div class="mobile-tree__topic-body" :class="{ 'is-open': isMobileTopicOpen(topic.id) }">
-              <div v-if="topic.loading" class="mobile-tree__status">正在加载文章...</div>
+              <div v-if="topic.loading" class="mobile-tree__status">姝ｅ湪鍔犺浇鏂囩珷...</div>
               <div v-else-if="topic.loadError" class="mobile-tree__status is-error">{{ topic.loadError }}</div>
               <template v-else-if="hasSecondLevelGroups(topic)">
                 <section
@@ -196,7 +196,7 @@
                     <span
                       class="mobile-tree__group-arrow"
                       :class="{ 'is-open': isMobileGroupOpen(topic.id, group.key) }"
-                      >▾</span
+                      >鈻?/span
                     >
                   </button>
                   <div
@@ -218,7 +218,7 @@
                     </div>
                   </div>
                 </section>
-                <div v-if="!getTopicGroups(topic).length" class="mobile-tree__status">该专题暂无文章</div>
+                <div v-if="!getTopicGroups(topic).length" class="mobile-tree__status">璇ヤ笓棰樻殏鏃犳枃绔?/div>
               </template>
               <div v-else-if="topic.rootArticles?.length" class="mobile-tree__articles mobile-tree__articles--root">
                 <router-link
@@ -233,11 +233,11 @@
                   <span class="mobile-tree__article-title">{{ article.title }}</span>
                 </router-link>
               </div>
-              <div v-else class="mobile-tree__status">该专题暂无文章</div>
+              <div v-else class="mobile-tree__status">璇ヤ笓棰樻殏鏃犳枃绔?/div>
             </div>
           </section>
         </div>
-        <div v-else class="mobile-directory__tip">暂无目录数据</div>
+        <div v-else class="mobile-directory__tip">鏆傛棤鐩綍鏁版嵁</div>
       </div>
     </el-drawer>
   </teleport>
@@ -283,6 +283,7 @@ const contentMode = ref('unknown')
 
 let categoryPollTimer = null
 let debounceTimer = null
+const TOPIC_FETCH_PAGE_SIZE = 200
 const isHomeActive = computed(() => route.path === '/home' || route.path === '/')
 const isArticleRoute = computed(() => route.path.startsWith('/article/'))
 const activeDrawerArticleId = computed(() =>
@@ -379,21 +380,21 @@ const emitTopicsRefresh = () => {
 
 const formatSyncResultMessage = (result) => {
   if (!result || !Object.keys(result).length) {
-    return '同步已完成，本次没有新的变更'
+    return '鍚屾宸插畬鎴愶紝鏈娌℃湁鏂扮殑鍙樻洿'
   }
   const matched = Number(result.matched || 0)
   const created = Number(result.created || 0)
   const deleted = Number(result.deleted || 0)
   const deletedCategories = Number(result.deletedCategories || 0)
   const failed = Number(result.failed || 0)
-  return `同步完成：匹配 ${matched} 篇，新建 ${created} 篇，删除 ${deleted} 篇，清理分类 ${deletedCategories} 个，失败 ${failed} 篇`
+  return `鍚屾瀹屾垚锛氬尮閰?${matched} 绡囷紝鏂板缓 ${created} 绡囷紝鍒犻櫎 ${deleted} 绡囷紝娓呯悊鍒嗙被 ${deletedCategories} 涓紝澶辫触 ${failed} 绡嘸
 }
 
 const handleManualSync = async () => {
   if (syncLoading.value) return
   syncLoading.value = true
   const loadingMessage = ElMessage({
-    message: '正在同步文章',
+    message: '姝ｅ湪鍚屾鏂囩珷',
     type: 'info',
     duration: 0,
     showClose: true,
@@ -406,7 +407,7 @@ const handleManualSync = async () => {
     ElMessage.success(formatSyncResultMessage(result))
   } catch (error) {
     loadingMessage.close()
-    ElMessage.error(error?.message || '文章同步失败，请稍后重试')
+    ElMessage.error(error?.message || '鏂囩珷鍚屾澶辫触锛岃绋嶅悗閲嶈瘯')
   } finally {
     syncLoading.value = false
   }
@@ -546,7 +547,7 @@ const getTopicGroups = (topic) => {
   const groups = topic?.folderGroups ? [...topic.folderGroups] : []
   const rootArticles = topic?.rootArticles || []
   if (rootArticles.length) {
-    groups.unshift({ key: '__root__', label: '未分组', articles: rootArticles })
+    groups.unshift({ key: '__root__', label: '鏈垎缁?, articles: rootArticles })
   }
   return groups
 }
@@ -583,7 +584,7 @@ const loadTopicArticlesIntoTree = async (topicId) => {
     next[idx] = {
       ...next[idx],
       loading: false,
-      loadError: '文章加载失败，请重试',
+      loadError: '鏂囩珷鍔犺浇澶辫触锛岃閲嶈瘯',
       rootArticles: [],
       folderGroups: [],
     }
@@ -628,6 +629,63 @@ const formatDate = (dateStr) => {
   })
 }
 
+const fetchAllTopicArticles = async () => {
+  const articles = []
+  let page = 1
+
+  while (true) {
+    const res = await fetchArticles({ page, size: TOPIC_FETCH_PAGE_SIZE })
+    const list = Array.isArray(res?.data) ? res.data : []
+    const totalPage = Number(res?.pagination?.totalPage || 0)
+
+    articles.push(...list)
+
+    if (!totalPage || page >= totalPage) {
+      break
+    }
+    page += 1
+  }
+
+  return articles
+}
+
+const buildTopicsFromArticles = (articles, categories) => {
+  const categoryMetaMap = new Map(
+    (Array.isArray(categories) ? categories : [])
+      .filter((item) => item?.id)
+      .map((item) => [
+        Number(item.id),
+        {
+          id: Number(item.id),
+          name: String(item.name || '').trim(),
+          sortOrder: Number(item.sortOrder || 0),
+        },
+      ]),
+  )
+
+  const topicMap = new Map()
+  for (const article of Array.isArray(articles) ? articles : []) {
+    const id = Number(article?.categoryId || 0)
+    const fallbackName = categoryMetaMap.get(id)?.name || ''
+    const name = String(article?.categoryName || fallbackName).trim()
+    if (!id || !name || name === '棣栭〉') continue
+    if (topicMap.has(id)) continue
+
+    const meta = categoryMetaMap.get(id)
+    topicMap.set(id, {
+      id,
+      name: meta?.name || name,
+      sortOrder: meta?.sortOrder || 0,
+    })
+  }
+
+  return Array.from(topicMap.values()).sort((a, b) => {
+    const orderDiff = (a.sortOrder || 0) - (b.sortOrder || 0)
+    if (orderDiff !== 0) return orderDiff
+    return String(a.name || '').localeCompare(String(b.name || ''), 'zh-CN')
+  })
+}
+
 const onScroll = () => {
   const y = window.scrollY
   const docH = document.documentElement.scrollHeight - window.innerHeight
@@ -646,19 +704,12 @@ const loadTopics = async () => {
   drawerTreeLoading.value = true
   drawerTreeError.value = ''
   try {
-    const categories = (await fetchCategories()) || []
-    const filtered = categories
-      .filter((item) => {
-        const name = String(item?.name || '').trim()
-        return item?.id && name && name !== '首页'
-      })
-      .sort((a, b) => {
-        const orderDiff = (a.sortOrder || 0) - (b.sortOrder || 0)
-        if (orderDiff !== 0) return orderDiff
-        return String(a.name || '').localeCompare(String(b.name || ''), 'zh-CN')
-      })
-    topics.value = filtered
-      .map((item) => ({ id: item.id, name: item.name }))
+    const [articles, categories] = await Promise.all([
+      fetchAllTopicArticles(),
+      fetchCategories().catch(() => []),
+    ])
+    const filtered = buildTopicsFromArticles(articles, categories)
+    topics.value = filtered.map((item) => ({ id: item.id, name: item.name }))
     mobileTree.value = filtered.map((item) => ({
       id: item.id,
       name: item.name,
@@ -670,7 +721,7 @@ const loadTopics = async () => {
   } catch {
     topics.value = []
     mobileTree.value = []
-    drawerTreeError.value = '目录加载失败，请稍后重试。'
+    drawerTreeError.value = '鐩綍鍔犺浇澶辫触锛岃绋嶅悗閲嶈瘯銆?
   } finally {
     drawerTreeLoading.value = false
   }
@@ -688,7 +739,7 @@ onMounted(() => {
   window.addEventListener('blog:topics-refresh', loadTopics)
   window.addEventListener('scroll', onScroll, { passive: true })
   window.addEventListener('keydown', onKeydown)
-  // 每5分钟静默刷新分类，确保后端同步后前端自动更新
+  // 姣?鍒嗛挓闈欓粯鍒锋柊鍒嗙被锛岀‘淇濆悗绔悓姝ュ悗鍓嶇鑷姩鏇存柊
   categoryPollTimer = setInterval(loadTopics, 5 * 60 * 1000)
 })
 
@@ -885,7 +936,7 @@ watch(
   z-index: 1;
 }
 
-/* Search overlay (teleported to body → :global) */
+/* Search overlay (teleported to body 鈫?:global) */
 :global(.search-overlay) {
   position: fixed;
   inset: 0;
@@ -1038,7 +1089,7 @@ watch(
   opacity: 0;
 }
 
-/* Drawer (teleported → :global) */
+/* Drawer (teleported 鈫?:global) */
 :global(.drawer-header) {
   display: flex;
   align-items: center;
