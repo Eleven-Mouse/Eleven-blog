@@ -1,32 +1,18 @@
-FROM maven:3.9.9-eclipse-temurin-21 AS builder
+FROM python:3.11-slim
 
-WORKDIR /workspace
-
-COPY pom.xml ./
-COPY blog-common ./blog-common
-COPY blog-pojo ./blog-pojo
-COPY blog-server ./blog-server
-
-RUN mvn -pl blog-server -am -DskipTests package
-
-FROM eclipse-temurin:21-jre-alpine
+COPY --from=ghcr.io/astral-sh/uv:0.11.8 /uv /uvx /bin/
 
 WORKDIR /app
 
-COPY --from=builder /workspace/blog-server/target/blog-server-1.0-SNAPSHOT.jar app.jar
+COPY app ./app
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
 
-RUN mkdir -p /app/uploads
+ENV PATH="/app/.venv/bin:$PATH"
 
-EXPOSE 8081
+EXPOSE 8082
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-    CMD wget -q --spider http://localhost:8081/actuator/health || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8082/health', timeout=3)" || exit 1
 
-ENTRYPOINT ["java", \
-    "-Xms256m", \
-    "-Xmx768m", \
-    "-XX:+UseG1GC", \
-    "-XX:+HeapDumpOnOutOfMemoryError", \
-    "-XX:HeapDumpPath=/app/heapdump.hprof", \
-    "-Djava.security.egd=file:/dev/./urandom", \
-    "-jar", "app.jar"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8082"]

@@ -3,13 +3,14 @@
     :id="contentId"
     ref="rootRef"
     class="article-markdown"
+    :class="{ 'is-text-animated': animateText }"
     v-html="rendered.html"
     @click="handleContentClick"
   ></div>
 </template>
 
 <script setup>
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { Marked } from 'marked'
 import hljs from 'highlight.js/lib/common'
 
@@ -26,11 +27,16 @@ const props = defineProps({
     type: String,
     default: 'heading',
   },
+  animateText: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const emit = defineEmits(['catalog-change', 'image-click'])
 
 const rootRef = ref(null)
+const SKIP_TEXT_TAGS = new Set(['SCRIPT', 'STYLE', 'PRE', 'CODE'])
 
 const sanitizeMarkdownSource = (source) =>
   String(source || '').replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
@@ -157,14 +163,55 @@ const renderMarkdown = (source, headingPrefix) => {
 
 const rendered = computed(() => renderMarkdown(props.content, props.headingPrefix))
 
+const animateTextCharacters = async () => {
+  if (!props.animateText) return
+
+  await nextTick()
+  const root = rootRef.value
+  if (!root || root.querySelector('.text-pop-char')) return
+
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+  const textNodes = []
+  while (walker.nextNode()) {
+    const node = walker.currentNode
+    const parentTag = node.parentElement?.tagName
+    if (!SKIP_TEXT_TAGS.has(parentTag) && node.nodeValue) {
+      textNodes.push(node)
+    }
+  }
+
+  let charIndex = 0
+  textNodes.forEach((node) => {
+    const fragment = document.createDocumentFragment()
+
+    for (const char of node.nodeValue) {
+      if (/\s/.test(char)) {
+        fragment.appendChild(document.createTextNode(char))
+      } else {
+        const span = document.createElement('span')
+        span.className = 'text-pop-char'
+        span.textContent = char
+        span.style.setProperty('--char-index', String(charIndex))
+        fragment.appendChild(span)
+      }
+      charIndex += 1
+    }
+
+    node.parentNode?.replaceChild(fragment, node)
+  })
+}
+
 watch(
   rendered,
   async (value) => {
     await nextTick()
     emit('catalog-change', value.catalog)
+    await animateTextCharacters()
   },
   { immediate: true },
 )
+
+onMounted(animateTextCharacters)
 
 const copyCode = async (button) => {
   const codeEl = button.closest('pre')?.querySelector('code')
@@ -208,6 +255,32 @@ const handleContentClick = async (event) => {
   box-sizing: border-box;
 }
 
+.article-markdown.is-text-animated :deep(.text-pop-char) {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(0.7em) scale(0.65) rotate(-5deg);
+  animation: textPopChar 0.46s cubic-bezier(0.2, 0.9, 0.3, 1.35) forwards;
+  animation-delay: calc(var(--char-index) * 18ms);
+}
+
+@keyframes textPopChar {
+  0% {
+    opacity: 0;
+    transform: translateY(0.7em) scale(0.65) rotate(-5deg);
+  }
+  58% {
+    opacity: 1;
+    transform: translateY(-0.18em) scale(1.12) rotate(3deg);
+  }
+  78% {
+    transform: translateY(0.04em) scale(0.97) rotate(-1deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0);
+  }
+}
+
 .article-markdown :deep(p) {
   margin: 0 0 24px;
   font-size: 17px;
@@ -230,6 +303,14 @@ const handleContentClick = async (event) => {
 
 .article-markdown :deep(h1) {
   font-size: 2rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .article-markdown.is-text-animated :deep(.text-pop-char) {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
 }
 
 .article-markdown :deep(h2) {

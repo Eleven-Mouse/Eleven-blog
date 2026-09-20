@@ -45,14 +45,29 @@ npm run lint
 
 ## Static content mode
 
-The frontend can now read article data from `public/content/site.json` before falling back to `/api`.
+This deployment uses Vercel for static hosting only. Article data is generated from the local `notes/` directory at build time and comments are hosted by Utterances through GitHub Issues.
 
-1. Copy `public/content/site.example.json` to `public/content/site.json`, or configure the GitHub build envs below
-2. Keep `VITE_CONTENT_SOURCE=auto` to prefer static content when the file exists
-3. Set `VITE_CONTENT_SOURCE=static` to force static mode
-4. Set `VITE_CONTENT_SOURCE=api` to force the old backend API mode
+Put Markdown articles into `notes/`. Nested folders become topics and relative images or documents are copied into the production build automatically.
 
-If you want Vercel to generate `site.json` directly from GitHub during build, set:
+```text
+notes/
+├── Java/
+│   ├── 01-基础.md
+│   └── image.png
+└── Network/
+    └── TCP.md
+```
+
+Production uses:
+
+```env
+VITE_CONTENT_SOURCE=static
+VITE_UTTERANCES_REPO=Eleven-Mouse/Eleven-blog
+```
+
+The local `notes/` directory takes precedence over GitHub content configuration.
+
+The following environment variables remain available as a GitHub-source fallback:
 
 - `GITHUB_CONTENT_OWNER`
 - `GITHUB_CONTENT_REPO`
@@ -61,20 +76,14 @@ If you want Vercel to generate `site.json` directly from GitHub during build, se
 - `GITHUB_CONTENT_TOKEN` (optional, recommended for private repos or rate limits)
 - `BLOG_STATIC_CONFIG_JSON` (optional JSON string for blog config)
 
-The build now runs `node scripts/generate-static-site.mjs` before `vite build`.
+The build runs `node scripts/generate-static-site.mjs` before `vite build`.
 
-Static mode currently covers:
+Before deploying, install the Utterances GitHub App for `Eleven-Mouse/Eleven-blog` from `https://github.com/apps/utterances`.
 
-- article detail
-- homepage featured article
-- categories/topics
-- tags
-- archive
-- blog config
+Deploy settings:
 
-These features still need the backend:
+- Root Directory: `blog-view`
+- Build Command: `npm run build`
+- Output Directory: `dist`
 
-- comments
-- GitHub OAuth
-- view count
-- manual sync
+No application backend, database, Redis, or upload service is required.

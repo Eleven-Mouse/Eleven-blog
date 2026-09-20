@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises'
+import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
@@ -8,11 +9,29 @@ const projectRoot = path.resolve(__dirname, '..')
 const publicContentDir = path.join(projectRoot, 'public', 'content')
 const outputFile = path.join(publicContentDir, 'site.json')
 const assetOutputDir = path.join(publicContentDir, 'assets')
+const localNotesDir = path.join(projectRoot, 'notes')
+const contentConfigFile = path.join(projectRoot, 'content.config.json')
 
-const owner = String(process.env.GITHUB_CONTENT_OWNER || '').trim()
-const repo = String(process.env.GITHUB_CONTENT_REPO || '').trim()
-const branch = String(process.env.GITHUB_CONTENT_BRANCH || 'main').trim()
-const rootPath = String(process.env.GITHUB_CONTENT_ROOT || '').trim().replace(/^\/+|\/+$/g, '')
+const loadContentConfig = () => {
+  try {
+    return JSON.parse(readFileSync(contentConfigFile, 'utf8'))
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      console.warn('[static-content] content.config.json is invalid:', error.message)
+    }
+    return {}
+  }
+}
+
+const contentConfig = loadContentConfig()
+const owner = String(process.env.GITHUB_CONTENT_OWNER || contentConfig.owner || '').trim()
+const repo = String(process.env.GITHUB_CONTENT_REPO || contentConfig.repo || '').trim()
+const branch = String(
+  process.env.GITHUB_CONTENT_BRANCH || contentConfig.branch || 'main',
+).trim()
+const rootPath = String(process.env.GITHUB_CONTENT_ROOT || contentConfig.root || '')
+  .trim()
+  .replace(/^\/+|\/+$/g, '')
 const token = String(process.env.GITHUB_CONTENT_TOKEN || '').trim()
 const configJson = String(process.env.BLOG_STATIC_CONFIG_JSON || '').trim()
 
@@ -227,6 +246,43 @@ const githubGetBuffer = async (repoPath) => {
   return Buffer.from(await response.arrayBuffer())
 }
 
+const localNotesPath = (repoPath) =>
+  path.join(localNotesDir, ...normalizeRepoPath(repoPath).split('/'))
+
+const listLocalMarkdownFiles = async () => {
+  const files = []
+
+  const walk = async (directory, prefix = '') => {
+    const entries = await fs.readdir(directory, { withFileTypes: true })
+    for (const entry of entries) {
+      const repoPath = joinRepoPath(prefix, entry.name)
+      if (entry.isDirectory()) {
+        await walk(path.join(directory, entry.name), repoPath)
+      } else if (entry.isFile() && isMarkdownFile(repoPath)) {
+        files.push(repoPath)
+      }
+    }
+  }
+
+  try {
+    await walk(localNotesDir)
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error
+  }
+
+  return files.sort((a, b) => a.localeCompare(b, 'en'))
+}
+
+const readMarkdownFile = async (repoPath, useLocalNotes) =>
+  useLocalNotes
+    ? fs.readFile(localNotesPath(repoPath), 'utf8')
+    : githubGetText(repoPath)
+
+const readBinaryAsset = async (repoPath, useLocalNotes) =>
+  useLocalNotes
+    ? fs.readFile(localNotesPath(repoPath))
+    : githubGetBuffer(repoPath)
+
 const resolveRelativePath = (articlePath, target) => {
   const cleanTarget = String(target || '').trim()
   if (!cleanTarget || cleanTarget.startsWith('http://') || cleanTarget.startsWith('https://') || cleanTarget.startsWith('/')) {
@@ -267,7 +323,13 @@ const rewriteMarkdownAssets = (markdown, articlePath) => {
 
   output = output.replace(/(!?\[[^\]]*]\()([^)]+)(\))/g, (full, prefix, rawTarget, suffix) => {
     const trimmedTarget = String(rawTarget || '').trim()
-    if (!trimmedTarget || trimmedTarget.startsWith('http://') || trimmedTarget.startsWith('https://') || trimmedTarget.startsWith('#')) {
+    if (
+      !trimmedTarget ||
+      trimmedTarget.startsWith('http://') ||
+      trimmedTarget.startsWith('https://') ||
+      trimmedTarget.startsWith('#') ||
+      trimmedTarget.startsWith('/content/assets/')
+    ) {
       return full
     }
     const repoPath = resolveRelativePath(articlePath, trimmedTarget)
@@ -353,11 +415,11 @@ const buildTagData = (articles) => {
   return Array.from(tagMap.values()).sort((a, b) => String(a.name).localeCompare(String(b.name), 'zh-CN'))
 }
 
-const buildArticles = async (markdownFiles, generatedAt) => {
+const buildArticles = async (markdownFiles, generatedAt, useLocalNotes) => {
   const articles = []
 
   for (const repoPath of markdownFiles) {
-    const raw = await githubGetText(repoPath)
+    const raw = await readMarkdownFile(repoPath, useLocalNotes)
     const { data, content } = parseFrontMatter(raw)
     const relativePath = rootPath ? repoPath.slice(rootPath.length).replace(/^\/+/, '') : repoPath
     const segments = relativePath.split('/').filter(Boolean)
@@ -386,7 +448,7 @@ const buildArticles = async (markdownFiles, generatedAt) => {
       readingMinutes: Number(data.readingMinutes || data.readingTime || 0) || null,
       isCore: data.isCore === true || data.isCore === 1 ? 1 : 0,
       viewCount: 0,
-      githubUrl: blobFileUrl(repoPath),
+      githubUrl: useLocalNotes ? repoPath : blobFileUrl(repoPath),
       syncStatus: 1,
       lastSyncTime: generatedAt,
       isComment: data.isComment === false || data.comments === false ? 0 : 1,
@@ -400,12 +462,12 @@ const buildArticles = async (markdownFiles, generatedAt) => {
   return articles.sort((a, b) => new Date(b.publishTime).getTime() - new Date(a.publishTime).getTime())
 }
 
-const copyAssets = async () => {
+const copyAssets = async (useLocalNotes) => {
   await fs.rm(assetOutputDir, { recursive: true, force: true })
   await ensureDir(assetOutputDir)
 
   for (const repoPath of createdAssetPaths) {
-    const buffer = await githubGetBuffer(repoPath)
+    const buffer = await readBinaryAsset(repoPath, useLocalNotes)
     const outputPath = path.join(assetOutputDir, ...normalizeRepoPath(repoPath).split('/'))
     await ensureDir(path.dirname(outputPath))
     await fs.writeFile(outputPath, buffer)
@@ -415,7 +477,12 @@ const copyAssets = async () => {
 const main = async () => {
   await ensureDir(publicContentDir)
 
-  if (!owner || !repo) {
+  const localMarkdownFiles = await listLocalMarkdownFiles()
+  const useLocalNotes = localMarkdownFiles.length > 0
+
+  if (useLocalNotes) {
+    log(`Loading ${localMarkdownFiles.length} markdown files from local notes/`)
+  } else if (!owner || !repo) {
     try {
       await fs.access(outputFile)
       log('No GitHub source env found. Reusing existing public/content/site.json.')
@@ -426,15 +493,17 @@ const main = async () => {
   }
 
   const generatedAt = new Date().toISOString()
-  log(`Loading markdown from ${owner}/${repo}@${branch}${rootPath ? ` (${rootPath})` : ''}`)
+  if (!useLocalNotes) {
+    log(`Loading markdown from ${owner}/${repo}@${branch}${rootPath ? ` (${rootPath})` : ''}`)
+  }
 
-  const markdownFiles = await fetchMarkdownFiles()
+  const markdownFiles = useLocalNotes ? localMarkdownFiles : await fetchMarkdownFiles()
   if (!markdownFiles.length) {
     warn('No markdown files found. Skip static content generation.')
     return
   }
 
-  const articles = await buildArticles(markdownFiles, generatedAt)
+  const articles = await buildArticles(markdownFiles, generatedAt, useLocalNotes)
   const categories = buildCategoryData(articles)
   const tags = buildTagData(articles)
   const config = parseConfig()
@@ -446,7 +515,7 @@ const main = async () => {
     }
   }
 
-  await copyAssets()
+  await copyAssets(useLocalNotes)
   await fs.writeFile(
     outputFile,
     JSON.stringify(

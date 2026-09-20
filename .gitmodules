@@ -1,0 +1,3 @@
+[submodule "blog-view/notes"]
+	path = blog-view/notes
+	url = https://github.com/Eleven-Mouse/Notes.git

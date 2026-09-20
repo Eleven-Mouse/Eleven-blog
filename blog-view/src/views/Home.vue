@@ -6,12 +6,13 @@
 
       <template v-else-if="article">
         <article class="article-body home-block home-block--hero">
-          <ArticleMarkdown content-id="home-featured-preview" :content="renderedFeaturedContent" />
+          <ArticleMarkdown
+            content-id="home-featured-preview"
+            :content="renderedFeaturedContent"
+            animate-text
+          />
         </article>
-        <section class="home-comments home-block home-block--comments">
-          <el-divider />
-          <CommentsCard :blog-id="article.id" />
-        </section>
+        <GithubComments class="home-comments" />
       </template>
       <div v-else class="empty-tip">首页文章未找到，请确认标题为“首页”的文章存在。</div>
     </section>
@@ -22,9 +23,9 @@
 import { computed, ref, watch, nextTick, onUnmounted } from 'vue'
 import { fetchArticleById, fetchArticles } from '@/api/article'
 import { useBlogConfigStore } from '@/stores/blogConfig'
-import CommentsCard from '@/components/CommentsCard.vue'
 import { transformObsidianAssetLinks } from '@/utils/markdownAssets'
 import ArticleMarkdown from '@/components/ArticleMarkdown.vue'
+import GithubComments from '@/components/GithubComments.vue'
 
 const blogConfig = useBlogConfigStore()
 const article = ref(null)
@@ -137,19 +138,13 @@ onUnmounted(() => {
   animation-delay: 0.06s;
 }
 
-.home-content.is-ready .home-block--comments {
-  animation-delay: 0.18s;
-}
-
-.article-body,
-.home-comments {
+.article-body {
   transition:
     transform 0.28s ease,
     filter 0.28s ease;
 }
 
-.article-body:hover,
-.home-comments:hover {
+.article-body:hover {
   transform: translateY(-2px);
   filter: saturate(1.03);
 }
@@ -167,6 +162,7 @@ onUnmounted(() => {
   height: auto;
   margin: 20px auto;
 }
+
 .home-comments {
   margin-top: 40px;
 }
@@ -200,13 +196,11 @@ onUnmounted(() => {
 @media (prefers-reduced-motion: reduce) {
   .home-content,
   .home-block,
-  .article-body,
-  .home-comments {
+  .article-body {
     animation: none !important;
   }
 
-  .article-body,
-  .home-comments {
+  .article-body {
     transition: none;
   }
 }
