@@ -466,6 +466,29 @@ const handleContentClick = async (event) => {
   color: var(--text-muted);
 }
 
+.article-markdown :deep(.github-snake) {
+  margin: 30px 0;
+}
+
+.article-markdown :deep(.github-snake img) {
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: auto;
+}
+
+.article-markdown :deep(.github-snake__dark) {
+  display: none;
+}
+
+html[data-theme='dark'] .article-markdown :deep(.github-snake__light) {
+  display: none;
+}
+
+html[data-theme='dark'] .article-markdown :deep(.github-snake__dark) {
+  display: block;
+}
+
 .article-markdown :deep(a) {
   color: var(--text-link);
   text-decoration: none;
@@ -570,6 +593,13 @@ html[data-theme='dark'] .article-markdown :deep(.hljs-variable),
 html[data-theme='dark'] .article-markdown :deep(.hljs-template-variable),
 html[data-theme='dark'] .article-markdown :deep(.hljs-operator) {
   color: #93c5fd;
+}
+
+@media (min-width: 1025px) {
+  .article-markdown :deep(.github-snake) {
+    width: 150%;
+    margin-left: -25%;
+  }
 }
 
 @media (max-width: 768px) {

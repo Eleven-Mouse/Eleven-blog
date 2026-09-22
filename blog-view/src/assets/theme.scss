@@ -2,23 +2,23 @@
 // Theme Variables — Eleven-blog
 // Premium Blog Design System
 // Two complete themes: Light / Dark
-// Color: Apple green + Cheese
+// Color: Apple green + Rice paper
 // ============================================
 
 // ---------- Light Theme (Default) ----------
 :root {
   // Backgrounds — layered depth system
-  --bg-primary: #FBF1D7;
-  --bg-secondary: #F5E7C7;
-  --bg-tertiary: #EEDDB7;
-  --bg-header: rgba(251, 241, 215, 0.82);
-  --bg-card: #FFF8E7;
-  --bg-code: #F5E9CD;
-  --bg-inline-code: #F1E2C2;
+  --bg-primary: #F9F2E0;
+  --bg-secondary: #F4EBD8;
+  --bg-tertiary: #ECE1CA;
+  --bg-header: rgba(249, 242, 224, 0.82);
+  --bg-card: #FFFBF2;
+  --bg-code: #F5EBD7;
+  --bg-inline-code: #F1E5CE;
   --bg-overlay: rgba(0, 0, 0, 0.4);
 
   // Page background — subtle gradient for depth
-  --bg-page: linear-gradient(180deg, #F6E8C8 0%, #FBF1D7 12%, #FBF1D7 88%, #F7EACD 100%);
+  --bg-page: linear-gradient(180deg, #F4E9D3 0%, #F9F2E0 12%, #F9F2E0 88%, #F5EBD7 100%);
   --bg-page-radial: radial-gradient(ellipse at 50% 0%, rgba(115, 174, 82, 0.08) 0%, transparent 70%);
 
   // Text — stronger hierarchy
@@ -26,7 +26,7 @@
   --text-secondary: #43503C;
   --text-muted: #707869;
   --text-link: #4F7A38;
-  --text-inverse: #FBF1D7;
+  --text-inverse: #F9F2E0;
 
   // Accent — apple green
   --accent: #73AE52;
@@ -38,9 +38,9 @@
   --accent-secondary: #A8CA91;
   --accent-secondary-rgb: 168, 202, 145;
 
-  // Warm accent — cheese
-  --accent-warm: #FBF1D7;
-  --accent-warm-rgb: 251, 241, 215;
+  // Warm accent — rice paper
+  --accent-warm: #F9F2E0;
+  --accent-warm-rgb: 249, 242, 224;
 
   // Border & Divider — softer
   --border-color: #E4D5B5;
@@ -67,7 +67,7 @@
   --scrollbar-track: transparent;
 
   // Misc
-  --hero-gradient: linear-gradient(135deg, #FBF1D7 0%, #F5E7C7 48%, #EDF5E8 100%);
+  --hero-gradient: linear-gradient(135deg, #F9F2E0 0%, #F4EBD8 48%, #EDF5E8 100%);
   --navbar-blur: 20px;
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -98,23 +98,23 @@
 
 // ---------- Dark Theme ----------
 html[data-theme="dark"] {
-  --bg-primary: #0F1117;
-  --bg-secondary: #1A1D27;
-  --bg-tertiary: #232630;
-  --bg-header: rgba(15, 17, 23, 0.75);
-  --bg-card: #1A1D27;
-  --bg-code: #1E2130;
-  --bg-inline-code: #282B38;
+  --bg-primary: #08150E;
+  --bg-secondary: #111F17;
+  --bg-tertiary: #192A20;
+  --bg-header: rgba(8, 21, 14, 0.84);
+  --bg-card: #101F17;
+  --bg-code: #0D1B13;
+  --bg-inline-code: #17271D;
   --bg-overlay: rgba(0, 0, 0, 0.6);
 
-  --bg-page: linear-gradient(180deg, #0d0f15 0%, #0F1117 12%, #0F1117 88%, #0d0f15 100%);
+  --bg-page: linear-gradient(180deg, #06110B 0%, #08150E 12%, #08150E 88%, #06110B 100%);
   --bg-page-radial: radial-gradient(ellipse at 50% 0%, rgba(76, 175, 80, 0.04) 0%, transparent 70%);
 
-  --text-primary: #E8EAED;
-  --text-secondary: #B0B8C4;
-  --text-muted: #6B7280;
+  --text-primary: #E8EFEA;
+  --text-secondary: #B9C6BD;
+  --text-muted: #839489;
   --text-link: #9ACB7D;
-  --text-inverse: #0F1117;
+  --text-inverse: #08150E;
 
   --accent: #73AE52;
   --accent-hover: #8CC76B;
@@ -124,12 +124,12 @@ html[data-theme="dark"] {
   --accent-secondary: #8FC172;
   --accent-secondary-rgb: 143, 193, 114;
 
-  --accent-warm: #FBF1D7;
-  --accent-warm-rgb: 251, 241, 215;
+  --accent-warm: #F9F2E0;
+  --accent-warm-rgb: 249, 242, 224;
 
-  --border-color: #2A2D3A;
-  --border-light: #1F222E;
-  --divider-color: #2A2D3A;
+  --border-color: #2A3B31;
+  --border-light: #1D2D23;
+  --divider-color: #2A3B31;
 
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
@@ -146,7 +146,7 @@ html[data-theme="dark"] {
 
   --scrollbar-thumb: #4A5060;
 
-  --hero-gradient: linear-gradient(135deg, #0f1117 0%, #0f1a14 30%, #0f1117 60%, #111520 100%);
+  --hero-gradient: linear-gradient(135deg, #08150E 0%, #0D2116 30%, #08150E 60%, #101F17 100%);
 
   // Element Plus overrides — Dark
   --el-bg-color: var(--bg-primary);

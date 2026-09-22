@@ -1,0 +1,37 @@
+name: Generate GitHub contribution snake
+
+on:
+  schedule:
+    - cron: "17 1 * * *"
+  workflow_dispatch:
+  push:
+    branches:
+      - static-blog-vercel
+    paths:
+      - .github/workflows/github-snake.yml
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate snake SVGs
+        uses: Platane/snk/svg-only@v3
+        with:
+          github_user_name: Eleven-Mouse
+          outputs: |
+            dist/github-snake.svg?color_snake=#73AE52&color_dots=#E9E0CC,#D8E7CE,#B7D59F,#91C46F,#73AE52
+            dist/github-snake-dark.svg?color_snake=#73AE52&color_dots=#1D2D23,#29452E,#477A38,#5F983F,#73AE52
+
+      - name: Publish SVGs
+        uses: crazy-max/ghaction-github-pages@v3.1.0
+        with:
+          target_branch: output
+          build_dir: dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
