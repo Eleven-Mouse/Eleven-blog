@@ -79,6 +79,7 @@ const hydrateHomeImages = () => {
   const container = document.querySelector('#home-featured-preview')
   if (!container) return
   container.querySelectorAll('img').forEach((img) => {
+    if (img.closest('.github-snake')) return
     img.loading = 'lazy'
     img.fetchPriority = 'low'
     img.decoding = 'async'
@@ -160,7 +161,7 @@ onUnmounted(() => {
 }
 
 .article-body :deep(img) {
-  display: block !important;
+  display: block;
   visibility: visible !important;
   opacity: 1 !important;
   max-width: 100%;
