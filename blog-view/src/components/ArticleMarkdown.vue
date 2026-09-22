@@ -477,15 +477,15 @@ const handleContentClick = async (event) => {
   height: auto;
 }
 
-.article-markdown :deep(.github-snake__dark) {
+.article-markdown :deep(.github-snake img.github-snake__dark) {
   display: none;
 }
 
-html[data-theme='dark'] .article-markdown :deep(.github-snake__light) {
+html[data-theme='dark'] .article-markdown :deep(.github-snake img.github-snake__light) {
   display: none;
 }
 
-html[data-theme='dark'] .article-markdown :deep(.github-snake__dark) {
+html[data-theme='dark'] .article-markdown :deep(.github-snake img.github-snake__dark) {
   display: block;
 }
 
