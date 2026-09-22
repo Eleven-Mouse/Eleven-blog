@@ -1,53 +1,26 @@
-# vue-blog
+# Eleven Blog Frontend
 
-This template should help get you started developing with Vue 3 in Vite.
+Eleven Blog 的静态站点工程。项目在构建期读取 Markdown，生成文章 JSON 和资源文件，再由 Vite 输出纯静态站点。
 
-## Recommended IDE Setup
+完整项目说明见根目录 [`README.md`](../README.md)。
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## 开发环境
 
-## Recommended Browser Setup
+- Node.js `20.19+` 或 `22.12+`
+- npm `10+`
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd) 
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+项目已提供可用于本地预览的默认配置。需要个性化时，以 `.env.example` 为模板编辑 `.env.local`；已有 `.env.local` 时不要覆盖。
 
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
+```bash
+npm ci
 npm run dev
 ```
 
-### Compile and Minify for Production
+开发服务器默认运行在 `http://localhost:3000`。
 
-```sh
-npm run build
-```
+## 内容来源
 
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
-
-## Static content mode
-
-This deployment uses Vercel for static hosting only. Article data is generated from the local `notes/` directory at build time and comments are hosted by Giscus through GitHub Discussions.
-
-Put Markdown articles into `notes/`. Nested folders become topics and relative images or documents are copied into the production build automatically.
+默认优先读取 `notes/`：
 
 ```text
 notes/
@@ -58,36 +31,44 @@ notes/
     └── TCP.md
 ```
 
-Production uses:
+如果用 GitHub 仓库作为内容源，可配置 `GITHUB_CONTENT_*` 环境变量，或复制 `content.config.example.json` 为 `content.config.json`。环境变量优先。
 
-```env
-VITE_CONTENT_SOURCE=static
-VITE_GISCUS_REPO=Eleven-Mouse/Eleven-blog
-VITE_GISCUS_REPO_ID=R_kgDOQxLe7w
-VITE_GISCUS_CATEGORY=Announcements
-VITE_GISCUS_CATEGORY_ID=DIC_kwDOQxLe784DGJ97
-VITE_GISCUS_MAPPING=pathname
+构建流程：
+
+```text
+notes / GitHub
+    │
+    ▼
+scripts/generate-static-site.mjs
+    │ 生成 site.json、文章 JSON、公开资源
+    ▼
+vite build
+    │
+    ▼
+dist/
 ```
 
-The local `notes/` directory takes precedence over GitHub content configuration.
+## 命令
 
-The following environment variables remain available as a GitHub-source fallback:
+| 命令 | 说明 |
+|:---|:---|
+| `npm run dev` | 生成内容并启动开发服务器 |
+| `npm run build:content` | 只生成静态内容 |
+| `npm run build` | 生成内容并构建生产包 |
+| `npm run preview` | 预览生产构建 |
+| `npm run lint` | 执行 ESLint |
 
-- `GITHUB_CONTENT_OWNER`
-- `GITHUB_CONTENT_REPO`
-- `GITHUB_CONTENT_BRANCH`
-- `GITHUB_CONTENT_ROOT` (optional)
-- `GITHUB_CONTENT_TOKEN` (optional, recommended for private repos or rate limits)
-- `BLOG_STATIC_CONFIG_JSON` (optional JSON string for blog config)
+## 部署
 
-The build runs `node scripts/generate-static-site.mjs` before `vite build`.
+Vercel 配置：
 
-Before deploying, install the Giscus GitHub App for `Eleven-Mouse/Eleven-blog` from `https://github.com/apps/giscus`.
+| 配置项 | 值 |
+|:---|:---|
+| Root Directory | `blog-view` |
+| Install Command | `npm ci` |
+| Build Command | `npm run build` |
+| Output Directory | `dist` |
 
-Deploy settings:
+评论由 Giscus 提供。部署前请确认目标仓库已经安装 Giscus GitHub App，且 `VITE_GISCUS_*` 与 GitHub Discussions 分类一致。
 
-- Root Directory: `blog-view`
-- Build Command: `npm run build`
-- Output Directory: `dist`
-
-No application backend, database, Redis, or upload service is required.
+项目不需要后端 API、数据库、Redis 或文件上传服务。

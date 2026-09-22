@@ -17,6 +17,9 @@ const FILE_EXTENSIONS = new Set([
   'md',
 ])
 
+const CONTRIBUTION_SNAKE_RAW_PATTERN =
+  /^https:\/\/raw\.githubusercontent\.com\/([^/]+)\/([^/]+)\/output\/(github-snake(?:-dark)?\.svg)(?:[?#].*)?$/i
+
 const stripQueryAndHash = (value) => String(value || '').split('#')[0].split('?')[0]
 
 const getExt = (target) => {
@@ -34,8 +37,14 @@ const filenameFromTarget = (target) => {
   return pieces[pieces.length - 1] || cleaned
 }
 
+const normalizeContributionSnakeUrl = (target) => {
+  const match = String(target || '').trim().match(CONTRIBUTION_SNAKE_RAW_PATTERN)
+  if (!match) return target
+  return `https://cdn.jsdelivr.net/gh/${match[1]}/${match[2]}@output/${match[3]}`
+}
+
 const toAssetUrl = (target) => {
-  const cleaned = String(target || '').trim()
+  const cleaned = normalizeContributionSnakeUrl(String(target || '').trim())
   if (!cleaned) return ''
   if (
     cleaned.startsWith('http://') ||
@@ -54,8 +63,14 @@ const toAssetUrl = (target) => {
 export const transformObsidianAssetLinks = (markdown) => {
   if (!markdown) return markdown
 
+  // raw.githubusercontent.com 在国内移动网络下不稳定，贡献图改用 CDN。
+  let output = String(markdown).replace(
+    /https:\/\/raw\.githubusercontent\.com\/[^/\s"'<>]+\/[^/\s"'<>]+\/output\/github-snake(?:-dark)?\.svg(?:\?[^\s"'<>]*)?/gi,
+    (url) => normalizeContributionSnakeUrl(url),
+  )
+
   // Embed form: ![[file.ext|alt]]
-  let output = String(markdown).replace(/!\[\[([^\]|]+)(?:\|([^\]]+))?]]/g, (_, rawTarget, rawAlias) => {
+  output = output.replace(/!\[\[([^\]|]+)(?:\|([^\]]+))?]]/g, (_, rawTarget, rawAlias) => {
     const target = String(rawTarget || '').trim()
     if (!isLikelyAsset(target)) return _
     const url = toAssetUrl(target)

@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - static-blog-vercel
+      - main
     paths:
       - .github/workflows/github-snake.yml
 

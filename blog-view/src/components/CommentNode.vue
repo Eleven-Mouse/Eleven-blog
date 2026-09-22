@@ -43,7 +43,8 @@
         <span class="reply-form__name">{{ visitorNickname }}</span>
       </div>
       <el-input
-        v-model="commentForm.content"
+        :model-value="commentForm.content"
+        @update:model-value="(value) => emit('update-comment-content', value)"
         :placeholder="`回复 @${comment.nickname}`"
         type="textarea"
         :rows="3"
@@ -71,6 +72,7 @@
         @submit-reply="(p) => $emit('submit-reply', p)"
         @cancel-reply="$emit('cancel-reply')"
         @like-comment="(id) => $emit('like-comment', id)"
+        @update-comment-content="(value) => $emit('update-comment-content', value)"
       />
     </div>
   </div>
@@ -80,7 +82,6 @@
 import { defineProps, defineEmits, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { marked } from 'marked'
-import defaultAvatarUrl from '../assets/(5).png'
 
 defineOptions({ name: 'CommentNode' })
 
@@ -96,7 +97,13 @@ const props = defineProps({
   defaultAvatar: { type: String, required: false, default: '' },
 })
 
-const emit = defineEmits(['show-reply', 'submit-reply', 'cancel-reply', 'like-comment'])
+const emit = defineEmits([
+  'show-reply',
+  'submit-reply',
+  'cancel-reply',
+  'like-comment',
+  'update-comment-content',
+])
 
 /** Markdown 渲染 — 安全配置 */
 const renderer = new marked.Renderer()

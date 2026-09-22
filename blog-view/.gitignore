@@ -38,3 +38,5 @@ __screenshots__/
 
 .vercel
 .env*
+!.env.example
+content.config.json

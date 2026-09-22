@@ -1,131 +1,21 @@
-version: "3.9"
-
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: blog-mysql
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      TZ: Asia/Shanghai
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-    volumes:
-      - mysql_data:/var/lib/mysql
-      - ./sql/kunxing_blog_cloud_minimal.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
-      interval: 10s
-      timeout: 5s
-      retries: 20
-      start_period: 40s
-    networks:
-      - blog-net
-
-  redis:
-    image: redis:7-alpine
-    container_name: blog-redis
-    restart: always
-    command: redis-server --requirepass "${REDIS_PASSWORD}" --appendonly yes
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 20s
-    networks:
-      - blog-net
-
-  blog-backend:
-    image: kunxingll/blog-backend:latest
-    container_name: blog-backend
-    restart: always
-    env_file:
-      - .env.backend
-    environment:
-      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true"
-      SPRING_DATASOURCE_USERNAME: "${MYSQL_USERNAME:-root}"
-      SPRING_DATASOURCE_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
-      SPRING_DATA_REDIS_HOST: "redis"
-      SPRING_DATA_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_PASSWORD: "${REDIS_PASSWORD}"
-      SPRING_DATA_REDIS_DATABASE: "1"
-      FILE_UPLOAD_DIR: "/app/uploads"
-      MANAGEMENT_HEALTH_MAIL_ENABLED: "false"
-      TZ: "Asia/Shanghai"
-    volumes:
-      - ${UPLOAD_HOST_DIR:-./upload_data}:/app/uploads
-    ports:
-      - "8081:8081"
-    depends_on:
-      mysql:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q http://localhost:8081/actuator/health || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 5
-      start_period: 45s
-    networks:
-      - blog-net
-
-  blog-backend-python:
+  blog:
     build:
-      context: ./blog-backend-python
-    container_name: blog-backend-python
+      context: ./blog-view
+      args:
+        GITHUB_CONTENT_OWNER: ${GITHUB_CONTENT_OWNER:-}
+        GITHUB_CONTENT_REPO: ${GITHUB_CONTENT_REPO:-}
+        GITHUB_CONTENT_BRANCH: ${GITHUB_CONTENT_BRANCH:-main}
+        GITHUB_CONTENT_ROOT: ${GITHUB_CONTENT_ROOT:-}
+        GITHUB_CONTENT_TOKEN: ${GITHUB_CONTENT_TOKEN:-}
+    image: eleven-blog:local
+    container_name: eleven-blog
     restart: unless-stopped
-    env_file:
-      - .env.backend
-    environment:
-      DATABASE_URL: "mysql+asyncmy://${MYSQL_USERNAME:-root}:${MYSQL_ROOT_PASSWORD}@mysql:3306/${MYSQL_DATABASE}?charset=utf8mb4"
-      REDIS_URL: "redis://:${REDIS_PASSWORD}@redis:6379/1"
-      FILE_UPLOAD_DIR: "/app/uploads"
-      SCHEDULED_TASKS_ENABLED: "false"
-      TZ: "Asia/Shanghai"
-    volumes:
-      - ${UPLOAD_HOST_DIR:-./upload_data}:/app/uploads
     ports:
-      - "8082:8082"
-    depends_on:
-      mysql:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - "${BLOG_PORT:-8080}:80"
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8082/health', timeout=3)\""]
-      interval: 30s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    networks:
-      - blog-net
-
-  blog-view:
-    image: kunxingll/blog-view:latest
-    container_name: blog-view
-    restart: always
-    ports:
-      - "80:80"
-
-    depends_on:
-      blog-backend:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/"]
       interval: 30s
       timeout: 3s
       retries: 3
-    networks:
-      - blog-net
-
-volumes:
-  mysql_data:
-  redis_data:
-
-networks:
-  blog-net:
-    driver: bridge
+      start_period: 10s

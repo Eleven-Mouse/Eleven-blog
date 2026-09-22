@@ -4,13 +4,8 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 
-
 export default defineConfig({
   plugins: [vue(), vueDevTools()],
-
-  define: {
-    'process.env': {},
-  },
 
   resolve: {
     alias: {
@@ -21,21 +16,6 @@ export default defineConfig({
   server: {
     port: 3000,
     host: '0.0.0.0',
-    open: true,
-
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8081',
-        changeOrigin: true,
-      },
-      '/images': {
-        target: 'http://localhost:8081',
-        changeOrigin: true,
-      },
-      '/upload': {
-        target: 'http://localhost:8081',
-        changeOrigin: true,
-      },
-    },
+    open: false,
   },
 })

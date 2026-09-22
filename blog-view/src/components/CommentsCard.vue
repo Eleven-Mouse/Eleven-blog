@@ -57,6 +57,7 @@
         @submit-reply="handleSubmitReply"
         @cancel-reply="handleCancelReply"
         @like-comment="handleLikeComment"
+        @update-comment-content="(value) => (commentForm.content = value)"
       />
     </div>
     <div v-else-if="!loading" class="empty-tip">暂无评论，快来抢沙发吧！</div>
@@ -73,7 +74,6 @@ import CommentNode from './CommentNode.vue'
 import defaultAvatar from '../assets/(5).png'
 
 const PROFILE_KEY = 'visitor_profile'
-const PROFILE_EXPIRE_DAYS = 30
 
 const props = defineProps({
   blogId: { type: [Number, String], default: null },
