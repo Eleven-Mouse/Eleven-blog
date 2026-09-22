@@ -11,7 +11,7 @@
             :content="renderedFeaturedContent"
           />
         </article>
-        <GithubComments class="home-comments" />
+        <GiscusComments class="home-comments" />
       </template>
       <div v-else class="empty-tip">首页文章未找到，请确认标题为“首页”的文章存在。</div>
     </section>
@@ -24,7 +24,7 @@ import { fetchArticleById, fetchArticles } from '@/api/article'
 import { useBlogConfigStore } from '@/stores/blogConfig'
 import { transformObsidianAssetLinks } from '@/utils/markdownAssets'
 import ArticleMarkdown from '@/components/ArticleMarkdown.vue'
-import GithubComments from '@/components/GithubComments.vue'
+import GiscusComments from '@/components/GiscusComments.vue'
 
 const blogConfig = useBlogConfigStore()
 const article = ref(null)

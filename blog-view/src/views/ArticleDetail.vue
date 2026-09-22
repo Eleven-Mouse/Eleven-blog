@@ -85,6 +85,12 @@
                 @image-click="openLightbox"
               />
             </article>
+
+            <GiscusComments
+              v-if="article.id"
+              :key="article.id"
+              class="article-page__comments"
+            />
           </div>
         </div>
 
@@ -161,6 +167,7 @@ import TopicTreeSidebar from '@/components/TopicTreeSidebar.vue'
 import { useUiStore } from '@/stores/ui'
 import { transformObsidianAssetLinks } from '@/utils/markdownAssets'
 import ArticleMarkdown from '@/components/ArticleMarkdown.vue'
+import GiscusComments from '@/components/GiscusComments.vue'
 
 const route = useRoute()
 const uiStore = useUiStore()
@@ -475,6 +482,10 @@ onUnmounted(() => {
 
 .article-page__content {
   padding-bottom: 32px;
+}
+
+.article-page__comments {
+  margin-top: 56px;
 }
 
 /* ---------- TOC Floating Button ---------- */

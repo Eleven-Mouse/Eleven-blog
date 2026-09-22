@@ -45,7 +45,7 @@ npm run lint
 
 ## Static content mode
 
-This deployment uses Vercel for static hosting only. Article data is generated from the local `notes/` directory at build time and comments are hosted by Utterances through GitHub Issues.
+This deployment uses Vercel for static hosting only. Article data is generated from the local `notes/` directory at build time and comments are hosted by Giscus through GitHub Discussions.
 
 Put Markdown articles into `notes/`. Nested folders become topics and relative images or documents are copied into the production build automatically.
 
@@ -62,7 +62,11 @@ Production uses:
 
 ```env
 VITE_CONTENT_SOURCE=static
-VITE_UTTERANCES_REPO=Eleven-Mouse/Eleven-blog
+VITE_GISCUS_REPO=Eleven-Mouse/Eleven-blog
+VITE_GISCUS_REPO_ID=R_kgDOQxLe7w
+VITE_GISCUS_CATEGORY=Announcements
+VITE_GISCUS_CATEGORY_ID=DIC_kwDOQxLe784DGJ97
+VITE_GISCUS_MAPPING=pathname
 ```
 
 The local `notes/` directory takes precedence over GitHub content configuration.
@@ -78,7 +82,7 @@ The following environment variables remain available as a GitHub-source fallback
 
 The build runs `node scripts/generate-static-site.mjs` before `vite build`.
 
-Before deploying, install the Utterances GitHub App for `Eleven-Mouse/Eleven-blog` from `https://github.com/apps/utterances`.
+Before deploying, install the Giscus GitHub App for `Eleven-Mouse/Eleven-blog` from `https://github.com/apps/giscus`.
 
 Deploy settings:
 
