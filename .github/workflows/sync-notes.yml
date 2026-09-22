@@ -3,6 +3,7 @@ name: Sync notes submodule
 on:
   repository_dispatch:
     types: [notes-updated]
+  workflow_dispatch:
 
 permissions:
   contents: write
