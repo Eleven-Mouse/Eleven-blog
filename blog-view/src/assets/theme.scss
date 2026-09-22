@@ -2,50 +2,50 @@
 // Theme Variables — Eleven-blog
 // Premium Blog Design System
 // Two complete themes: Light / Dark
-// Color: Blue primary + Indigo secondary + Amber accent
+// Color: Apple green + Cheese
 // ============================================
 
 // ---------- Light Theme (Default) ----------
 :root {
   // Backgrounds — layered depth system
-  --bg-primary: #FAFAFA;
-  --bg-secondary: #F1F5F9;
-  --bg-tertiary: #E8ECF1;
-  --bg-header: rgba(250, 250, 250, 0.75);
-  --bg-card: #FFFFFF;
-  --bg-code: #F6F8FA;
-  --bg-inline-code: #F0F3F7;
+  --bg-primary: #FBF1D7;
+  --bg-secondary: #F5E7C7;
+  --bg-tertiary: #EEDDB7;
+  --bg-header: rgba(251, 241, 215, 0.82);
+  --bg-card: #FFF8E7;
+  --bg-code: #F5E9CD;
+  --bg-inline-code: #F1E2C2;
   --bg-overlay: rgba(0, 0, 0, 0.4);
 
   // Page background — subtle gradient for depth
-  --bg-page: linear-gradient(180deg, #f0f4f8 0%, #FAFAFA 12%, #FAFAFA 88%, #F1F5F9 100%);
-  --bg-page-radial: radial-gradient(ellipse at 50% 0%, rgba(47, 147, 68, 0.03) 0%, transparent 70%);
+  --bg-page: linear-gradient(180deg, #F6E8C8 0%, #FBF1D7 12%, #FBF1D7 88%, #F7EACD 100%);
+  --bg-page-radial: radial-gradient(ellipse at 50% 0%, rgba(115, 174, 82, 0.08) 0%, transparent 70%);
 
   // Text — stronger hierarchy
-  --text-primary: #111827;
-  --text-secondary: #374151;
-  --text-muted: #6B7280;
-  --text-link: #2f9344;
-  --text-inverse: #ffffff;
+  --text-primary: #1F2A1B;
+  --text-secondary: #43503C;
+  --text-muted: #707869;
+  --text-link: #4F7A38;
+  --text-inverse: #FBF1D7;
 
-  // Accent — refined green
-  --accent: #2f9344;
-  --accent-hover: #237633;
-  --accent-light: #ecfdf5;
-  --accent-rgb: 47, 147, 68;
+  // Accent — apple green
+  --accent: #73AE52;
+  --accent-hover: #5E9342;
+  --accent-light: #EDF5E8;
+  --accent-rgb: 115, 174, 82;
 
-  // Secondary accent — indigo
-  --accent-secondary: #6366F1;
-  --accent-secondary-rgb: 99, 102, 241;
+  // Secondary accent — light apple green
+  --accent-secondary: #A8CA91;
+  --accent-secondary-rgb: 168, 202, 145;
 
-  // Warm accent — amber
-  --accent-warm: #F59E0B;
-  --accent-warm-rgb: 245, 158, 11;
+  // Warm accent — cheese
+  --accent-warm: #FBF1D7;
+  --accent-warm-rgb: 251, 241, 215;
 
   // Border & Divider — softer
-  --border-color: #E5E7EB;
-  --border-light: #F3F4F6;
-  --divider-color: #E5E7EB;
+  --border-color: #E4D5B5;
+  --border-light: #EFE3C9;
+  --divider-color: #E4D5B5;
 
   // Shadow — premium multi-layer system
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -55,19 +55,19 @@
   --shadow-xl: 0 12px 28px rgba(0, 0, 0, 0.08), 0 32px 64px rgba(0, 0, 0, 0.1);
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.03), 0 4px 12px rgba(0, 0, 0, 0.03);
   --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.07), 0 2px 8px rgba(0, 0, 0, 0.04);
-  --shadow-glow: 0 0 20px rgba(47, 147, 68, 0.12);
+  --shadow-glow: 0 0 20px rgba(115, 174, 82, 0.16);
 
   // Tag
-  --tag-bg: #ecfdf5;
-  --tag-text: #2f9344;
-  --tag-border: #d1fae5;
+  --tag-bg: #F1F7EC;
+  --tag-text: #547D3E;
+  --tag-border: #D8E7CE;
 
   // Scrollbar
-  --scrollbar-thumb: #C4CDD5;
+  --scrollbar-thumb: #B9A77E;
   --scrollbar-track: transparent;
 
   // Misc
-  --hero-gradient: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 30%, #f0f9ff 70%, #faf5ff 100%);
+  --hero-gradient: linear-gradient(135deg, #FBF1D7 0%, #F5E7C7 48%, #EDF5E8 100%);
   --navbar-blur: 20px;
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -113,19 +113,19 @@ html[data-theme="dark"] {
   --text-primary: #E8EAED;
   --text-secondary: #B0B8C4;
   --text-muted: #6B7280;
-  --text-link: #4ade80;
+  --text-link: #9ACB7D;
   --text-inverse: #0F1117;
 
-  --accent: #4ade80;
-  --accent-hover: #86efac;
-  --accent-light: rgba(74, 222, 128, 0.1);
-  --accent-rgb: 74, 222, 128;
+  --accent: #73AE52;
+  --accent-hover: #8CC76B;
+  --accent-light: rgba(115, 174, 82, 0.14);
+  --accent-rgb: 115, 174, 82;
 
-  --accent-secondary: #818CF8;
-  --accent-secondary-rgb: 129, 140, 248;
+  --accent-secondary: #8FC172;
+  --accent-secondary-rgb: 143, 193, 114;
 
-  --accent-warm: #FBBF24;
-  --accent-warm-rgb: 251, 191, 36;
+  --accent-warm: #FBF1D7;
+  --accent-warm-rgb: 251, 241, 215;
 
   --border-color: #2A2D3A;
   --border-light: #1F222E;
@@ -138,11 +138,11 @@ html[data-theme="dark"] {
   --shadow-xl: 0 12px 28px rgba(0, 0, 0, 0.35), 0 32px 64px rgba(0, 0, 0, 0.4);
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15);
   --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
-  --shadow-glow: 0 0 20px rgba(74, 222, 128, 0.08);
+  --shadow-glow: 0 0 20px rgba(115, 174, 82, 0.12);
 
-  --tag-bg: rgba(74, 222, 128, 0.08);
-  --tag-text: #6ee77a;
-  --tag-border: rgba(74, 222, 128, 0.15);
+  --tag-bg: rgba(115, 174, 82, 0.1);
+  --tag-text: #9ACB7D;
+  --tag-border: rgba(115, 174, 82, 0.22);
 
   --scrollbar-thumb: #4A5060;
 
@@ -165,12 +165,12 @@ html[data-theme="dark"] {
   --el-fill-color-blank: var(--bg-card);
   --el-fill-color-dark: var(--bg-tertiary);
   --el-color-primary: var(--accent);
-  --el-color-primary-light-3: rgba(74, 222, 128, 0.5);
-  --el-color-primary-light-5: rgba(74, 222, 128, 0.3);
-  --el-color-primary-light-7: rgba(74, 222, 128, 0.15);
-  --el-color-primary-light-8: rgba(74, 222, 128, 0.1);
-  --el-color-primary-light-9: rgba(74, 222, 128, 0.05);
-  --el-color-primary-dark-2: #3aba68;
+  --el-color-primary-light-3: rgba(115, 174, 82, 0.5);
+  --el-color-primary-light-5: rgba(115, 174, 82, 0.3);
+  --el-color-primary-light-7: rgba(115, 174, 82, 0.15);
+  --el-color-primary-light-8: rgba(115, 174, 82, 0.1);
+  --el-color-primary-light-9: rgba(115, 174, 82, 0.05);
+  --el-color-primary-dark-2: #5E9342;
   --el-mask-color: rgba(0, 0, 0, 0.6);
   --el-disabled-bg-color: var(--bg-tertiary);
   --el-disabled-text-color: var(--text-muted);

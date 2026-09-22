@@ -9,7 +9,6 @@
           <ArticleMarkdown
             content-id="home-featured-preview"
             :content="renderedFeaturedContent"
-            animate-text
           />
         </article>
         <GithubComments class="home-comments" />
@@ -42,8 +41,13 @@ const loadFeaturedArticle = async () => {
   error.value = ''
   try {
     if (featuredId.value) {
-      article.value = await fetchArticleById(featuredId.value)
-      return
+      try {
+        article.value = await fetchArticleById(featuredId.value)
+        return
+      } catch (err) {
+        // 本地配置可能缓存了旧文章 ID，继续按“首页”标题查找。
+        console.warn('首页配置的文章不存在，尝试按标题回退。', err)
+      }
     }
 
     // 兜底规则：标题严格等于“首页”的文章作为首页文章
@@ -64,7 +68,7 @@ const loadFeaturedArticle = async () => {
     }
   } catch (err) {
     article.value = null
-    error.value = '首页文章加载失败，请检查“首页”文章是否存在。'
+    error.value = '首页内容加载失败，请检查网络后重试。'
     console.error(err)
   } finally {
     loading.value = false
@@ -75,7 +79,8 @@ const hydrateHomeImages = () => {
   const container = document.querySelector('#home-featured-preview')
   if (!container) return
   container.querySelectorAll('img').forEach((img) => {
-    img.loading = 'eager'
+    img.loading = 'lazy'
+    img.fetchPriority = 'low'
     img.decoding = 'async'
     img.style.display = 'block'
     img.style.visibility = 'visible'
@@ -150,7 +155,7 @@ onUnmounted(() => {
 }
 
 .article-body {
-  width: min(100%, 920px);
+  width: min(100%, 760px);
   margin: 0 auto;
 }
 

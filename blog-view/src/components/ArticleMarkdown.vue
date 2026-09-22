@@ -3,7 +3,6 @@
     :id="contentId"
     ref="rootRef"
     class="article-markdown"
-    :class="{ 'is-text-animated': animateText }"
     v-html="rendered.html"
     @click="handleContentClick"
   ></div>
@@ -12,7 +11,6 @@
 <script setup>
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { Marked } from 'marked'
-import hljs from 'highlight.js/lib/common'
 
 const props = defineProps({
   content: {
@@ -27,16 +25,12 @@ const props = defineProps({
     type: String,
     default: 'heading',
   },
-  animateText: {
-    type: Boolean,
-    default: false,
-  },
 })
 
 const emit = defineEmits(['catalog-change', 'image-click'])
 
 const rootRef = ref(null)
-const SKIP_TEXT_TAGS = new Set(['SCRIPT', 'STYLE', 'PRE', 'CODE'])
+let highlighterPromise = null
 
 const sanitizeMarkdownSource = (source) =>
   String(source || '').replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
@@ -67,6 +61,9 @@ const getFileExtension = (value) => {
 }
 
 const isPdfUrl = (value) => getFileExtension(value) === 'pdf'
+const isVideoUrl = (value) => ['mp4', 'mov'].includes(getFileExtension(value))
+const getVideoCompanionUrl = (value, suffix) =>
+  String(value || '').replace(/\.(mp4|mov)(?=($|[?#]))/i, suffix)
 
 const isSafeUrl = (value) => {
   const normalized = String(value || '').trim().toLowerCase()
@@ -92,16 +89,11 @@ const renderMarkdown = (source, headingPrefix) => {
     },
     code({ text, lang }) {
       const rawLang = String(lang || '').trim().toLowerCase()
-      const language = rawLang && hljs.getLanguage(rawLang) ? rawLang : 'plaintext'
-      const codeHtml =
-        language === 'plaintext'
-          ? escapeHtml(text)
-          : hljs.highlight(text, { language }).value
-      const languageLabel = rawLang || 'text'
+      const language = rawLang || 'plaintext'
       return `
-        <pre data-language="${escapeAttr(languageLabel)}">
+        <pre data-language="${escapeAttr(rawLang || 'text')}">
           <button type="button" class="article-markdown__copy-btn">复制代码</button>
-          <code class="hljs language-${escapeAttr(language)}">${codeHtml}</code>
+          <code class="hljs language-${escapeAttr(language)}" data-raw-language="${escapeAttr(rawLang)}">${escapeHtml(text)}</code>
         </pre>
       `
     },
@@ -110,6 +102,28 @@ const renderMarkdown = (source, headingPrefix) => {
       if (!src) return ''
       const alt = String(text || '').trim()
       const caption = title || alt
+      if (isVideoUrl(src)) {
+        const posterUrl = getVideoCompanionUrl(src, '-poster.webp')
+        const fallbackUrl = getVideoCompanionUrl(src, '.gif')
+        return `
+          <figure class="article-markdown__figure article-markdown__figure--video">
+            <video
+              src="${escapeAttr(src)}"
+              poster="${escapeAttr(posterUrl)}"
+              ${caption ? `aria-label="${escapeAttr(caption)}"` : ''}
+              controls
+              autoplay
+              loop
+              muted
+              playsinline
+              preload="metadata"
+            >
+              <img src="${escapeAttr(fallbackUrl)}" alt="${escapeAttr(caption)}" loading="lazy" />
+            </video>
+            ${caption ? `<figcaption>${escapeHtml(caption)}</figcaption>` : ''}
+          </figure>
+        `
+      }
       if (isPdfUrl(src)) {
         return `
           <figure class="article-markdown__figure article-markdown__figure--pdf">
@@ -163,41 +177,27 @@ const renderMarkdown = (source, headingPrefix) => {
 
 const rendered = computed(() => renderMarkdown(props.content, props.headingPrefix))
 
-const animateTextCharacters = async () => {
-  if (!props.animateText) return
-
-  await nextTick()
-  const root = rootRef.value
-  if (!root || root.querySelector('.text-pop-char')) return
-
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
-  const textNodes = []
-  while (walker.nextNode()) {
-    const node = walker.currentNode
-    const parentTag = node.parentElement?.tagName
-    if (!SKIP_TEXT_TAGS.has(parentTag) && node.nodeValue) {
-      textNodes.push(node)
-    }
+const loadHighlighter = () => {
+  if (!highlighterPromise) {
+    highlighterPromise = import('highlight.js/lib/common').then((module) => module.default)
   }
+  return highlighterPromise
+}
 
-  let charIndex = 0
-  textNodes.forEach((node) => {
-    const fragment = document.createDocumentFragment()
+const highlightCodeBlocks = async () => {
+  await nextTick()
+  const codeBlocks = rootRef.value?.querySelectorAll('pre code:not([data-highlighted])')
+  if (!codeBlocks?.length) return
 
-    for (const char of node.nodeValue) {
-      if (/\s/.test(char)) {
-        fragment.appendChild(document.createTextNode(char))
-      } else {
-        const span = document.createElement('span')
-        span.className = 'text-pop-char'
-        span.textContent = char
-        span.style.setProperty('--char-index', String(charIndex))
-        fragment.appendChild(span)
-      }
-      charIndex += 1
+  const hljs = await loadHighlighter()
+  codeBlocks.forEach((codeElement) => {
+    const rawLanguage = String(codeElement.dataset.rawLanguage || '').trim().toLowerCase()
+    if (rawLanguage && hljs.getLanguage(rawLanguage)) {
+      codeElement.innerHTML = hljs.highlight(codeElement.textContent || '', {
+        language: rawLanguage,
+      }).value
     }
-
-    node.parentNode?.replaceChild(fragment, node)
+    codeElement.dataset.highlighted = 'true'
   })
 }
 
@@ -206,12 +206,18 @@ watch(
   async (value) => {
     await nextTick()
     emit('catalog-change', value.catalog)
-    await animateTextCharacters()
+    highlightCodeBlocks().catch((error) => {
+      console.error('代码高亮加载失败:', error)
+    })
   },
   { immediate: true },
 )
 
-onMounted(animateTextCharacters)
+onMounted(() => {
+  highlightCodeBlocks().catch((error) => {
+    console.error('代码高亮加载失败:', error)
+  })
+})
 
 const copyCode = async (button) => {
   const codeEl = button.closest('pre')?.querySelector('code')
@@ -248,43 +254,22 @@ const handleContentClick = async (event) => {
 
 <style scoped>
 .article-markdown {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
   color: var(--text-primary);
+  font-size: 18px;
+  line-height: 1.75;
 }
 
 .article-markdown :deep(*) {
   box-sizing: border-box;
 }
 
-.article-markdown.is-text-animated :deep(.text-pop-char) {
-  display: inline-block;
-  opacity: 0;
-  transform: translateY(0.7em) scale(0.65) rotate(-5deg);
-  animation: textPopChar 0.46s cubic-bezier(0.2, 0.9, 0.3, 1.35) forwards;
-  animation-delay: calc(var(--char-index) * 18ms);
-}
-
-@keyframes textPopChar {
-  0% {
-    opacity: 0;
-    transform: translateY(0.7em) scale(0.65) rotate(-5deg);
-  }
-  58% {
-    opacity: 1;
-    transform: translateY(-0.18em) scale(1.12) rotate(3deg);
-  }
-  78% {
-    transform: translateY(0.04em) scale(0.97) rotate(-1deg);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1) rotate(0);
-  }
-}
-
 .article-markdown :deep(p) {
-  margin: 0 0 24px;
-  font-size: 17px;
-  line-height: 1.92;
+  margin: 0 0 30px;
+  font-size: inherit;
+  line-height: 1.78;
   color: var(--text-primary);
 }
 
@@ -294,10 +279,12 @@ const handleContentClick = async (event) => {
 .article-markdown :deep(h4),
 .article-markdown :deep(h5),
 .article-markdown :deep(h6) {
-  margin: 52px 0 20px;
+  margin: 40px 0 18px;
   color: var(--text-primary);
-  line-height: 1.35;
-  font-weight: 800;
+  font-family: "Noto Serif SC", "Songti SC", "STSong", Georgia, serif;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0;
   scroll-margin-top: 92px;
 }
 
@@ -305,47 +292,39 @@ const handleContentClick = async (event) => {
   font-size: 2rem;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .article-markdown.is-text-animated :deep(.text-pop-char) {
-    opacity: 1;
-    transform: none;
-    animation: none;
-  }
-}
-
 .article-markdown :deep(h2) {
-  font-size: 1.55rem;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border-light);
+  font-size: 1.67rem;
 }
 
 .article-markdown :deep(h3) {
-  font-size: 1.25rem;
+  font-size: 1.33rem;
 }
 
 .article-markdown :deep(h4) {
-  font-size: 1.08rem;
+  font-size: 1.11rem;
 }
 
 .article-markdown :deep(ul),
 .article-markdown :deep(ol) {
-  margin: 0 0 24px;
+  margin: 0 0 30px;
   padding-left: 24px;
 }
 
 .article-markdown :deep(li) {
-  margin: 8px 0;
-  line-height: 1.85;
+  margin: 6px 0;
+  line-height: 1.75;
   color: var(--text-primary);
 }
 
 .article-markdown :deep(blockquote) {
-  margin: 30px 0;
-  padding: 18px 22px;
-  border-left: 4px solid var(--accent);
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
-  background: var(--accent-light);
-  color: var(--text-secondary);
+  margin: 30px 0 30px -30px;
+  padding: 0 0 0 30px;
+  border-left: 3px solid var(--accent);
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: "Noto Serif SC", "Songti SC", "STSong", Georgia, serif;
+  font-style: italic;
 }
 
 .article-markdown :deep(blockquote p:last-child) {
@@ -353,37 +332,39 @@ const handleContentClick = async (event) => {
 }
 
 .article-markdown :deep(hr) {
-  margin: 40px 0;
+  height: 1px;
+  margin: 45px 0;
   border: none;
-  border-top: 1px solid var(--border-light);
+  background: var(--border-color);
 }
 
 .article-markdown :deep(code:not(pre code)) {
-  padding: 2px 8px;
-  border-radius: 6px;
-  background: var(--bg-inline-code);
-  color: var(--accent);
-  font-size: 14px;
+  padding: 1px 4px;
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  background: var(--bg-code);
+  color: var(--text-secondary);
+  font-size: 0.9em;
   font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
 }
 
 .article-markdown :deep(pre) {
   position: relative;
-  margin: 32px 0;
-  padding: 44px 18px 18px;
+  margin: 0 0 30px;
+  padding: 42px 16px 16px;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: 3px;
   background: var(--bg-code);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  box-shadow: var(--shadow-xs);
+  box-shadow: none;
 }
 
 .article-markdown :deep(pre::before) {
   content: attr(data-language);
   position: absolute;
-  top: 12px;
-  left: 18px;
+  top: 13px;
+  left: 16px;
   font-size: 11px;
   line-height: 1;
   letter-spacing: 0.08em;
@@ -395,20 +376,20 @@ const handleContentClick = async (event) => {
   display: block;
   background: transparent;
   color: var(--text-primary);
-  font-size: 14px;
-  line-height: 1.72;
+  font-size: 15px;
+  line-height: 1.6;
   font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
 }
 
 .article-markdown :deep(.article-markdown__copy-btn) {
   position: absolute;
-  top: 10px;
-  right: 12px;
+  top: 8px;
+  right: 10px;
   border: 1px solid var(--border-color);
-  border-radius: 999px;
+  border-radius: 3px;
   background: var(--bg-primary);
   color: var(--text-muted);
-  padding: 4px 10px;
+  padding: 3px 8px;
   font-size: 12px;
   cursor: pointer;
   transition:
@@ -425,18 +406,37 @@ const handleContentClick = async (event) => {
 
 .article-markdown :deep(.article-markdown__figure) {
   margin: 30px 0;
+  text-align: center;
 }
 
 .article-markdown :deep(.article-markdown__figure--pdf) {
-  margin: 36px 0;
+  margin: 30px 0;
+}
+
+.article-markdown :deep(.article-markdown__figure--video) {
+  margin: 30px 0;
+}
+
+.article-markdown :deep(.article-markdown__figure--video video) {
+  display: block;
+  width: min(100%, 320px);
+  aspect-ratio: 4 / 3;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  object-fit: cover;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: none;
 }
 
 .article-markdown :deep(.article-markdown__pdf-shell) {
   overflow: hidden;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: 12px;
   background: var(--bg-secondary);
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
 }
 
 .article-markdown :deep(.article-markdown__pdf-frame) {
@@ -450,40 +450,47 @@ const handleContentClick = async (event) => {
 .article-markdown :deep(.article-markdown__figure img) {
   display: block;
   width: auto;
-  max-width: 100%;
+  max-width: min(100%, 640px);
   height: auto;
   margin: 0 auto;
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: none;
   cursor: zoom-in;
 }
 
 .article-markdown :deep(.article-markdown__figure figcaption) {
-  margin-top: 10px;
+  margin-top: 8px;
   text-align: center;
   font-size: 13px;
   color: var(--text-muted);
 }
 
 .article-markdown :deep(a) {
-  color: var(--accent);
+  color: var(--text-link);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.article-markdown :deep(a:hover) {
+  color: var(--accent-hover);
   text-decoration: underline;
-  text-decoration-thickness: 1px;
   text-underline-offset: 3px;
 }
 
 .article-markdown :deep(table) {
   display: block;
   width: 100%;
-  margin: 28px 0;
+  margin: 0 0 30px;
   border-collapse: collapse;
+  border-bottom: 1px solid var(--border-color);
   overflow-x: auto;
 }
 
 .article-markdown :deep(th),
 .article-markdown :deep(td) {
-  padding: 12px 16px;
-  border: 1px solid var(--border-color);
+  padding: 8px;
+  border-top: 1px solid var(--border-color);
   text-align: left;
   white-space: nowrap;
 }
@@ -568,15 +575,24 @@ html[data-theme='dark'] .article-markdown :deep(.hljs-operator) {
 @media (max-width: 768px) {
   .article-markdown :deep(p) {
     font-size: 16px;
-    line-height: 1.82;
+    line-height: 1.75;
   }
 
   .article-markdown :deep(h1) {
-    font-size: 1.68rem;
+    font-size: 1.75rem;
   }
 
   .article-markdown :deep(h2) {
-    font-size: 1.35rem;
+    font-size: 1.5rem;
+  }
+
+  .article-markdown :deep(h3) {
+    font-size: 1.25rem;
+  }
+
+  .article-markdown :deep(blockquote) {
+    margin-left: 0;
+    padding-left: 20px;
   }
 
   .article-markdown :deep(pre) {

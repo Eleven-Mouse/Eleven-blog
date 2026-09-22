@@ -204,34 +204,34 @@
                     :class="{ 'is-open': isMobileGroupOpen(topic.id, group.key) }"
                   >
                     <div class="mobile-tree__articles">
-                      <router-link
+                      <button
                         v-for="article in group.articles"
                         :key="article.id"
-                        :to="`/article/${article.id}`"
+                        type="button"
                         class="mobile-tree__article"
                         :class="{ 'is-active': Number(activeDrawerArticleId) === Number(article.id) }"
-                        @click="drawerOpen = false"
+                        @click="navigateMobileArticle(article.id)"
                       >
                         <span class="mobile-tree__article-index">{{ article.chapterOrder ?? 0 }}</span>
                         <span class="mobile-tree__article-title">{{ article.title }}</span>
-                      </router-link>
+                      </button>
                     </div>
                   </div>
                 </section>
                 <div v-if="!getTopicGroups(topic).length" class="mobile-tree__status">该专题暂无文章</div>
               </template>
               <div v-else-if="topic.rootArticles?.length" class="mobile-tree__articles mobile-tree__articles--root">
-                <router-link
+                <button
                   v-for="article in topic.rootArticles"
                   :key="article.id"
-                  :to="`/article/${article.id}`"
+                  type="button"
                   class="mobile-tree__article"
                   :class="{ 'is-active': Number(activeDrawerArticleId) === Number(article.id) }"
-                  @click="drawerOpen = false"
+                  @click="navigateMobileArticle(article.id)"
                 >
                   <span class="mobile-tree__article-index">{{ article.chapterOrder ?? 0 }}</span>
                   <span class="mobile-tree__article-title">{{ article.title }}</span>
-                </router-link>
+                </button>
               </div>
               <div v-else class="mobile-tree__status">该专题暂无文章</div>
             </div>
@@ -614,6 +614,12 @@ const toggleMobileGroup = (topicId, groupKey) => {
   openMobileGroupKeys.value = next
 }
 
+const navigateMobileArticle = async (articleId) => {
+  drawerOpen.value = false
+  await nextTick()
+  await router.push(`/article/${Number(articleId)}`)
+}
+
 const highlightText = (text) => {
   if (!text || !searchQuery.value.trim()) return text
   const keyword = searchQuery.value.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -759,12 +765,10 @@ watch(
 
 watch(
   () => drawerOpen.value,
-  async (open) => {
-    if (!open || !mobileTree.value.length || openMobileTopicIds.value.size) return
-    const first = mobileTree.value[0]
-    if (first?.id) {
-      await toggleMobileTopic(first.id)
-    }
+  (open) => {
+    if (!open) return
+    openMobileTopicIds.value = new Set()
+    openMobileGroupKeys.value = new Set()
   },
 )
 </script>
@@ -1214,11 +1218,17 @@ watch(
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
   padding: 7px 10px 7px 12px;
+  border: 0;
   border-radius: var(--radius-sm);
+  background: transparent;
   color: var(--text-secondary);
   text-decoration: none;
   font-size: 12px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
   transition:
     color 0.18s,
     background 0.18s;

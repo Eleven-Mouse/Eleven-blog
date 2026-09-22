@@ -12,14 +12,16 @@ import { useThemeStore } from '@/stores/theme'
 const repo = String(import.meta.env.VITE_UTTERANCES_REPO || 'Eleven-Mouse/Eleven-blog').trim()
 const containerRef = ref(null)
 const themeStore = useThemeStore()
+let commentsObserver = null
+let commentsLoaded = false
 
 const utterancesTheme = () => (themeStore.theme === 'dark' ? 'github-dark' : 'github-light')
 
 const loadComments = () => {
   const container = containerRef.value
-  if (!container) return
+  if (!container || commentsLoaded) return
+  commentsLoaded = true
 
-  container.innerHTML = ''
   const script = document.createElement('script')
   script.src = 'https://utteranc.es/client.js'
   script.async = true
@@ -32,6 +34,7 @@ const loadComments = () => {
 }
 
 const syncTheme = () => {
+  if (!commentsLoaded) return
   const frame = containerRef.value?.querySelector('iframe.utterances-frame')
   if (!frame?.contentWindow) {
     loadComments()
@@ -43,9 +46,31 @@ const syncTheme = () => {
   )
 }
 
-onMounted(loadComments)
+const observeComments = () => {
+  const container = containerRef.value
+  if (!container) return
+  if (!('IntersectionObserver' in window)) {
+    loadComments()
+    return
+  }
+
+  commentsObserver = new IntersectionObserver(
+    (entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return
+      loadComments()
+      commentsObserver?.disconnect()
+      commentsObserver = null
+    },
+    { rootMargin: '400px 0px' },
+  )
+  commentsObserver.observe(container)
+}
+
+onMounted(observeComments)
 watch(() => themeStore.theme, syncTheme)
 onBeforeUnmount(() => {
+  commentsObserver?.disconnect()
+  commentsObserver = null
   if (containerRef.value) containerRef.value.innerHTML = ''
 })
 </script>

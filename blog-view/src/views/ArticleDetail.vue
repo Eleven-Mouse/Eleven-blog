@@ -468,7 +468,7 @@ onUnmounted(() => {
 /* ---------- Content ---------- */
 .article-page__header,
 .article-page__content {
-  width: min(100%, 860px);
+  width: min(100%, 760px);
   margin-left: auto;
   margin-right: auto;
 }

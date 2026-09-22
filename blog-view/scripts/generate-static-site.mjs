@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises'
 import { readFileSync } from 'node:fs'
+import { Buffer } from 'node:buffer'
 import path from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
@@ -8,6 +9,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const projectRoot = path.resolve(__dirname, '..')
 const publicContentDir = path.join(projectRoot, 'public', 'content')
 const outputFile = path.join(publicContentDir, 'site.json')
+const generatedContentDir = path.join(projectRoot, 'src', 'generated')
+const sourceOutputFile = path.join(generatedContentDir, 'site.json')
+const generatedHomeFile = path.join(generatedContentDir, 'home.json')
+const generatedArticlesDir = path.join(generatedContentDir, 'articles')
 const assetOutputDir = path.join(publicContentDir, 'assets')
 const localNotesDir = path.join(projectRoot, 'notes')
 const contentConfigFile = path.join(projectRoot, 'content.config.json')
@@ -75,6 +80,62 @@ if (token) {
 
 const ensureDir = async (dir) => {
   await fs.mkdir(dir, { recursive: true })
+}
+
+const writeSiteData = async (siteData) => {
+  await ensureDir(publicContentDir)
+  await fs.rm(generatedContentDir, { recursive: true, force: true })
+  await ensureDir(generatedContentDir)
+  await ensureDir(generatedArticlesDir)
+
+  const articles = Array.isArray(siteData.articles) ? siteData.articles : []
+  const featuredArticle =
+    articles.find(
+      (article) => String(article.id) === String(siteData.config?.home_featured_article_id || ''),
+    ) ||
+    articles.find((article) => article.title === '首页') ||
+    articles[0] ||
+    null
+  const articleSummaries = articles.map((article) => {
+    const summary = { ...article }
+    delete summary.content
+    return summary
+  })
+
+  await Promise.all([
+    fs.writeFile(outputFile, JSON.stringify(siteData, null, 2), 'utf8'),
+    fs.writeFile(
+      sourceOutputFile,
+      JSON.stringify({ ...siteData, articles: articleSummaries }, null, 2),
+      'utf8',
+    ),
+    fs.writeFile(
+      generatedHomeFile,
+      JSON.stringify(
+        {
+          id: featuredArticle?.id ?? null,
+          content: featuredArticle?.content ?? '',
+        },
+        null,
+        2,
+      ),
+      'utf8',
+    ),
+    ...articles.map((article) =>
+      fs.writeFile(
+        path.join(generatedArticlesDir, `${article.id}.json`),
+        JSON.stringify(
+          {
+            id: article.id,
+            content: article.content || '',
+          },
+          null,
+          2,
+        ),
+        'utf8',
+      ),
+    ),
+  ])
 }
 
 const log = (...args) => {
@@ -466,11 +527,31 @@ const copyAssets = async (useLocalNotes) => {
   await fs.rm(assetOutputDir, { recursive: true, force: true })
   await ensureDir(assetOutputDir)
 
-  for (const repoPath of createdAssetPaths) {
+  const writeAsset = async (repoPath) => {
     const buffer = await readBinaryAsset(repoPath, useLocalNotes)
     const outputPath = path.join(assetOutputDir, ...normalizeRepoPath(repoPath).split('/'))
     await ensureDir(path.dirname(outputPath))
     await fs.writeFile(outputPath, buffer)
+  }
+
+  for (const repoPath of createdAssetPaths) {
+    await writeAsset(repoPath)
+
+    if (!/\.(mp4|mov)$/i.test(repoPath)) continue
+    const companionPaths = [
+      repoPath.replace(/\.(mp4|mov)$/i, '-poster.webp'),
+      repoPath.replace(/\.(mp4|mov)$/i, '.gif'),
+    ]
+
+    for (const companionPath of companionPaths) {
+      if (createdAssetPaths.has(companionPath)) continue
+      try {
+        await writeAsset(companionPath)
+      } catch (error) {
+        if (useLocalNotes && error.code === 'ENOENT') continue
+        warn(`Failed to copy video companion ${companionPath}: ${error.message}`)
+      }
+    }
   }
 }
 
@@ -484,10 +565,18 @@ const main = async () => {
     log(`Loading ${localMarkdownFiles.length} markdown files from local notes/`)
   } else if (!owner || !repo) {
     try {
-      await fs.access(outputFile)
+      const existingSiteData = JSON.parse(await fs.readFile(outputFile, 'utf8'))
       log('No GitHub source env found. Reusing existing public/content/site.json.')
+      await writeSiteData(existingSiteData)
     } catch {
-      warn('No GitHub source env found. Skip static content generation.')
+      warn('No GitHub source env found. Generating empty static content.')
+      await writeSiteData({
+        generatedAt: '',
+        config: {},
+        categories: [],
+        tags: [],
+        articles: [],
+      })
     }
     return
   }
@@ -516,21 +605,13 @@ const main = async () => {
   }
 
   await copyAssets(useLocalNotes)
-  await fs.writeFile(
-    outputFile,
-    JSON.stringify(
-      {
-        generatedAt,
-        config,
-        categories,
-        tags,
-        articles,
-      },
-      null,
-      2,
-    ),
-    'utf8',
-  )
+  await writeSiteData({
+    generatedAt,
+    config,
+    categories,
+    tags,
+    articles,
+  })
 
   log(`Generated ${articles.length} articles, ${categories.length} categories, ${tags.length} tags.`)
 }

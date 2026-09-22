@@ -1,10 +1,13 @@
+import bundledSiteData from '@/generated/site.json'
+import bundledHomeArticle from '@/generated/home.json'
+
+const articleContentModules = import.meta.glob('../generated/articles/*.json')
+const articleContentCache = new Map()
+
 const CONTENT_SOURCE = String(import.meta.env.VITE_CONTENT_SOURCE || 'auto')
   .trim()
   .toLowerCase()
 
-const STATIC_SITE_URL = String(import.meta.env.VITE_STATIC_SITE_URL || '/content/site.json').trim()
-
-let staticSitePromise = null
 let resolvedModePromise = null
 
 const toNumberOrNull = (value) => {
@@ -157,23 +160,27 @@ const normalizeSiteData = (raw) => {
   }
 }
 
-const loadStaticSiteData = async () => {
-  if (!staticSitePromise) {
-    staticSitePromise = fetch(STATIC_SITE_URL, { cache: 'force-cache' })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Static site data missing: ${response.status}`)
-        }
-        return response.json()
-      })
-      .then(normalizeSiteData)
-      .catch((error) => {
-        staticSitePromise = null
-        throw error
-      })
+const bundledSite = normalizeSiteData(bundledSiteData)
+
+const loadStaticSiteData = async () => bundledSite
+
+const loadStaticArticleContent = async (id) => {
+  const normalizedId = Number(id)
+  if (normalizedId === Number(bundledHomeArticle.id)) {
+    return String(bundledHomeArticle.content || '')
+  }
+  if (articleContentCache.has(normalizedId)) {
+    return articleContentCache.get(normalizedId)
   }
 
-  return staticSitePromise
+  const loader = articleContentModules[`../generated/articles/${normalizedId}.json`]
+  if (!loader) {
+    throw new Error(`Article content not found: ${normalizedId}`)
+  }
+
+  const content = loader().then((module) => String(module.default?.content || ''))
+  articleContentCache.set(normalizedId, content)
+  return content
 }
 
 export const resolveContentMode = async () => {
@@ -232,7 +239,10 @@ export const getStaticArticleById = (site, id) => {
   if (!article) {
     throw new Error('Article not found')
   }
-  return article
+  return loadStaticArticleContent(article.id).then((content) => ({
+    ...article,
+    content,
+  }))
 }
 
 export const getStaticCategories = (site) =>
