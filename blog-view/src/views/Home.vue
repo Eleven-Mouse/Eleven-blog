@@ -11,7 +11,11 @@
             :content="renderedFeaturedContent"
           />
         </article>
-        <GiscusComments class="home-comments" />
+        <GiscusComments
+          ref="commentsRef"
+          class="home-comments"
+          :class="{ 'home-comments--visible': commentsVisible }"
+        />
       </template>
       <div v-else class="empty-tip">首页文章未找到，请确认标题为“首页”的文章存在。</div>
     </section>
@@ -25,12 +29,17 @@ import { useBlogConfigStore } from '@/stores/blogConfig'
 import { transformObsidianAssetLinks } from '@/utils/markdownAssets'
 import ArticleMarkdown from '@/components/ArticleMarkdown.vue'
 import GiscusComments from '@/components/GiscusComments.vue'
+import Typed from 'typed.js'
 
 const blogConfig = useBlogConfigStore()
 const article = ref(null)
 const loading = ref(false)
 const error = ref('')
+const commentsRef = ref(null)
+const commentsVisible = ref(false)
 let mediaObserver = null
+let motionObserver = null
+let titleTyped = null
 
 const featuredId = computed(() => Number(blogConfig.config.home_featured_article_id || 0))
 const renderedFeaturedContent = computed(() => transformObsidianAssetLinks(article.value?.content || ''))
@@ -99,6 +108,107 @@ const setupImageObserver = () => {
   mediaObserver.observe(root, { childList: true, subtree: true })
 }
 
+const getRevealElements = (root) => {
+  const elements = []
+  const firstMedia = root.querySelector('.article-markdown__figure')
+  if (firstMedia) elements.push(firstMedia)
+
+  const introHeading = Array.from(root.querySelectorAll('h2')).find(
+    (heading) => heading.textContent?.trim() === '前言',
+  )
+  if (!introHeading) return elements
+
+  elements.push(introHeading)
+  let sibling = introHeading.nextElementSibling
+  while (sibling && sibling.tagName !== 'HR') {
+    if (sibling.matches('p, ul, ol, blockquote, pre, table, figure')) {
+      elements.push(sibling)
+    }
+    sibling = sibling.nextElementSibling
+  }
+  return elements
+}
+
+const setupTitleTyped = () => {
+  titleTyped?.destroy()
+  titleTyped = null
+
+  const root = document.querySelector('#home-featured-preview')
+  const heading = root?.querySelector('h1')
+  if (!heading) return
+
+  const currentTitle = String(heading.textContent || '').trim()
+  const title = heading.dataset.typewriterText || currentTitle
+  if (title !== 'Kun Xing') return
+  heading.dataset.typewriterText = title
+  heading.setAttribute('aria-label', title)
+
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+    heading.textContent = title
+    return
+  }
+
+  heading.textContent = ''
+  titleTyped = new Typed(heading, {
+    strings: [title],
+    typeSpeed: 180,
+    startDelay: 300,
+    showCursor: true,
+    cursorChar: '|',
+    contentType: 'text',
+  })
+}
+
+const setupHomeMotion = () => {
+  motionObserver?.disconnect()
+  motionObserver = null
+
+  const root = document.querySelector('#home-featured-preview')
+  const commentElement = commentsRef.value?.$el
+  const revealElements = root ? getRevealElements(root) : []
+
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+    commentsVisible.value = true
+    return
+  }
+
+  revealElements.forEach((element, index) => {
+    element.classList.add('home-intro-reveal')
+    element.style.setProperty('--home-reveal-delay', `${Math.min(index * 75, 300)}ms`)
+  })
+
+  const reveal = (element) => {
+    if (element === commentElement) {
+      commentsVisible.value = true
+      return
+    }
+    element.classList.add('is-visible')
+  }
+
+  if (!('IntersectionObserver' in window)) {
+    revealElements.forEach(reveal)
+    if (commentElement) reveal(commentElement)
+    return
+  }
+
+  motionObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return
+        reveal(entry.target)
+        motionObserver?.unobserve(entry.target)
+      })
+    },
+    {
+      threshold: 0.1,
+      rootMargin: '0px 0px -8% 0px',
+    },
+  )
+
+  revealElements.forEach((element) => motionObserver.observe(element))
+  if (commentElement) motionObserver.observe(commentElement)
+}
+
 watch(
   () => featuredId.value,
   () => {
@@ -113,6 +223,8 @@ watch(
     nextTick(() => {
       hydrateHomeImages()
       setupImageObserver()
+      setupTitleTyped()
+      setupHomeMotion()
     })
   },
 )
@@ -120,6 +232,10 @@ watch(
 onUnmounted(() => {
   mediaObserver?.disconnect?.()
   mediaObserver = null
+  motionObserver?.disconnect?.()
+  motionObserver = null
+  titleTyped?.destroy()
+  titleTyped = null
 })
 </script>
 
@@ -169,8 +285,44 @@ onUnmounted(() => {
   margin: 20px auto;
 }
 
+.home-content :deep(.home-intro-reveal) {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0);
+  transition:
+    opacity 0.9s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition-delay: var(--home-reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.home-content :deep(.home-intro-reveal.is-visible) {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.home-content :deep(.typed-cursor) {
+  color: var(--accent);
+  font-weight: 400;
+  animation: homeTypedCursor 0.75s step-end infinite;
+}
+
+.home-content :deep(h1[data-typewriter-text]) {
+  display: inline-block;
+}
+
 .home-comments {
   margin-top: 40px;
+  opacity: 0;
+  transform: translate3d(0, 34px, 0);
+  transition:
+    opacity 0.95s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.95s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: opacity, transform;
+}
+
+.home-comments--visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
 }
 
 .empty-tip {
@@ -199,6 +351,17 @@ onUnmounted(() => {
   }
 }
 
+@keyframes homeTypedCursor {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  46%,
+  100% {
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .home-content,
   .home-block,
@@ -208,6 +371,13 @@ onUnmounted(() => {
 
   .article-body {
     transition: none;
+  }
+
+  .home-comments,
+  .home-content :deep(.home-intro-reveal) {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
 }
 
