@@ -25,8 +25,8 @@ export function fetchArticles(params) {
 }
 
 /**
- * 根据ID获取文章详情
- * @param {number} id - 文章ID
+ * 根据ID或slug获取文章详情
+ * @param {number|string} id - 文章ID或slug
  */
 export function fetchArticleById(id) {
   return withContentSource(

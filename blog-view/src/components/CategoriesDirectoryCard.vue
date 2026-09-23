@@ -8,7 +8,7 @@
       <router-link
         v-for="article in articlesList"
         :key="article.id"
-        :to="`/article/${article.id}`"
+        :to="`/article/${article.slug || article.id}`"
         class="directory-item stagger-item"
       >
         <span class="directory-item__bullet" />

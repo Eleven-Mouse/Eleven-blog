@@ -248,6 +248,29 @@ const stripNumericPrefix = (name) => String(name || '').replace(/^\d+[-_.\s]*/, 
 
 const titleFromPath = (filePath) => stripNumericPrefix(path.posix.basename(filePath, path.posix.extname(filePath)))
 
+const sanitizeSlug = (value) =>
+  String(value || '')
+    .trim()
+    .replace(/[/\\?#"<>%&+]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^[-.]+|[-.]+$/g, '')
+
+const buildArticleSlugs = (articles) => {
+  const usedSlugs = new Set()
+
+  articles.forEach((article) => {
+    const baseSlug = sanitizeSlug(article.title) || `article-${article.id}`
+    let slug = baseSlug
+    let suffix = 2
+    while (usedSlugs.has(slug)) {
+      slug = `${baseSlug}-${suffix}`
+      suffix += 1
+    }
+    usedSlugs.add(slug)
+    article.slug = slug
+  })
+}
+
 const orderFromPath = (filePath) => {
   const fileName = path.posix.basename(filePath)
   const match = fileName.match(/^(\d+)/)
@@ -499,6 +522,7 @@ const buildArticles = async (markdownFiles, generatedAt, useLocalNotes) => {
 
     articles.push({
       id: stableHash(`article:${repoPath}`),
+      slug: title,
       title,
       content: rewrittenContent,
       summary: String(data.summary || data.description || extractSummary(content)).trim(),
@@ -519,6 +543,8 @@ const buildArticles = async (markdownFiles, generatedAt, useLocalNotes) => {
       tags: parseTags(data.tags),
     })
   }
+
+  buildArticleSlugs(articles)
 
   return articles.sort((a, b) => new Date(b.publishTime).getTime() - new Date(a.publishTime).getTime())
 }

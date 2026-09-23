@@ -54,7 +54,7 @@ const openTopic = async () => {
       error.value = '该专题下暂无文章'
       return
     }
-    await router.replace(`/article/${list[0].id}`)
+    await router.replace(`/article/${list[0].slug || list[0].id}`)
   } catch (err) {
     error.value = '专题打开失败，请稍后重试。'
     console.error(err)

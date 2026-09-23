@@ -10,7 +10,7 @@
             <router-link
               v-for="article in activeTopic.rootArticles"
               :key="article.id"
-              :to="`/article/${article.id}`"
+              :to="`/article/${article.slug || article.id}`"
               class="drawer-article"
               :class="{ 'is-active': Number(activeArticleId) === Number(article.id) }"
             >
@@ -34,7 +34,7 @@
                 <router-link
                   v-for="article in group.articles"
                   :key="article.id"
-                  :to="`/article/${article.id}`"
+                  :to="`/article/${article.slug || article.id}`"
                   class="drawer-article"
                   :class="{ 'is-active': Number(activeArticleId) === Number(article.id) }"
                 >

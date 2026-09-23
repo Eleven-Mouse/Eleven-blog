@@ -61,6 +61,7 @@ const normalizeArticle = (article, categoryMap) => {
   return {
     ...article,
     id: toNumberOrNull(article?.id) ?? article?.id,
+    slug: String(article?.slug || '').trim(),
     categoryId: normalizedCategoryId ?? article?.categoryId ?? null,
     categoryName: article?.categoryName || category?.name || '',
     chapterOrder: toNumberOrNull(article?.chapterOrder),
@@ -134,6 +135,9 @@ const normalizeSiteData = (raw) => {
     ? raw.articles.map((article) => normalizeArticle(article, categoryMap)).sort(compareArticlesDesc)
     : []
   const articleMap = new Map(articles.map((article) => [Number(article.id), article]))
+  const articleSlugMap = new Map(
+    articles.filter((article) => article.slug).map((article) => [article.slug, article]),
+  )
 
   const tags =
     Array.isArray(raw?.tags) && raw.tags.length
@@ -155,6 +159,7 @@ const normalizeSiteData = (raw) => {
     categoryMap,
     articles,
     articleMap,
+    articleSlugMap,
     tags,
     tagMap: new Map(tags.map((tag) => [String(tag.id), tag])),
   }
@@ -234,8 +239,20 @@ export const getStaticArticleList = (site, params = {}) => {
   return paginate(list, params)
 }
 
+const safeDecodeURIComponent = (value) => {
+  try {
+    return decodeURIComponent(String(value || ''))
+  } catch {
+    return String(value || '')
+  }
+}
+
 export const getStaticArticleById = (site, id) => {
-  const article = site.articleMap.get(Number(id))
+  const key = String(id ?? '').trim()
+  const article =
+    (key && site.articleSlugMap.get(key)) ||
+    (key && site.articleSlugMap.get(safeDecodeURIComponent(key))) ||
+    (key && site.articleMap.get(Number(key)))
   if (!article) {
     throw new Error('Article not found')
   }

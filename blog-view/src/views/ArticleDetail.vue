@@ -242,15 +242,15 @@ const updateActiveHeading = () => {
 
 onMounted(async () => {
   uiStore.setTopicTreeOpen(true)
-  const articleId = route.params.id
-  if (!articleId) {
-    error.value = '未找到文章ID'
+  const articleSlug = route.params.slug
+  if (!articleSlug) {
+    error.value = '未找到文章标识'
     return
   }
 
   loading.value = true
   try {
-    const data = await fetchArticleById(articleId)
+    const data = await fetchArticleById(articleSlug)
     article.value = data || null
   } catch (err) {
     error.value = '加载文章失败，请稍后再试。'

@@ -209,8 +209,8 @@
                         :key="article.id"
                         type="button"
                         class="mobile-tree__article"
-                        :class="{ 'is-active': Number(activeDrawerArticleId) === Number(article.id) }"
-                        @click="navigateMobileArticle(article.id)"
+                        :class="{ 'is-active': article.slug === activeDrawerArticleSlug }"
+                        @click="navigateMobileArticle(article)"
                       >
                         <span class="mobile-tree__article-index">{{ article.chapterOrder ?? 0 }}</span>
                         <span class="mobile-tree__article-title">{{ article.title }}</span>
@@ -226,8 +226,8 @@
                   :key="article.id"
                   type="button"
                   class="mobile-tree__article"
-                  :class="{ 'is-active': Number(activeDrawerArticleId) === Number(article.id) }"
-                  @click="navigateMobileArticle(article.id)"
+                  :class="{ 'is-active': article.slug === activeDrawerArticleSlug }"
+                  @click="navigateMobileArticle(article)"
                 >
                   <span class="mobile-tree__article-index">{{ article.chapterOrder ?? 0 }}</span>
                   <span class="mobile-tree__article-title">{{ article.title }}</span>
@@ -286,8 +286,8 @@ let debounceTimer = null
 const TOPIC_FETCH_PAGE_SIZE = 200
 const isHomeActive = computed(() => route.path === '/home' || route.path === '/')
 const isArticleRoute = computed(() => route.path.startsWith('/article/'))
-const activeDrawerArticleId = computed(() =>
-  route.path.startsWith('/article/') ? Number(route.params.id || 0) : 0,
+const activeDrawerArticleSlug = computed(() =>
+  route.path.startsWith('/article/') ? String(route.params.slug || '') : '',
 )
 const canManualSync = computed(() => contentMode.value === 'api')
 
@@ -364,7 +364,7 @@ const highlightPrev = () => {
 
 const handleSelectArticle = (item) => {
   if (!item?.id) return
-  router.push(`/article/${item.id}`)
+  router.push(`/article/${item.slug || item.id}`)
   searchOpen.value = false
   drawerOpen.value = false
   resetSearch()
@@ -614,10 +614,11 @@ const toggleMobileGroup = (topicId, groupKey) => {
   openMobileGroupKeys.value = next
 }
 
-const navigateMobileArticle = async (articleId) => {
+const navigateMobileArticle = async (article) => {
+  if (!article?.id) return
   drawerOpen.value = false
   await nextTick()
-  await router.push(`/article/${Number(articleId)}`)
+  await router.push(`/article/${article.slug || article.id}`)
 }
 
 const highlightText = (text) => {
