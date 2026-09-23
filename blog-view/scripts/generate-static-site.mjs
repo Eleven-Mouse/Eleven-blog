@@ -456,6 +456,10 @@ const buildCategoryData = (articles) => {
 
   articles.forEach((article) => {
     const name = String(article.categoryName || '').trim()
+    const categoryOrder =
+      article.categoryOrder !== null && Number.isFinite(Number(article.categoryOrder))
+        ? Number(article.categoryOrder)
+        : null
     if (!name) return
     if (!categoryMap.has(name)) {
       categoryMap.set(name, {
@@ -464,11 +468,14 @@ const buildCategoryData = (articles) => {
         slug: name.toLowerCase().replace(/\s+/g, '-'),
         description: '',
         coverImage: '',
-        sortOrder: categoryMap.size + 1,
+        sortOrder: categoryOrder ?? categoryMap.size + 1,
         articleCount: 0,
       })
     }
     const category = categoryMap.get(name)
+    if (categoryOrder !== null) {
+      category.sortOrder = categoryOrder
+    }
     category.articleCount += 1
     article.categoryId = category.id
   })
@@ -511,6 +518,7 @@ const buildArticles = async (markdownFiles, generatedAt, useLocalNotes) => {
     const categoryName = String(data.category || fallbackCategoryName || '未分类').trim()
     const rewrittenContent = rewriteMarkdownAssets(content, repoPath)
     const title = String(data.title || titleFromPath(repoPath)).trim() || titleFromPath(repoPath)
+    const categoryOrder = segments.length > 1 ? orderFromPath(segments[0]) : null
     const publishTime = toIsoString(
       data.publishTime || data.date || data.publish_date || data.createdAt,
       generatedAt,
@@ -529,6 +537,7 @@ const buildArticles = async (markdownFiles, generatedAt, useLocalNotes) => {
       coverImage: String(data.coverImage || data.cover || '').trim(),
       categoryId: null,
       categoryName,
+      categoryOrder,
       chapterOrder: Number(data.chapterOrder || data.order || orderFromPath(repoPath) || 0) || null,
       readingMinutes: Number(data.readingMinutes || data.readingTime || 0) || null,
       isCore: data.isCore === true || data.isCore === 1 ? 1 : 0,
