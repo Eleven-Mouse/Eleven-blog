@@ -10,6 +10,7 @@
     "predev": "npm run build:content",
     "dev": "vite",
     "build:content": "node scripts/generate-static-site.mjs",
+    "notes:date": "node scripts/add-publish-time.mjs",
     "build": "npm run build:content && vite build",
     "preview": "vite preview",
     "lint": "eslint ."
