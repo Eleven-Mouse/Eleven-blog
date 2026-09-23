@@ -400,6 +400,7 @@ h3 { font-size: 1.25rem; }
 
 // ---------- Element Plus Drawer Scroll Fix ----------
 body.el-popup-parent--hidden {
+  width: 100% !important;
   padding-right: 0 !important;
 }
 
