@@ -5,7 +5,7 @@
       <p class="page-header__desc">按标签浏览文章</p>
     </div>
 
-    <div v-if="loading" class="loading-tip">正在加载文章...</div>
+    <SproutLoader v-if="loading" text="正在加载文章..." />
     <div v-if="error" class="error-tip">{{ error }}</div>
 
     <div v-if="articlesList.length" class="tags-list">
@@ -22,7 +22,7 @@
     </div>
     <div v-else-if="!loading" class="empty-tip">该标签下暂无文章。</div>
 
-    <div v-if="loadingMore" class="loading-tip">加载更多...</div>
+    <SproutLoader v-if="loadingMore" text="加载更多..." :scale="0.7" />
     <div ref="sentinelRef" class="scroll-sentinel" />
   </div>
 </template>
@@ -31,6 +31,7 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { fetchArticlesByTagId } from '@/api/tags.js'
+import SproutLoader from '@/components/common/SproutLoader.vue'
 
 const route = useRoute()
 const articlesList = ref([])
@@ -145,12 +146,5 @@ onUnmounted(() => {
 
 .scroll-sentinel {
   height: 1px;
-}
-
-.loading-tip {
-  text-align: center;
-  padding: 16px;
-  color: var(--text-tertiary, #999);
-  font-size: 14px;
 }
 </style>

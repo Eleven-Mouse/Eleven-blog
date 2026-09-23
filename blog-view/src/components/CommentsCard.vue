@@ -38,7 +38,7 @@
 
     <h3 class="comments-card__subtitle">共有 {{ totalComments }} 条评论</h3>
 
-    <div v-if="loading && comments.length === 0" class="loading-tip">评论加载中...</div>
+    <SproutLoader v-if="loading && comments.length === 0" text="评论加载中..." :scale="0.7" />
     <div v-if="error" class="error-tip">{{ error }}</div>
 
     <div class="comments-list" v-if="comments.length > 0">
@@ -71,6 +71,7 @@ import { ref, onMounted, defineProps, reactive, onBeforeMount, computed } from '
 import { fetchComments, createComment, likeComment } from '@/api/comment.js'
 import { ElMessage } from 'element-plus'
 import CommentNode from './CommentNode.vue'
+import SproutLoader from './common/SproutLoader.vue'
 import defaultAvatar from '../assets/(5).png'
 
 const PROFILE_KEY = 'visitor_profile'

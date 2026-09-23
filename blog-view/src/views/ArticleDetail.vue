@@ -1,6 +1,6 @@
 <template>
   <div class="article-page">
-    <div v-if="loading" class="loading-tip">文章加载中...</div>
+    <SproutLoader v-if="loading" text="文章加载中..." />
     <div v-if="error" class="error-tip">{{ error }}</div>
 
     <template v-if="article">
@@ -182,6 +182,7 @@ import { useUiStore } from '@/stores/ui'
 import { transformObsidianAssetLinks } from '@/utils/markdownAssets'
 import ArticleMarkdown from '@/components/ArticleMarkdown.vue'
 import GiscusComments from '@/components/GiscusComments.vue'
+import SproutLoader from '@/components/common/SproutLoader.vue'
 
 const route = useRoute()
 const uiStore = useUiStore()

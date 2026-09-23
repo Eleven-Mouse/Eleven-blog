@@ -5,7 +5,7 @@
       <p class="page-header__desc">真棒！目前共计 {{ totalArticles }} 篇文章。</p>
     </div>
 
-    <div v-if="loading" class="loading-tip">正在加载归档数据...</div>
+    <SproutLoader v-if="loading" text="正在加载归档数据..." />
     <div v-if="error" class="error-tip">{{ error }}</div>
 
     <div v-if="!loading && !error" class="archive-list">
@@ -30,6 +30,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { fetchArchive } from '@/api/archive.js'
+import SproutLoader from '@/components/common/SproutLoader.vue'
 
 const archiveData = ref({})
 const totalArticles = ref(0)

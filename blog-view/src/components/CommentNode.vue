@@ -82,6 +82,7 @@
 import { defineProps, defineEmits, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { marked } from 'marked'
+import DOMPurify from 'dompurify'
 
 defineOptions({ name: 'CommentNode' })
 
@@ -106,23 +107,28 @@ const emit = defineEmits([
 ])
 
 /** Markdown 渲染 — 安全配置 */
-const renderer = new marked.Renderer()
 marked.setOptions({
-  renderer,
   breaks: true,
   gfm: true,
-  sanitize: false,
 })
+
+// DOMPurify 白名单：移除事件属性（onerror/onload 等）、javascript: 链接、iframe/script 等危险节点
+const sanitizeHtml = (html) =>
+  DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: [
+      'p', 'br', 'hr', 'strong', 'em', 'del', 's', 'code', 'pre',
+      'blockquote', 'ul', 'ol', 'li', 'a', 'img', 'h1', 'h2', 'h3',
+      'h4', 'h5', 'h6', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'span',
+    ],
+    ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'target', 'rel'],
+  })
 
 const renderedContent = computed(() => {
   if (!props.comment.content) return ''
-  // 简单 XSS 过滤: 移除 script 标签
-  const sanitized = props.comment.content
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
   try {
-    return marked.parse(sanitized)
+    return sanitizeHtml(marked.parse(props.comment.content))
   } catch {
-    return sanitized
+    return DOMPurify.sanitize(props.comment.content)
   }
 })
 

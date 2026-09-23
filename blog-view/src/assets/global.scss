@@ -350,7 +350,6 @@ h3 { font-size: 1.25rem; }
 }
 
 // ---------- Loading ----------
-.loading-tip,
 .error-tip,
 .empty-tip {
   text-align: center;
@@ -359,36 +358,8 @@ h3 { font-size: 1.25rem; }
   font-size: 18px;
 }
 
-.loading-tip {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  width: 100%;
-  min-height: 120px;
-}
-
-.loading-tip::before {
-  content: '';
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 3px solid rgba(var(--accent-rgb), 0.25);
-  border-top-color: var(--accent);
-  animation: app-loading-spin 0.72s linear infinite;
-}
-
 .error-tip {
   color: #EF4444;
-}
-
-@keyframes app-loading-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 // ---------- Pagination Override ----------

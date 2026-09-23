@@ -7,7 +7,6 @@ dist/
 coverage/
 *.log
 .env*
-!.env.production
 public/content/site.json
 public/content/assets/
 src/generated/

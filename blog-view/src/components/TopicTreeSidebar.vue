@@ -1,6 +1,6 @@
 <template>
   <aside class="topic-drawer">
-    <div v-if="loading" class="loading-tip">正在加载目录...</div>
+    <SproutLoader v-if="loading" text="正在加载目录..." :scale="0.7" />
     <div v-else-if="error" class="error-tip">{{ error }}</div>
 
     <div v-else-if="activeTopic" class="topic-drawer__list">
@@ -54,6 +54,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { fetchArticlesByCategoryId, fetchCategories } from '@/api/categories'
+import SproutLoader from '@/components/common/SproutLoader.vue'
 
 const props = defineProps({
   activeTopicId: {

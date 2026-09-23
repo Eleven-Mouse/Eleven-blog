@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",
-    "axios": "^1.13.2",
+    "dompurify": "^3.4.15",
     "element-plus": "^2.13.0",
     "emoji-picker-element": "^1.28.1",
     "highlight.js": "^11.11.1",

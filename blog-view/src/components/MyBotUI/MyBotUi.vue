@@ -39,7 +39,13 @@
 
 <script setup>
 import { ref, nextTick, onMounted } from 'vue'
-import Typed from 'typed.js'
+
+// 打字机效果按需加载，仅在该组件首次渲染消息时才拉取 typed.js
+let typedPromise = null
+const loadTyped = () => {
+  if (!typedPromise) typedPromise = import('typed.js').then((module) => module.default)
+  return typedPromise
+}
 // text: 支持 HTML 标签，支持 ^500 暂停语法
 // next: 下一步的 key
 // options: 用户选项
@@ -139,9 +145,10 @@ const botSay = async (nodeKey) => {
     isTyping.value = false
   }
 }
-const initTypeEffect = (el, msg, index) => {
+const initTypeEffect = async (el, msg, index) => {
   if (!el || el.innerHTML || index !== messages.value.length - 1) return
 
+  const Typed = await loadTyped()
   const typed = new Typed(el, {
     strings: [msg.text],
     typeSpeed: 50,

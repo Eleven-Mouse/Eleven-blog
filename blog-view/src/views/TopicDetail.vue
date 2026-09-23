@@ -1,6 +1,6 @@
 <template>
   <div class="topic-redirect page-container">
-    <div v-if="loading" class="loading-tip">正在打开专题...</div>
+    <SproutLoader v-if="loading" text="正在打开专题..." />
     <div v-else-if="error" class="error-tip">{{ error }}</div>
   </div>
 </template>
@@ -9,6 +9,7 @@
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchArticlesByCategoryId } from '@/api/categories'
+import SproutLoader from '@/components/common/SproutLoader.vue'
 
 const route = useRoute()
 const router = useRouter()

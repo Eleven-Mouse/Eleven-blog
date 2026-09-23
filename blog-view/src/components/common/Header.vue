@@ -621,10 +621,23 @@ const navigateMobileArticle = async (article) => {
   await router.push(`/article/${article.slug || article.id}`)
 }
 
+const escapeHtml = (value) =>
+  String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+
 const highlightText = (text) => {
-  if (!text || !searchQuery.value.trim()) return text
-  const keyword = searchQuery.value.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  return text.replace(new RegExp(`(${keyword})`, 'gi'), '<mark>$1</mark>')
+  const query = searchQuery.value.trim()
+  if (!text || !query) return escapeHtml(text)
+  const keyword = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  // 先转义原文，再做高亮替换，防止标题中的 HTML 被注入
+  return escapeHtml(text).replace(
+    new RegExp(`(${escapeHtml(keyword)})`, 'gi'),
+    '<mark>$1</mark>'
+  )
 }
 
 const formatDate = (dateStr) => {

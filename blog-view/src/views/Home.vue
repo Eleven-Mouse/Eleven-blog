@@ -1,7 +1,7 @@
 <template>
   <div class="home page-container">
     <section class="home-content" :class="{ 'is-ready': homeReady }">
-      <div v-if="loading" class="loading-tip">正在加载首页文章...</div>
+      <SproutLoader v-if="loading" text="正在加载首页文章..." />
       <div v-else-if="error" class="error-tip">{{ error }}</div>
 
       <template v-else-if="article">
@@ -29,7 +29,14 @@ import { useBlogConfigStore } from '@/stores/blogConfig'
 import { transformObsidianAssetLinks } from '@/utils/markdownAssets'
 import ArticleMarkdown from '@/components/ArticleMarkdown.vue'
 import GiscusComments from '@/components/GiscusComments.vue'
-import Typed from 'typed.js'
+import SproutLoader from '@/components/common/SproutLoader.vue'
+
+// 打字机效果按需加载，避免 typed.js 进入首屏主包
+let typedPromise = null
+const loadTyped = () => {
+  if (!typedPromise) typedPromise = import('typed.js').then((module) => module.default)
+  return typedPromise
+}
 
 const blogConfig = useBlogConfigStore()
 const article = ref(null)
@@ -129,7 +136,7 @@ const getRevealElements = (root) => {
   return elements
 }
 
-const setupTitleTyped = () => {
+const setupTitleTyped = async () => {
   titleTyped?.destroy()
   titleTyped = null
 
@@ -149,6 +156,7 @@ const setupTitleTyped = () => {
   }
 
   heading.textContent = ''
+  const Typed = await loadTyped()
   titleTyped = new Typed(heading, {
     strings: [title],
     typeSpeed: 180,
