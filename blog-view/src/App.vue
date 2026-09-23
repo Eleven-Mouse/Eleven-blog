@@ -14,6 +14,7 @@
       </router-view>
     </main>
     <AppFooter />
+    <Analytics />
   </div>
 </template>
 
@@ -23,6 +24,7 @@ import { useThemeStore } from '@/stores/theme'
 import { useBlogConfigStore } from '@/stores/blogConfig'
 import AppNavbar from '@/components/common/Header.vue'
 import AppFooter from '@/components/common/Footer.vue'
+import { Analytics } from '@vercel/analytics/vue'
 
 const themeStore = useThemeStore()
 const blogConfigStore = useBlogConfigStore()
