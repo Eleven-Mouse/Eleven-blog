@@ -2,7 +2,12 @@
   <section class="giscus-comments">
     <h3 class="giscus-comments__title">评论</h3>
     <div class="giscus-comments__body">
-      <div v-if="!loaded" class="giscus-comments__placeholder">评论加载中...</div>
+      <SproutLoader
+        v-if="!loaded"
+        class="giscus-comments__placeholder"
+        text="评论加载中..."
+        :scale="0.65"
+      />
       <div ref="containerRef" class="giscus-comments__container" />
     </div>
   </section>
@@ -11,6 +16,7 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useThemeStore } from '@/stores/theme'
+import SproutLoader from '@/components/common/SproutLoader.vue'
 import lightTheme from '../../public/giscus-light.css?raw'
 import darkTheme from '../../public/giscus-dark.css?raw'
 

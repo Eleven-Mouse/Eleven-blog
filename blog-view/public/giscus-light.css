@@ -104,5 +104,63 @@ main .pagination-loader-container {
 }
 
 main .gsc-loading-image {
-  background-image: url(https://github.githubassets.com/images/mona-loading-default.gif);
+  position: relative;
+  background-image: none !important;
+}
+
+main .gsc-loading-image::before,
+main .gsc-loading-image::after {
+  position: absolute;
+  left: 50%;
+  content: '';
+}
+
+main .gsc-loading-image::before {
+  bottom: 3px;
+  width: 4px;
+  height: 10px;
+  border-radius: 999px;
+  background: #5E9342;
+  transform: translateX(-50%);
+  transform-origin: bottom center;
+  animation: gsc-sprout-stem 2.2s ease-in-out infinite;
+}
+
+main .gsc-loading-image::after {
+  bottom: 17px;
+  width: 30px;
+  height: 10px;
+  background:
+    radial-gradient(ellipse at 25% 50%, #73AE52 0 40%, transparent 43%),
+    radial-gradient(ellipse at 75% 50%, #8CC76B 0 40%, transparent 43%);
+  opacity: 0.45;
+  transform: translateX(-50%) scale(0.55);
+  transform-origin: center bottom;
+  animation: gsc-sprout-leaves 2.2s ease-in-out infinite;
+}
+
+@keyframes gsc-sprout-stem {
+  0%, 100% { height: 10px; opacity: 0.65; }
+  25%, 50% { height: 22px; opacity: 1; }
+  75% { height: 18px; opacity: 0.9; }
+}
+
+@keyframes gsc-sprout-leaves {
+  0%, 100% { opacity: 0.45; transform: translateX(-50%) scale(0.55); }
+  25% { opacity: 1; transform: translateX(-50%) scale(1.08); }
+  50% { opacity: 1; transform: translateX(-50%) scale(1); }
+  75% { opacity: 0.75; transform: translateX(-50%) scale(0.82); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  main .gsc-loading-image::before {
+    height: 22px;
+    animation: none;
+  }
+
+  main .gsc-loading-image::after {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+    animation: none;
+  }
 }
