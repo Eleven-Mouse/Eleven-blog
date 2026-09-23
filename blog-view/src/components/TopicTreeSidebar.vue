@@ -55,6 +55,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { fetchArticlesByCategoryId, fetchCategories } from '@/api/categories'
 import SproutLoader from '@/components/common/SproutLoader.vue'
+import { getArticleFolderLabel } from '@/utils/articlePath'
 
 const props = defineProps({
   activeTopicId: {
@@ -95,17 +96,6 @@ const sameKeySet = (a, b) => {
   return true
 }
 
-const safeDecode = (value) => {
-  if (!value) return ''
-  try {
-    return decodeURIComponent(value)
-  } catch {
-    return value
-  }
-}
-
-const normalizePart = (value) => String(safeDecode(value || '')).trim()
-const isMarkdownFile = (name) => /\.mdx?$/i.test(String(name || '').trim())
 const leadingNumber = (value) => {
   const m = String(value || '')
     .trim()
@@ -131,86 +121,11 @@ const compareArticles = (a, b) => {
   return compareLabel(a?.title, b?.title)
 }
 
-const groupLabelFromArticle = (article, topicName) => {
-  const path = extractGithubPath(article.githubUrl || '')
-  if (!path) return ''
-  const parts = path
-    .split('/')
-    .map((part) => normalizePart(part))
-    .filter(Boolean)
-  const topicNames = Array.from(
-    new Set(
-      [article.categoryName, topicName]
-        .map((name) => normalizePart(name))
-        .filter(Boolean),
-    ),
-  )
-  const topicIndex = topicNames.length
-    ? parts.findIndex((part) => topicNames.some((name) => name === part))
-    : -1
-
-  // 以“专题目录”为基准判断是否存在二级目录：
-  // topic/file.md => 直接文章
-  // topic/folder/file.md => 显示 folder
-  if (topicIndex >= 0) {
-    if (parts.length >= topicIndex + 3) {
-      const folder = parts[topicIndex + 1]
-      const fileLike = parts[topicIndex + 2]
-      if (folder && fileLike) return folder
-    }
-    return ''
-  }
-
-  // 回退逻辑：path=/topic/folder/file.md 时取 folder；否则当作根层文章
-  if (parts.length >= 3) {
-    const maybeFolder = parts[1]
-    const maybeFile = parts[2]
-    if (maybeFolder && maybeFile && isMarkdownFile(maybeFile)) return maybeFolder
-  }
-  return ''
-}
-
-const extractGithubPath = (url) => {
-  if (!url) return ''
-  const raw = String(url).trim()
-  if (!raw) return ''
-
-  // 兼容本地同步产生的相对路径/Windows 路径
-  if (!/^https?:\/\//i.test(raw)) {
-    return raw
-      .replace(/\\/g, '/')
-      .replace(/^\.?\//, '')
-      .split('/')
-      .map((part) => safeDecode(part))
-      .filter(Boolean)
-      .join('/')
-  }
-
-  try {
-    const u = new URL(raw)
-    const parts = u.pathname.split('/').filter(Boolean).map((part) => safeDecode(part))
-    if (u.hostname === 'raw.githubusercontent.com') {
-      // /owner/repo/branch/path/to/file.md
-      return parts.length > 3 ? parts.slice(3).join('/') : ''
-    }
-    if (u.hostname === 'github.com') {
-      // /owner/repo/blob/branch/path/to/file.md
-      const blobIndex = parts.findIndex((p) => p === 'blob')
-      if (blobIndex >= 0 && parts.length > blobIndex + 2) {
-        return parts.slice(blobIndex + 2).join('/')
-      }
-    }
-    return parts.join('/')
-  } catch {
-    return ''
-  }
-}
-
 const buildGroups = (articles, topicName) => {
   const map = new Map()
   const rootArticles = []
   for (const article of articles) {
-    const label = groupLabelFromArticle(article, topicName)
+    const label = getArticleFolderLabel(article, topicName)
     if (!label) {
       rootArticles.push(article)
       continue

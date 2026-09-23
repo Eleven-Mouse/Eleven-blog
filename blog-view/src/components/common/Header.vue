@@ -255,6 +255,7 @@ import { resolveContentMode } from '@/content/siteContent'
 import ThemeToggle from './ThemeSwitcher.vue'
 import { useBlogConfigStore } from '@/stores/blogConfig'
 import { useUiStore } from '@/stores/ui'
+import { getArticleFolderLabel } from '@/utils/articlePath'
 
 const blogConfig = useBlogConfigStore()
 const uiStore = useUiStore()
@@ -418,17 +419,6 @@ const isMobileTopicOpen = (topicId) => openMobileTopicIds.value.has(Number(topic
 const isMobileGroupOpen = (topicId, groupKey) =>
   openMobileGroupKeys.value.has(mobileGroupKey(topicId, groupKey))
 
-const safeDecode = (value) => {
-  if (!value) return ''
-  try {
-    return decodeURIComponent(value)
-  } catch {
-    return value
-  }
-}
-
-const normalizePart = (value) => String(safeDecode(value || '')).trim()
-const isMarkdownFile = (name) => /\.mdx?$/i.test(String(name || '').trim())
 const leadingNumber = (value) => {
   const m = String(value || '')
     .trim()
@@ -454,79 +444,11 @@ const compareArticles = (a, b) => {
   return compareLabel(a?.title, b?.title)
 }
 
-const extractGithubPath = (url) => {
-  if (!url) return ''
-  const raw = String(url).trim()
-  if (!raw) return ''
-
-  if (!/^https?:\/\//i.test(raw)) {
-    return raw
-      .replace(/\\/g, '/')
-      .replace(/^\.?\//, '')
-      .split('/')
-      .map((part) => safeDecode(part))
-      .filter(Boolean)
-      .join('/')
-  }
-
-  try {
-    const u = new URL(raw)
-    const parts = u.pathname.split('/').filter(Boolean).map((part) => safeDecode(part))
-    if (u.hostname === 'raw.githubusercontent.com') {
-      return parts.length > 3 ? parts.slice(3).join('/') : ''
-    }
-    if (u.hostname === 'github.com') {
-      const blobIndex = parts.findIndex((p) => p === 'blob')
-      if (blobIndex >= 0 && parts.length > blobIndex + 2) {
-        return parts.slice(blobIndex + 2).join('/')
-      }
-    }
-    return parts.join('/')
-  } catch {
-    return ''
-  }
-}
-
-const groupLabelFromArticle = (article, topicName) => {
-  const path = extractGithubPath(article.githubUrl || '')
-  if (!path) return ''
-  const parts = path
-    .split('/')
-    .map((part) => normalizePart(part))
-    .filter(Boolean)
-  const topicNames = Array.from(
-    new Set(
-      [article.categoryName, topicName]
-        .map((name) => normalizePart(name))
-        .filter(Boolean),
-    ),
-  )
-  const topicIndex = topicNames.length
-    ? parts.findIndex((part) => topicNames.some((name) => name === part))
-    : -1
-
-  if (topicIndex >= 0) {
-    if (parts.length >= topicIndex + 3) {
-      const folder = parts[topicIndex + 1]
-      const fileLike = parts[topicIndex + 2]
-      if (folder && fileLike) return folder
-    }
-    return ''
-  }
-
-  if (parts.length >= 3) {
-    const maybeFolder = parts[1]
-    const maybeFile = parts[2]
-    if (maybeFolder && maybeFile && isMarkdownFile(maybeFile)) return maybeFolder
-  }
-  return ''
-}
-
 const buildGroups = (articles, topicName) => {
   const map = new Map()
   const rootArticles = []
   for (const article of articles) {
-    const label = groupLabelFromArticle(article, topicName)
+    const label = getArticleFolderLabel(article, topicName)
     if (!label) {
       rootArticles.push(article)
       continue
@@ -689,9 +611,8 @@ const buildTopicsFromArticles = (articles, categories) => {
     const fallbackName = categoryMetaMap.get(id)?.name || ''
     const name = String(article?.categoryName || fallbackName).trim()
     if (!id || !name || name === '首页') continue
-    if (topicMap.has(id)) continue
-
     const meta = categoryMetaMap.get(id)
+    if (topicMap.has(id)) continue
     topicMap.set(id, {
       id,
       name: meta?.name || name,
