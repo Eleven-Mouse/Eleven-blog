@@ -71,6 +71,58 @@ const isSafeUrl = (value) => {
   return !normalized.startsWith('javascript:') && !normalized.startsWith('vbscript:')
 }
 
+// 友链卡片：<!-- friends --> 标记后的 "- [名称](链接 "头像URL")" 列表会被渲染成卡片。
+// 头像可省略，默认取站点根路径的 favicon.ico。
+const FRIENDS_MARKER_PATTERN = /<!--\s*friends\s*-->/
+const FRIEND_LIST_ITEM_PATTERN = /^-\s+\[([^\]]+)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)\s*$/
+
+const resolveFriendAvatar = (friend) => {
+  if (friend.avatar) return friend.avatar
+  try {
+    return new URL('/favicon.ico', friend.url).href
+  } catch {
+    return ''
+  }
+}
+
+const buildFriendCardsHtml = (friends) => {
+  const cardsHtml = friends
+    .map(
+      (friend) =>
+        `<a class="friend-card" href="${escapeAttr(friend.url)}" target="_blank" rel="noreferrer">` +
+        `<img class="friend-card__avatar" src="${escapeAttr(resolveFriendAvatar(friend))}" alt="${escapeAttr(friend.name)}" loading="lazy" />` +
+        `<span class="friend-card__name">${escapeHtml(friend.name)}</span>` +
+        `</a>`
+    )
+    .join('')
+  return `<div class="friend-cards">${cardsHtml}</div>`
+}
+
+const extractFriendLinks = (source) => {
+  const lines = String(source || '').split('\n')
+  const markerIndex = lines.findIndex((line) => FRIENDS_MARKER_PATTERN.test(line))
+  if (markerIndex < 0) return null
+
+  const friends = []
+  let lastIndex = markerIndex
+  for (let i = markerIndex + 1; i < lines.length; i += 1) {
+    const line = lines[i].trim()
+    if (!line) continue
+    const match = line.match(FRIEND_LIST_ITEM_PATTERN)
+    if (!match) break
+    friends.push({
+      name: match[1].trim(),
+      url: match[2].trim(),
+      avatar: (match[3] || '').trim(),
+    })
+    lastIndex = i
+  }
+  if (!friends.length) return null
+
+  lines.splice(markerIndex, lastIndex - markerIndex + 1, buildFriendCardsHtml(friends))
+  return lines.join('\n')
+}
+
 const renderMarkdown = (source, headingPrefix) => {
   const catalog = []
   const renderer = {
@@ -169,8 +221,9 @@ const renderMarkdown = (source, headingPrefix) => {
     renderer,
   })
 
+  const sanitizedSource = sanitizeMarkdownSource(source)
   return {
-    html: String(parser.parse(sanitizeMarkdownSource(source)) || ''),
+    html: String(parser.parse(extractFriendLinks(sanitizedSource) ?? sanitizedSource) || ''),
     catalog,
   }
 }
@@ -493,6 +546,53 @@ html[data-theme='dark'] .article-markdown :deep(.github-snake img.github-snake__
   color: var(--text-link);
   text-decoration: none;
   transition: color var(--transition-fast);
+}
+
+.article-markdown :deep(.friend-cards) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 10px 0 30px;
+}
+
+.article-markdown :deep(.friend-card) {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px 8px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  text-decoration: none;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.article-markdown :deep(.friend-card:hover) {
+  border-color: rgba(var(--accent-rgb), 0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.article-markdown :deep(.friend-card__avatar) {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--bg-code);
+}
+
+.article-markdown :deep(.friend-card__name) {
+  font-size: 15px;
+  font-weight: 600;
+  transition: color var(--transition-fast);
+}
+
+.article-markdown :deep(.friend-card:hover) .friend-card__name {
+  color: var(--accent);
 }
 
 .article-markdown :deep(a:hover) {
