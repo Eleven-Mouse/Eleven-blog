@@ -44,6 +44,20 @@
                   </svg>
                   {{ formatTime(article.publishTime) }}
                 </span>
+                <span>
+                  <svg
+                    viewBox="0 0 16 16"
+                    width="14"
+                    height="14"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <path d="M2 3h5a2 2 0 0 1 2 2v8a2 2 0 0 0-2-2H2zM14 3H9" />
+                    <path d="M14 3v9H9a2 2 0 0 0-2 2" />
+                  </svg>
+                  约 {{ readingTime }} 分钟
+                </span>
                 <span v-if="article.categoryName">
                   <svg
                     viewBox="0 0 16 16"
@@ -182,6 +196,21 @@ const showDesktopTocPanel = computed(() => Boolean(showTopicTreePanel.value && !
 const showTopicTreePanel = computed(() => article.value && article.value.title !== '首页')
 const panelTransitionReady = ref(false)
 const renderedArticleContent = computed(() => transformObsidianAssetLinks(article.value?.content || ''))
+
+// 阅读时长：中文按 400 字/分钟，英文按 200 词/分钟估算
+const readingTime = computed(() => {
+  const content = article.value?.content || ''
+  if (!content) return 1
+  const text = content
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/`[^`]*`/g, '')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/<[^>]+>/g, '')
+  const cjkChars = (text.match(/[一-鿿]/g) || []).length
+  const words = (text.replace(/[一-鿿]/g, ' ').match(/[a-zA-Z0-9]+/g) || []).length
+  return Math.max(1, Math.ceil(cjkChars / 400 + words / 200))
+})
 
 const onCatalogChange = (list) => {
   catalogList.value = Array.isArray(list) ? list : []
