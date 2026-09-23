@@ -52,15 +52,9 @@ const featuredId = computed(() => Number(blogConfig.config.home_featured_article
 const renderedFeaturedContent = computed(() => transformObsidianAssetLinks(article.value?.content || ''))
 const homeReady = computed(() => Boolean(article.value) && !loading.value && !error.value)
 
-// 静态内容模式下数据几乎瞬时返回，为加载动画保留最短展示时长
-const MIN_LOADING_MS = 700
-let loadToken = 0
-
 const loadFeaturedArticle = async () => {
-  const token = ++loadToken
   loading.value = true
   error.value = ''
-  const startedAt = Date.now()
   try {
     if (featuredId.value) {
       try {
@@ -93,14 +87,7 @@ const loadFeaturedArticle = async () => {
     error.value = '首页内容加载失败，请检查网络后重试。'
     console.error(err)
   } finally {
-    // 数据返回过快时补足最短展示时长；期间若触发新一轮加载则交由其接管
-    const remainMs = Math.max(0, MIN_LOADING_MS - (Date.now() - startedAt))
-    if (remainMs > 0) {
-      await new Promise((resolve) => setTimeout(resolve, remainMs))
-    }
-    if (token === loadToken) {
-      loading.value = false
-    }
+    loading.value = false
   }
 }
 
