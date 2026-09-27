@@ -76,6 +76,11 @@ const isSafeUrl = (value) => {
 const FRIENDS_MARKER_PATTERN = /<!--\s*friends\s*-->/
 const FRIEND_LIST_ITEM_PATTERN = /^-\s+\[([^\]]+)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)\s*$/
 
+// 作品集卡片：<!-- projects --> 标记后的 "- [名称](链接 "一句话描述" "标签1,标签2")" 列表会被渲染成卡片。
+// 描述和标签均可省略；标签用中英文逗号分隔。
+const PROJECTS_MARKER_PATTERN = /<!--\s*projects\s*-->/
+const PROJECT_LIST_ITEM_PATTERN = /^-\s+\[([^\]]+)\]\(([^)\s]+)(?:\s+"([^"]*)")?(?:\s+"([^"]*)")?\)\s*$/
+
 const resolveFriendAvatar = (friend) => {
   if (friend.avatar) return friend.avatar
   try {
@@ -120,6 +125,61 @@ const extractFriendLinks = (source) => {
   if (!friends.length) return null
 
   lines.splice(markerIndex, lastIndex - markerIndex + 1, buildFriendCardsHtml(friends))
+  return lines.join('\n')
+}
+
+const parseProjectTags = (value) =>
+  String(value || '')
+    .split(/[,，]/)
+    .map((tag) => tag.trim())
+    .filter(Boolean)
+
+const buildProjectCardsHtml = (projects) => {
+  const cardsHtml = projects
+    .map((project) => {
+      const tagsHtml = project.tags
+        .map((tag) => `<span class="project-card__tag">${escapeHtml(tag)}</span>`)
+        .join('')
+      return (
+        `<a class="project-card" href="${escapeAttr(project.url)}" target="_blank" rel="noreferrer">` +
+        `<span class="project-card__header">` +
+        `<span class="project-card__name">${escapeHtml(project.name)}</span>` +
+        `<span class="project-card__arrow" aria-hidden="true">↗</span>` +
+        `</span>` +
+        (project.description
+          ? `<span class="project-card__desc">${escapeHtml(project.description)}</span>`
+          : '') +
+        (tagsHtml ? `<span class="project-card__tags">${tagsHtml}</span>` : '') +
+        `</a>`
+      )
+    })
+    .join('')
+  return `<div class="project-cards">${cardsHtml}</div>`
+}
+
+const extractProjectCards = (source) => {
+  const lines = String(source || '').split('\n')
+  const markerIndex = lines.findIndex((line) => PROJECTS_MARKER_PATTERN.test(line))
+  if (markerIndex < 0) return null
+
+  const projects = []
+  let lastIndex = markerIndex
+  for (let i = markerIndex + 1; i < lines.length; i += 1) {
+    const line = lines[i].trim()
+    if (!line) continue
+    const match = line.match(PROJECT_LIST_ITEM_PATTERN)
+    if (!match) break
+    projects.push({
+      name: match[1].trim(),
+      url: match[2].trim(),
+      description: (match[3] || '').trim(),
+      tags: parseProjectTags(match[4]),
+    })
+    lastIndex = i
+  }
+  if (!projects.length) return null
+
+  lines.splice(markerIndex, lastIndex - markerIndex + 1, buildProjectCardsHtml(projects))
   return lines.join('\n')
 }
 
@@ -223,7 +283,10 @@ const renderMarkdown = (source, headingPrefix) => {
 
   const sanitizedSource = sanitizeMarkdownSource(source)
   return {
-    html: String(parser.parse(extractFriendLinks(sanitizedSource) ?? sanitizedSource) || ''),
+    html: String(
+      parser.parse(extractProjectCards(extractFriendLinks(sanitizedSource) ?? sanitizedSource) ?? sanitizedSource) ||
+        '',
+    ),
     catalog,
   }
 }
@@ -593,6 +656,89 @@ html[data-theme='dark'] .article-markdown :deep(.github-snake img.github-snake__
 
 .article-markdown :deep(.friend-card:hover) .friend-card__name {
   color: var(--accent);
+}
+
+.article-markdown :deep(.project-cards) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+  margin: 10px 0 30px;
+}
+
+.article-markdown :deep(.project-card) {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 18px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  text-decoration: none;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.article-markdown :deep(.project-card:hover) {
+  border-color: rgba(var(--accent-rgb), 0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+  text-decoration: none;
+}
+
+.article-markdown :deep(.project-card__header) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.article-markdown :deep(.project-card__name) {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: color var(--transition-fast);
+}
+
+.article-markdown :deep(.project-card:hover) .project-card__name {
+  color: var(--accent);
+}
+
+.article-markdown :deep(.project-card__arrow) {
+  font-size: 13px;
+  color: var(--text-muted);
+  transition:
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.article-markdown :deep(.project-card:hover) .project-card__arrow {
+  color: var(--accent);
+  transform: translate(2px, -2px);
+}
+
+.article-markdown :deep(.project-card__desc) {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.article-markdown :deep(.project-card__tags) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.article-markdown :deep(.project-card__tag) {
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-code);
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
 .article-markdown :deep(a:hover) {
