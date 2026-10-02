@@ -9,8 +9,10 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, h, nextTick, onMounted, onUnmounted, ref, render as renderVNode, watch } from 'vue'
 import { Marked } from 'marked'
+import { extractFriendLinks } from '@/utils/friendLinks'
+import FriendWall from '@/components/FriendWall.vue'
 
 const props = defineProps({
   content: {
@@ -71,62 +73,13 @@ const isSafeUrl = (value) => {
   return !normalized.startsWith('javascript:') && !normalized.startsWith('vbscript:')
 }
 
-// 友链卡片：<!-- friends --> 标记后的 "- [名称](链接 "头像URL")" 列表会被渲染成卡片。
-// 头像可省略，默认取站点根路径的 favicon.ico。
-const FRIENDS_MARKER_PATTERN = /<!--\s*friends\s*-->/
-const FRIEND_LIST_ITEM_PATTERN = /^-\s+\[([^\]]+)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)\s*$/
+// 友链卡片：<!-- friends --> 标记后的 "- [名称](链接 "头像URL")" 列表会被替换成
+// FriendWall 组件的挂载占位符，解析逻辑见 utils/friendLinks.js。
 
 // 作品集卡片：<!-- projects --> 标记后的 "- [名称](链接 "一句话描述" "标签1,标签2")" 列表会被渲染成卡片。
 // 描述和标签均可省略；标签用中英文逗号分隔。
 const PROJECTS_MARKER_PATTERN = /<!--\s*projects\s*-->/
 const PROJECT_LIST_ITEM_PATTERN = /^-\s+\[([^\]]+)\]\(([^)\s]+)(?:\s+"([^"]*)")?(?:\s+"([^"]*)")?\)\s*$/
-
-const resolveFriendAvatar = (friend) => {
-  if (friend.avatar) return friend.avatar
-  try {
-    return new URL('/favicon.ico', friend.url).href
-  } catch {
-    return ''
-  }
-}
-
-const buildFriendCardsHtml = (friends) => {
-  const cardsHtml = friends
-    .map(
-      (friend) =>
-        `<a class="friend-card" href="${escapeAttr(friend.url)}" target="_blank" rel="noreferrer">` +
-        `<img class="friend-card__avatar" src="${escapeAttr(resolveFriendAvatar(friend))}" alt="${escapeAttr(friend.name)}" loading="lazy" />` +
-        `<span class="friend-card__name">${escapeHtml(friend.name)}</span>` +
-        `</a>`
-    )
-    .join('')
-  return `<div class="friend-cards">${cardsHtml}</div>`
-}
-
-const extractFriendLinks = (source) => {
-  const lines = String(source || '').split('\n')
-  const markerIndex = lines.findIndex((line) => FRIENDS_MARKER_PATTERN.test(line))
-  if (markerIndex < 0) return null
-
-  const friends = []
-  let lastIndex = markerIndex
-  for (let i = markerIndex + 1; i < lines.length; i += 1) {
-    const line = lines[i].trim()
-    if (!line) continue
-    const match = line.match(FRIEND_LIST_ITEM_PATTERN)
-    if (!match) break
-    friends.push({
-      name: match[1].trim(),
-      url: match[2].trim(),
-      avatar: (match[3] || '').trim(),
-    })
-    lastIndex = i
-  }
-  if (!friends.length) return null
-
-  lines.splice(markerIndex, lastIndex - markerIndex + 1, buildFriendCardsHtml(friends))
-  return lines.join('\n')
-}
 
 const parseProjectTags = (value) =>
   String(value || '')
@@ -283,12 +236,34 @@ const renderMarkdown = (source, headingPrefix) => {
 
   const sanitizedSource = sanitizeMarkdownSource(source)
   // 依次做友链、作品集卡片转换，每步无匹配时保留上一步结果
-  const sourceWithFriendCards = extractFriendLinks(sanitizedSource) ?? sanitizedSource
+  const friendResult = extractFriendLinks(sanitizedSource)
+  const sourceWithFriendCards = friendResult?.source ?? sanitizedSource
   const sourceWithAllCards = extractProjectCards(sourceWithFriendCards) ?? sourceWithFriendCards
   return {
     html: String(parser.parse(sourceWithAllCards) || ''),
     catalog,
+    friendWalls: friendResult ? [friendResult.friends] : [],
   }
+}
+
+// 友链占位符在 v-html 渲染后手动挂载 FriendWall 组件
+let mountedFriendWalls = []
+
+const unmountFriendWalls = () => {
+  mountedFriendWalls.forEach((el) => renderVNode(null, el))
+  mountedFriendWalls = []
+}
+
+const mountFriendWalls = (walls) => {
+  unmountFriendWalls()
+  const root = rootRef.value
+  if (!root || !walls.length) return
+  root.querySelectorAll('[data-friend-wall]').forEach((el) => {
+    const friends = walls[Number(el.dataset.friendWall)]
+    if (!friends?.length) return
+    renderVNode(h(FriendWall, { friends }), el)
+    mountedFriendWalls.push(el)
+  })
 }
 
 const rendered = computed(() => renderMarkdown(props.content, props.headingPrefix))
@@ -322,6 +297,7 @@ watch(
   async (value) => {
     await nextTick()
     emit('catalog-change', value.catalog)
+    mountFriendWalls(value.friendWalls)
     highlightCodeBlocks().catch((error) => {
       console.error('代码高亮加载失败:', error)
     })
@@ -330,9 +306,14 @@ watch(
 )
 
 onMounted(() => {
+  mountFriendWalls(rendered.value.friendWalls)
   highlightCodeBlocks().catch((error) => {
     console.error('代码高亮加载失败:', error)
   })
+})
+
+onUnmounted(() => {
+  unmountFriendWalls()
 })
 
 const copyCode = async (button) => {
@@ -609,64 +590,6 @@ html[data-theme='dark'] .article-markdown :deep(.github-snake img.github-snake__
   color: var(--text-link);
   text-decoration: none;
   transition: color var(--transition-fast);
-}
-
-.article-markdown :deep(.friend-cards) {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 14px;
-  margin: 10px 0 30px;
-}
-
-.article-markdown :deep(.friend-card) {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 24px 12px 18px;
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  text-decoration: none;
-  transition:
-    border-color var(--transition-fast),
-    box-shadow var(--transition-fast),
-    transform var(--transition-fast);
-}
-
-.article-markdown :deep(.friend-card:hover) {
-  border-color: rgba(var(--accent-rgb), 0.5);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
-}
-
-.article-markdown :deep(.friend-card__avatar) {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  object-fit: cover;
-  background: var(--bg-code);
-  transition: transform var(--transition-fast);
-}
-
-.article-markdown :deep(.friend-card:hover) .friend-card__avatar {
-  transform: scale(1.06);
-}
-
-.article-markdown :deep(.friend-card__name) {
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 15px;
-  font-weight: 600;
-  text-align: center;
-  transition: color var(--transition-fast);
-}
-
-.article-markdown :deep(.friend-card:hover) .friend-card__name {
-  color: var(--accent);
 }
 
 .article-markdown :deep(.project-cards) {
