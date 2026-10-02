@@ -282,11 +282,11 @@ const renderMarkdown = (source, headingPrefix) => {
   })
 
   const sanitizedSource = sanitizeMarkdownSource(source)
+  // 依次做友链、作品集卡片转换，每步无匹配时保留上一步结果
+  const sourceWithFriendCards = extractFriendLinks(sanitizedSource) ?? sanitizedSource
+  const sourceWithAllCards = extractProjectCards(sourceWithFriendCards) ?? sourceWithFriendCards
   return {
-    html: String(
-      parser.parse(extractProjectCards(extractFriendLinks(sanitizedSource) ?? sanitizedSource) ?? sanitizedSource) ||
-        '',
-    ),
+    html: String(parser.parse(sourceWithAllCards) || ''),
     catalog,
   }
 }
@@ -612,17 +612,18 @@ html[data-theme='dark'] .article-markdown :deep(.github-snake img.github-snake__
 }
 
 .article-markdown :deep(.friend-cards) {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 14px;
   margin: 10px 0 30px;
 }
 
 .article-markdown :deep(.friend-card) {
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 8px 16px 8px 8px;
+  gap: 12px;
+  padding: 24px 12px 18px;
   border: 1px solid var(--border-color);
   border-radius: 12px;
   background: var(--bg-secondary);
@@ -641,16 +642,26 @@ html[data-theme='dark'] .article-markdown :deep(.github-snake img.github-snake__
 }
 
 .article-markdown :deep(.friend-card__avatar) {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
   object-fit: cover;
   background: var(--bg-code);
+  transition: transform var(--transition-fast);
+}
+
+.article-markdown :deep(.friend-card:hover) .friend-card__avatar {
+  transform: scale(1.06);
 }
 
 .article-markdown :deep(.friend-card__name) {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 15px;
   font-weight: 600;
+  text-align: center;
   transition: color var(--transition-fast);
 }
 
